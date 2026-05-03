@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#1b4332"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Diet Tracker"/>
+<title>Diet Tracker — Belly Fat Plan</title>
+<link rel="manifest" href="manifest.json"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Georgia','Palatino',serif;background:#f4f6f4;min-height:100vh;padding-bottom:60px;overscroll-behavior:none;}
+  button{cursor:pointer;font-family:inherit;border:none;outline:none;}
+  input{font-family:inherit;outline:none;}
+  .header{background:linear-gradient(160deg,#1b4332 0%,#2d6a4f 60%,#40916c 100%);padding:20px 16px 16px;position:relative;overflow:hidden;}
+  .header-circle{position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.05);}
+  .header h1{color:#fff;font-size:20px;font-weight:normal;text-align:center;letter-spacing:.5px;}
+  .header p{color:rgba(255,255,255,.6);font-size:12px;text-align:center;margin:3px 0 14px;font-style:italic;}
+  .score-row{display:flex;gap:10px;}
+  .score-card{background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;flex:1;text-align:center;}
+  .score-label{color:rgba(255,255,255,.6);font-size:10px;margin-bottom:3px;}
+  .score-value{font-weight:bold;font-size:26px;}
+  .score-sub{color:rgba(255,255,255,.65);font-size:11px;}
+  .score-desc{color:rgba(255,255,255,.45);font-size:10px;margin-top:2px;}
+  .cal-bar-wrap{margin-top:10px;background:rgba(255,255,255,.15);border-radius:8px;height:7px;overflow:hidden;}
+  .cal-bar{height:100%;border-radius:8px;transition:width .4s;}
+  .cal-bar-labels{display:flex;justify-content:space-between;margin-top:3px;}
+  .cal-bar-labels span{color:rgba(255,255,255,.35);font-size:9px;}
+  .cal-bar-labels span.mid{color:rgba(255,255,255,.6);font-size:10px;}
+  .tabs{display:flex;background:#fff;border-bottom:2px solid #e0e8e0;position:sticky;top:0;z-index:100;}
+  .tab-btn{flex:1;padding:12px 4px;border:none;background:transparent;border-bottom:3px solid transparent;color:#888;font-size:12px;font-family:inherit;transition:all .2s;}
+  .tab-btn.active{border-bottom:3px solid #1b4332;color:#1b4332;font-weight:bold;}
+  .content{padding:14px;display:none;}
+  .content.active{display:block;}
+  .card{background:#fff;border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .card-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .card-header-title{font-weight:bold;font-size:13px;}
+  .card-header-time{font-size:11px;margin-left:8px;opacity:.7;}
+  .badge{border-radius:20px;padding:2px 9px;font-size:11px;font-weight:bold;color:#fff;}
+  .chevron{font-size:11px;transition:transform .2s;}
+  .card-items{display:none;}
+  .card-items.open{display:block;}
+  .check-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid #f5f5f5;transition:background .2s;}
+  .check-item:last-child{border-bottom:none;}
+  .check-item.done{background:#fafff8;}
+  .checkbox{width:24px;height:24px;border-radius:6px;flex-shrink:0;border:2px solid #d0d0d0;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+  .checkbox.checked{background:var(--ac);border-color:var(--ac);}
+  .checkbox svg{display:none;}
+  .checkbox.checked svg{display:block;}
+  .item-text{font-size:13px;color:#222;transition:all .2s;}
+  .item-text.done{color:#bbb;text-decoration:line-through;}
+  .item-note{font-size:11px;color:#bbb;margin-top:1px;}
+  .priority-box{background:#1b4332;border-radius:14px;margin-bottom:12px;padding:12px 14px;}
+  .priority-title{color:#c8f0c8;font-weight:bold;font-size:13px;margin-bottom:10px;}
+  .priority-pills{display:flex;flex-wrap:wrap;gap:8px;}
+  .priority-pill{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);border-radius:10px;padding:7px 12px;display:flex;align-items:center;gap:6px;transition:all .2s;}
+  .priority-pill.done{background:#2d6a4f;border-color:#97bc62;}
+  .priority-pill span.label{font-size:12px;color:rgba(255,255,255,.8);}
+  .priority-pill.done span.label{color:#97bc62;}
+  /* Calorie tab */
+  .log-summary{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .log-title{font-weight:bold;color:#1b4332;font-size:15px;}
+  .log-total{font-weight:bold;font-size:17px;}
+  .progress-bar-wrap{background:#f0f0f0;border-radius:8px;height:10px;overflow:hidden;margin-bottom:8px;}
+  .progress-bar{height:100%;border-radius:8px;transition:width .4s;}
+  .progress-labels{display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px;}
+  .meal-entry{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f5f5f5;}
+  .meal-entry-emoji{font-size:20px;flex-shrink:0;}
+  .meal-entry-name{flex:1;font-size:13px;color:#333;}
+  .meal-entry-time{font-size:10px;color:#ccc;}
+  .meal-entry-cal{font-weight:bold;font-size:14px;color:#2e7d32;flex-shrink:0;}
+  .meal-remove{background:none;border:none;color:#ddd;font-size:22px;padding:0 4px;line-height:1;flex-shrink:0;}
+  .empty-msg{text-align:center;color:#ccc;font-size:13px;padding:16px 0;}
+  .cat-filter{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none;}
+  .cat-filter::-webkit-scrollbar{display:none;}
+  .cat-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:none;background:#fff;color:#555;font-size:12px;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:all .2s;}
+  .cat-btn.active{background:#1b4332;color:#fff;}
+  .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .preset-btn{background:#fff;border-radius:12px;padding:11px 10px;box-shadow:0 1px 6px rgba(0,0,0,.08);display:flex;align-items:center;gap:8px;border:none;text-align:left;font-family:inherit;transition:transform .1s;}
+  .preset-btn:active{transform:scale(.97);}
+  .preset-emoji{font-size:22px;flex-shrink:0;}
+  .preset-name{font-size:11px;color:#222;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .preset-cal{font-weight:bold;font-size:14px;color:#2e7d32;margin-top:2px;}
+  .preset-plus{width:24px;height:24px;border-radius:6px;background:#f0f7f0;display:flex;align-items:center;justify-content:center;color:#2e7d32;font-weight:bold;font-size:18px;flex-shrink:0;}
+  .custom-box{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:10px;}
+  .custom-toggle{width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;font-family:inherit;padding:0;}
+  .custom-toggle span{font-weight:bold;color:#1b4332;font-size:14px;}
+  .custom-form{margin-top:12px;display:none;}
+  .custom-form.open{display:block;}
+  .custom-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;font-size:13px;margin-bottom:8px;}
+  .custom-row{display:flex;gap:8px;}
+  .custom-cal{flex:1;padding:10px 12px;border-radius:8px;border:1px solid #ddd;font-size:13px;}
+  .custom-add{background:#1b4332;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:bold;font-family:inherit;}
+  .reset-btn{width:100%;padding:11px;background:#fff;border:1px solid #e0e0e0;border-radius:12px;color:#aaa;font-size:13px;font-family:inherit;margin-top:4px;}
+  /* History */
+  .hist-day{padding:10px 0;border-bottom:1px solid #f0f4f0;}
+  .hist-day:last-child{border-bottom:none;}
+  .hist-day-header{display:flex;justify-content:space-between;margin-bottom:6px;}
+  .hist-day-name{font-size:13px;color:#555;}
+  .hist-day-name.today{color:#1b4332;font-weight:bold;}
+  .hist-scores{display:flex;gap:12px;}
+  .hist-score{font-size:12px;font-weight:bold;}
+  .mini-bar-row{display:flex;gap:4px;align-items:center;margin-bottom:4px;}
+  .mini-bar-icon{color:#ddd;font-size:9px;width:14px;}
+  .mini-bar-track{flex:1;height:5px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+  .mini-bar-fill{height:100%;border-radius:4px;transition:width .5s;}
+  .guide-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .guide-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+  .guide-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .guide-label{font-size:12px;font-weight:bold;min-width:130px;color:#333;}
+  .guide-desc{font-size:12px;color:#888;}
+  .motivation{background:linear-gradient(135deg,#1b4332,#2d6a4f);border-radius:14px;padding:16px;text-align:center;}
+  .motivation p{color:#c8f0c8;font-size:13px;line-height:1.9;}
+  .motivation strong{color:#fff;}
+  /* Install banner */
+  .install-banner{background:#ff6b35;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;display:none;}
+  .install-banner.show{display:flex;}
+  .install-text{color:#fff;font-size:13px;}
+  .install-btn{background:#fff;color:#ff6b35;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:bold;font-family:inherit;}
+  .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+  .toast.show{opacity:1;}
+  .footer-note{text-align:center;color:#ccc;font-size:10px;padding:8px 16px;font-style:italic;}
+  /* Rotating special */
+  .rot-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+</style>
+</head>
+<body>
+
+<div id="install-banner" class="install-banner">
+  <span class="install-text">📲 Install app on your phone</span>
+  <button class="install-btn" id="install-btn">Install</button>
+</div>
+
+<div class="header">
+  <div class="header-circle"></div>
+  <h1>🥗 Diet Tracker</h1>
+  <p id="header-date">Loading...</p>
+  <div class="score-row">
+    <div class="score-card">
+      <div class="score-label">CHECKLIST</div>
+      <div class="score-value" id="check-pct" style="color:#ffd166">0%</div>
+      <div class="score-sub" id="check-count">0/0 done</div>
+      <div class="score-desc" id="check-label">Needs work ❌</div>
+    </div>
+    <div class="score-card">
+      <div class="score-label">CALORIES</div>
+      <div class="score-value" id="cal-total" style="color:#ffd166">0</div>
+      <div class="score-sub">of 1550 kcal</div>
+      <div class="score-desc" id="cal-remaining">1550 remaining</div>
+    </div>
+  </div>
+  <div class="cal-bar-wrap">
+    <div class="cal-bar" id="cal-bar" style="width:0%;background:#97bc62"></div>
+  </div>
+  <div class="cal-bar-labels">
+    <span>0</span><span class="mid">Target: 1550 kcal</span><span>2000</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab(0)">✅ Checklist</button>
+  <button class="tab-btn" onclick="switchTab(1)">🔥 Calories</button>
+  <button class="tab-btn" onclick="switchTab(2)">📅 History</button>
+</div>
+
+<!-- TAB 0: CHECKLIST -->
+<div class="content active" id="tab-0">
+
+  <!-- Rotating Special -->
+  <div class="card" id="rot-card">
+    <div class="rot-header" id="rot-header">
+      <span id="rot-title" style="font-weight:bold;font-size:13px;"></span>
+      <span class="badge" id="rot-badge"></span>
+    </div>
+    <div id="rot-items"></div>
+  </div>
+
+  <!-- Priority Pills -->
+  <div class="priority-box">
+    <div class="priority-title">🔑 5 Priority Rules · <span id="pri-count">0</span>/5</div>
+    <div class="priority-pills" id="priority-pills"></div>
+  </div>
+
+  <!-- Sections -->
+  <div id="sections-container"></div>
+
+  <button class="reset-btn" onclick="resetChecklist()">🔄 Reset Today's Checklist</button>
+</div>
+
+<!-- TAB 1: CALORIES -->
+<div class="content" id="tab-1">
+  <div class="log-summary">
+    <div class="log-header">
+      <span class="log-title">Today's Food Log</span>
+      <span class="log-total" id="log-total-display">0 kcal</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="log-bar" style="width:0%;background:#2e7d32"></div>
+    </div>
+    <div class="progress-labels">
+      <span style="color:#888">Target: 1550 kcal</span>
+      <span id="log-remaining" style="font-weight:bold;color:#2e7d32">1550 remaining</span>
+    </div>
+    <div id="meal-log"><div class="empty-msg">No meals logged yet — tap any item below</div></div>
+  </div>
+
+  <div class="cat-filter" id="cat-filter"></div>
+  <div class="preset-grid" id="preset-grid"></div>
+
+  <div class="custom-box">
+    <button class="custom-toggle" onclick="toggleCustom()">
+      <span>+ Add Custom Food Item</span>
+      <span id="custom-chevron">▼</span>
+    </button>
+    <div class="custom-form" id="custom-form">
+      <input class="custom-input" id="custom-name" placeholder="Food name (e.g. Dal khichdi 1 bowl)"/>
+      <div class="custom-row">
+        <input class="custom-cal" id="custom-cal" type="number" placeholder="Calories (e.g. 320)"/>
+        <button class="custom-add" onclick="addCustom()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetMeals()">🔄 Reset Today's Calories</button>
+</div>
+
+<!-- TAB 2: HISTORY -->
+<div class="content" id="tab-2">
+  <div class="card" style="padding:16px">
+    <div style="font-weight:bold;color:#1b4332;font-size:15px;margin-bottom:14px">📅 Last 7 Days</div>
+    <div id="history-list"></div>
+  </div>
+  <div class="guide-card">
+    <div style="font-weight:bold;color:#1b4332;font-size:14px;margin-bottom:10px">📊 Score Guide</div>
+    <div class="guide-row"><div class="guide-dot" style="background:#2e7d32"></div><span class="guide-label">Checklist ≥80%</span><span class="guide-desc">Excellent — fat loss on track</span></div>
+    <div class="guide-row"><div class="guide-dot" style="background:#f57f17"></div><span class="guide-label">Checklist 60–79%</span><span class="guide-desc">Good — results coming</span></div>
+    <div class="guide-row"><div class="guide-dot" style="background:#2e7d32"></div><span class="guide-label">Calories ≤1,550</span><span class="guide-desc">On target</span></div>
+    <div class="guide-row"><div class="guide-dot" style="background:#c62828"></div><span class="guide-label">Calories >1,550</span><span class="guide-desc">Over — adjust dinner</span></div>
+  </div>
+  <div class="motivation">
+    <p>Aim for <strong>5 days ≥80%</strong> checklist per week<br/>
+    + stay <strong>under 1,550 kcal</strong> every day.<br/>
+    Visible belly fat reduction in <strong>4–6 weeks.</strong></p>
+  </div>
+</div>
+
+<div class="footer-note">Data saves on your phone · Calories are approximate</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────
+const TARGET = 1550;
+const STORE_KEY = "diet_pwa_v1";
+
+const ROTATING = {
+  0:{emoji:"🐟",label:"Sunday",bg:"#e3f2fd",ac:"#1565c0",items:[
+    {id:"r0a",text:"Fish curry at lunch — by 1 PM",note:"Omega-3 weekly dose"},
+    {id:"r0b",text:"Dinner by 7:30 PM (home day — use it!)",note:"Rare early dinner"},
+    {id:"r0c",text:"Sprouts chaat as evening snack",note:"Living food — peak nutrients"},
+  ]},
+  1:{emoji:"🫘",label:"Monday",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+    {id:"r1a",text:"Rajma instead of toor dal at lunch",note:"Highest fibre dal"},
+    {id:"r1b",text:"Palak sabzi at dinner",note:"Iron + folate overnight"},
+    {id:"r1c",text:"Beetroot slices in lunch salad",note:"Iron + metabolism boost"},
+  ]},
+  2:{emoji:"🐟",label:"Tuesday",bg:"#e8f5e9",ac:"#2e7d32",items:[
+    {id:"r2a",text:"Fish (rohu/katla) at dinner — 2 rotis + fish",note:"Omega-3 — best for belly fat"},
+    {id:"r2b",text:"Keep lunch lighter today",note:"Balance with fish dinner"},
+    {id:"r2c",text:"Beetroot in salad",note:"Iron + nitrates"},
+  ]},
+  3:{emoji:"🥬",label:"Wednesday",bg:"#e0f2f1",ac:"#00695c",items:[
+    {id:"r3a",text:"Palak dal OR palak paneer at lunch",note:"Iron + calcium combo"},
+    {id:"r3b",text:"Palak/lauki sabzi at dinner",note:"Double palak — iron reset"},
+    {id:"r3c",text:"Sprouts in desk snack",note:"Living food — highest enzymes"},
+  ]},
+  4:{emoji:"🍗",label:"Thursday",bg:"#fff8e1",ac:"#f57f17",items:[
+    {id:"r4a",text:"Chicken curry at lunch (no cream)",note:"Mid-week protein boost"},
+    {id:"r4b",text:"Turai/lauki sabzi at dinner",note:"Lowest cal — balances lunch"},
+    {id:"r4c",text:"Extra large salad at lunch",note:"Compensates chicken calories"},
+  ]},
+  5:{emoji:"🫘",label:"Friday",bg:"#fce4ec",ac:"#c62828",items:[
+    {id:"r5a",text:"Kabuli chana sabzi at dinner",note:"Magnesium + fibre"},
+    {id:"r5b",text:"Fish at lunch if available",note:"Second omega-3 dose"},
+    {id:"r5c",text:"Extra light dinner — highest risk day",note:"Friday fatigue = overeating"},
+  ]},
+  6:{emoji:"🥚",label:"Saturday",bg:"#fff3e0",ac:"#e65100",items:[
+    {id:"r6a",text:"2 egg bhurji + sprouts at breakfast",note:"Higher protein — semi-active"},
+    {id:"r6b",text:"Rajma or chana dal at lunch",note:"Weekend fibre boost"},
+    {id:"r6c",text:"30 min walk today",note:"Weekend time — use it"},
+  ]},
+};
+
+const SECTIONS = [
+  {id:"morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#e8f5e9",ac:"#2e7d32",items:[
+    {id:"c_lemon",text:"Warm lemon water + ½ lemon",note:"Vitamin C + metabolism"},
+    {id:"c_almonds",text:"6 soaked almonds (peeled)",note:"Vitamin E + good fats"},
+    {id:"c_walnuts",text:"2 walnuts",note:"Omega-3 — belly fat fighter"},
+    {id:"c_amla",text:"1 amla or guava",note:"Vitamin C — cortisol control"},
+    {id:"c_sunlight",text:"15 min morning sunlight",note:"Free Vitamin D"},
+  ]},
+  {id:"bfast",label:"🍳 Breakfast",time:"8:00–8:30 AM",bg:"#fff8e1",ac:"#f57f17",items:[
+    {id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs"},
+    {id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + B12 + protein"},
+    {id:"c_til",text:"Til on roti/sabzi",note:"Calcium"},
+    {id:"c_tea",text:"1 cup tea (mild sugar only)",note:"Max 1 sugared tea/day"},
+  ]},
+  {id:"snack1",label:"🥜 Desk Snack",time:"11:30 AM",bg:"#e8f4fd",ac:"#1565c0",items:[
+    {id:"c_chana",text:"Roasted chana 40g (carry from home)",note:"Iron + fibre"},
+    {id:"c_fruit",text:"1 fruit — apple/guava/pear",note:"Vitamins + fibre"},
+  ]},
+  {id:"lunch",label:"🍱 Lunch",time:"2:00–2:30 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+    {id:"c_saladFirst",text:"Ate salad FIRST before rice/roti",note:"Reduces portion naturally"},
+    {id:"c_dal",text:"1 katori dal",note:"Protein + iron + magnesium"},
+    {id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs"},
+    {id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion discipline"},
+  ]},
+  {id:"snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+    {id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite"},
+    {id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat"},
+    {id:"c_noFried",text:"Avoided canteen fried snacks",note:"Zero maida today"},
+  ]},
+  {id:"dinner",label:"🥣 Dinner",time:"9:00–9:30 PM",bg:"#e8eaf6",ac:"#283593",items:[
+    {id:"c_noRice",text:"NO rice at dinner ✅",note:"Most critical rule"},
+    {id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar spike"},
+    {id:"c_dDal",text:"1 katori dal",note:"Overnight slow protein"},
+    {id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night"},
+    {id:"c_curd",text:"1 bowl curd",note:"Calcium + gut probiotics"},
+    {id:"c_isabgol",text:"Isabgol 1 tsp in water (30 min before dinner)",note:"Fibre + bloat reduction"},
+  ]},
+  {id:"postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+    {id:"c_walk",text:"15–20 min walk after dinner",note:"Blood sugar drops 20–30%"},
+    {id:"c_nolate",text:"Nothing after 10 PM",note:"Critical for belly fat"},
+    {id:"c_sleep",text:"Sleep by 11:30 PM",note:"Controls cortisol"},
+  ]},
+];
+
+const PRIORITY = [
+  {id:"c_noRice",label:"No rice at dinner",icon:"🔑"},
+  {id:"c_eggs",label:"2 eggs today",icon:"🥚"},
+  {id:"c_eve",label:"5 PM snack done",icon:"⚡"},
+  {id:"c_walk",label:"Post-dinner walk",icon:"🚶"},
+  {id:"c_isabgol",label:"Isabgol taken",icon:"🌿"},
+];
+
+const PRESETS = [
+  {name:"Milk tea with sugar",cal:65,emoji:"☕",cat:"Drinks"},
+  {name:"Milk tea mild sugar",cal:50,emoji:"☕",cat:"Drinks"},
+  {name:"Milk tea no sugar",cal:35,emoji:"☕",cat:"Drinks"},
+  {name:"Green tea",cal:5,emoji:"🍵",cat:"Drinks"},
+  {name:"Lemon water",cal:10,emoji:"🍋",cat:"Drinks"},
+  {name:"Milk 250ml",cal:150,emoji:"🥛",cat:"Drinks"},
+  {name:"Buttermilk/chaas",cal:35,emoji:"🥛",cat:"Drinks"},
+  {name:"Roti (1)",cal:75,emoji:"🫓",cat:"Grains"},
+  {name:"Rotis (2)",cal:150,emoji:"🫓",cat:"Grains"},
+  {name:"Rotis (3)",cal:225,emoji:"🫓",cat:"Grains"},
+  {name:"Rice 1 bowl",cal:165,emoji:"🍚",cat:"Grains"},
+  {name:"Rice 1.5 bowl",cal:245,emoji:"🍚",cat:"Grains"},
+  {name:"Poha 1 bowl",cal:180,emoji:"🥣",cat:"Grains"},
+  {name:"Oats 1 bowl",cal:150,emoji:"🥣",cat:"Grains"},
+  {name:"Toor/masoor dal 1 katori",cal:140,emoji:"🫘",cat:"Protein"},
+  {name:"Rajma/chana dal 1 katori",cal:165,emoji:"🫘",cat:"Protein"},
+  {name:"Kala chana ½ katori",cal:140,emoji:"🫘",cat:"Protein"},
+  {name:"Boiled egg (1)",cal:70,emoji:"🥚",cat:"Protein"},
+  {name:"Egg bhurji 1 egg",cal:105,emoji:"🍳",cat:"Protein"},
+  {name:"Egg bhurji 2 eggs",cal:185,emoji:"🍳",cat:"Protein"},
+  {name:"Chicken curry 2 pcs",cal:160,emoji:"🍗",cat:"Protein"},
+  {name:"Chicken curry 3 pcs",cal:240,emoji:"🍗",cat:"Protein"},
+  {name:"Fish curry 1 katori",cal:180,emoji:"🐟",cat:"Protein"},
+  {name:"Roasted chana 30g",cal:110,emoji:"🌰",cat:"Snacks"},
+  {name:"Roasted chana 40g",cal:147,emoji:"🌰",cat:"Snacks"},
+  {name:"Roasted chana 50g",cal:183,emoji:"🌰",cat:"Snacks"},
+  {name:"Roasted chana 75g",cal:275,emoji:"🌰",cat:"Snacks"},
+  {name:"Peanuts 20g",cal:114,emoji:"🥜",cat:"Snacks"},
+  {name:"Peanuts 25g",cal:142,emoji:"🥜",cat:"Snacks"},
+  {name:"Peanuts 30g",cal:170,emoji:"🥜",cat:"Snacks"},
+  {name:"Almonds 6 + Walnuts 2",cal:80,emoji:"🌰",cat:"Snacks"},
+  {name:"Apple / Guava / Pear",cal:80,emoji:"🍎",cat:"Fruits"},
+  {name:"Banana (1)",cal:90,emoji:"🍌",cat:"Fruits"},
+  {name:"Papaya 200g",cal:78,emoji:"🍈",cat:"Fruits"},
+  {name:"Amla (1)",cal:10,emoji:"🟢",cat:"Fruits"},
+  {name:"Plain sabzi 1 katori",cal:90,emoji:"🥬",cat:"Sabzi"},
+  {name:"Palak sabzi 1 katori",cal:95,emoji:"🥬",cat:"Sabzi"},
+  {name:"Turai/lauki 1 katori",cal:80,emoji:"🥒",cat:"Sabzi"},
+  {name:"Kaddu sabzi 1 katori",cal:110,emoji:"🎃",cat:"Sabzi"},
+  {name:"Hari saag ½ katori",cal:45,emoji:"🌿",cat:"Sabzi"},
+  {name:"Dal wadi+brinjal 1 katori",cal:180,emoji:"🍆",cat:"Sabzi"},
+  {name:"Aloo chokha",cal:120,emoji:"🥔",cat:"Sabzi"},
+  {name:"Aloo+gobi+brinjal ½ katori",cal:120,emoji:"🥔",cat:"Sabzi"},
+  {name:"Curd 1 bowl 150ml",cal:90,emoji:"🥛",cat:"Dairy"},
+  {name:"Curd ½ bowl 75ml",cal:45,emoji:"🥛",cat:"Dairy"},
+  {name:"Cucumber+tomato salad",cal:35,emoji:"🥗",cat:"Dairy"},
+  {name:"Salad with onion+beetroot",cal:55,emoji:"🥗",cat:"Dairy"},
+  {name:"Isabgol 1 tsp",cal:15,emoji:"🌿",cat:"Dairy"},
+];
+
+const CATS = ["All","Drinks","Grains","Protein","Snacks","Fruits","Sabzi","Dairy"];
+
+// ── State ─────────────────────────────────────────────────────
+const d = new Date();
+const TODAY = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const DOW = d.getDay();
+let checked = {};
+let meals = [];
+let history = {};
+let currentCat = "All";
+let openSections = new Set();
+
+// ── Storage ───────────────────────────────────────────────────
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      history = JSON.parse(raw);
+      const today = history[TODAY];
+      if (today) { checked = today.checked || {}; meals = today.meals || []; }
+    }
+  } catch(e) {}
+}
+function save() {
+  try {
+    history[TODAY] = { checked, meals };
+    localStorage.setItem(STORE_KEY, JSON.stringify(history));
+  } catch(e) {}
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function todayFmt() {
+  return d.toLocaleDateString("en-IN", {weekday:"long", day:"numeric", month:"long"});
+}
+function fmtDate(s) {
+  return new Date(s+"T12:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"});
+}
+function nowTime() {
+  return new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+}
+function scoreColor(p) { return p>=80?"#2e7d32":p>=60?"#f57f17":"#c62828"; }
+function scoreLabel(p) {
+  if(p===100) return "Perfect 🏆";
+  if(p>=80) return "Excellent 💪";
+  if(p>=60) return "Good 👍";
+  if(p>=40) return "Average ⚠️";
+  return "Needs work ❌";
+}
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+// ── Computed stats ────────────────────────────────────────────
+function allItems() {
+  return [...SECTIONS.flatMap(s=>s.items), ...ROTATING[DOW].items];
+}
+function checkPct() {
+  const all = allItems();
+  return Math.round((all.filter(i=>checked[i.id]).length / all.length) * 100);
+}
+function totalCal() { return meals.reduce((s,m)=>s+m.cal,0); }
+function priDone() { return PRIORITY.filter(p=>checked[p.id]).length; }
+
+// ── Update header ─────────────────────────────────────────────
+function updateHeader() {
+  const pct = checkPct();
+  const cal = totalCal();
+  const rem = TARGET - cal;
+  const calPct = Math.min(100, Math.round((cal/TARGET)*100));
+
+  document.getElementById("header-date").textContent = todayFmt() + " · " + ROTATING[DOW].emoji + " " + ROTATING[DOW].label;
+  document.getElementById("check-pct").textContent = pct + "%";
+  document.getElementById("check-pct").style.color = pct>=80?"#97bc62":pct>=60?"#ffd166":"#ef476f";
+  document.getElementById("check-count").textContent = allItems().filter(i=>checked[i.id]).length + "/" + allItems().length + " done";
+  document.getElementById("check-label").textContent = scoreLabel(pct);
+  document.getElementById("cal-total").textContent = cal;
+  document.getElementById("cal-total").style.color = cal>TARGET?"#ef476f":cal>1300?"#97bc62":"#ffd166";
+  document.getElementById("cal-remaining").textContent = rem<0 ? (Math.abs(rem)+" OVER ⚠️") : (rem+" remaining");
+  document.getElementById("cal-remaining").style.color = rem<0?"#c62828":"#2e7d32";
+  document.getElementById("cal-bar").style.width = calPct+"%";
+  document.getElementById("cal-bar").style.background = cal>TARGET?"#ef476f":"#97bc62";
+}
+
+// ── Render Rotating Menu ──────────────────────────────────────
+function renderRotating() {
+  const rot = ROTATING[DOW];
+  const hdr = document.getElementById("rot-header");
+  hdr.style.background = rot.bg;
+  document.getElementById("rot-title").textContent = rot.emoji+" "+rot.label+" Special";
+  document.getElementById("rot-title").style.color = rot.ac;
+  const done = rot.items.filter(i=>checked[i.id]).length;
+  const badge = document.getElementById("rot-badge");
+  badge.textContent = done+"/"+rot.items.length;
+  badge.style.background = rot.ac;
+
+  const container = document.getElementById("rot-items");
+  container.innerHTML = "";
+  rot.items.forEach(item => {
+    const el = document.createElement("div");
+    el.className = "check-item" + (checked[item.id]?" done":"");
+    el.innerHTML = `
+      <div class="checkbox ${checked[item.id]?"checked":""}" style="--ac:${rot.ac}">
+        <svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="flex:1">
+        <div class="item-text ${checked[item.id]?"done":""}">${item.text}</div>
+        <div class="item-note">${item.note}</div>
+      </div>`;
+    el.addEventListener("click", () => { toggleItem(item.id); renderRotating(); renderPriority(); updateHeader(); });
+    container.appendChild(el);
+  });
+}
+
+// ── Render Priority ───────────────────────────────────────────
+function renderPriority() {
+  const done = priDone();
+  document.getElementById("pri-count").textContent = done;
+  const container = document.getElementById("priority-pills");
+  container.innerHTML = "";
+  PRIORITY.forEach(p => {
+    const el = document.createElement("button");
+    el.className = "priority-pill" + (checked[p.id]?" done":"");
+    el.innerHTML = `<span>${checked[p.id]?"✅":p.icon}</span><span class="label">${p.label}</span>`;
+    el.addEventListener("click", () => { toggleItem(p.id); renderPriority(); renderSections(); updateHeader(); });
+    container.appendChild(el);
+  });
+}
+
+// ── Render Sections ───────────────────────────────────────────
+function renderSections() {
+  const container = document.getElementById("sections-container");
+  container.innerHTML = "";
+  SECTIONS.forEach((sec, si) => {
+    const done = sec.items.filter(i=>checked[i.id]).length;
+    const isOpen = openSections.has(si);
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const hdr = document.createElement("div");
+    hdr.className = "card-header";
+    hdr.style.background = sec.bg;
+    hdr.innerHTML = `
+      <div>
+        <span class="card-header-title" style="color:${sec.ac}">${sec.label}</span>
+        <span class="card-header-time" style="color:${sec.ac}">${sec.time}</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="badge" style="background:${sec.ac}">${done}/${sec.items.length}</span>
+        <span class="chevron" style="color:${sec.ac}">${isOpen?"▲":"▼"}</span>
+      </div>`;
+    hdr.addEventListener("click", () => {
+      if(isOpen) openSections.delete(si); else openSections.add(si);
+      renderSections();
+    });
+
+    const itemsDiv = document.createElement("div");
+    itemsDiv.className = "card-items" + (isOpen?" open":"");
+
+    sec.items.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "check-item" + (checked[item.id]?" done":"");
+      el.innerHTML = `
+        <div class="checkbox ${checked[item.id]?"checked":""}" style="--ac:${sec.ac}">
+          <svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="item-text ${checked[item.id]?"done":""}">${item.text}</div>
+          <div class="item-note">${item.note}</div>
+        </div>`;
+      el.addEventListener("click", () => { toggleItem(item.id); renderSections(); renderPriority(); updateHeader(); });
+      itemsDiv.appendChild(el);
+    });
+
+    card.appendChild(hdr);
+    card.appendChild(itemsDiv);
+    container.appendChild(card);
+  });
+}
+
+// ── Toggle item ───────────────────────────────────────────────
+function toggleItem(id) {
+  checked[id] = !checked[id];
+  save();
+}
+
+// ── Reset checklist ───────────────────────────────────────────
+function resetChecklist() {
+  if(!confirm("Reset today's checklist?")) return;
+  checked = {};
+  save();
+  renderRotating(); renderPriority(); renderSections(); updateHeader();
+  showToast("Checklist reset ✓");
+}
+
+// ── Calorie tab ───────────────────────────────────────────────
+function renderCalTab() {
+  renderMealLog();
+  renderCatFilter();
+  renderPresets();
+}
+
+function renderMealLog() {
+  const cal = totalCal();
+  const rem = TARGET - cal;
+  const pct = Math.min(100, Math.round((cal/TARGET)*100));
+  document.getElementById("log-total-display").textContent = cal + " kcal";
+  document.getElementById("log-total-display").style.color = cal>TARGET?"#c62828":cal>1300?"#2e7d32":"#f57f17";
+  document.getElementById("log-bar").style.width = pct+"%";
+  document.getElementById("log-bar").style.background = cal>TARGET?"#c62828":"#2e7d32";
+  document.getElementById("log-remaining").textContent = rem<0?(Math.abs(rem)+" OVER ⚠️"):(rem+" remaining");
+  document.getElementById("log-remaining").style.color = rem<0?"#c62828":"#2e7d32";
+
+  const logEl = document.getElementById("meal-log");
+  if(meals.length===0) { logEl.innerHTML='<div class="empty-msg">No meals logged yet — tap any item below</div>'; return; }
+  logEl.innerHTML = "";
+  meals.forEach(m => {
+    const el = document.createElement("div");
+    el.className = "meal-entry";
+    el.innerHTML = `
+      <span class="meal-entry-emoji">${m.emoji}</span>
+      <div style="flex:1">
+        <div class="meal-entry-name">${m.name}</div>
+        <div class="meal-entry-time">${m.time}</div>
+      </div>
+      <span class="meal-entry-cal">${m.cal}</span>
+      <button class="meal-remove" onclick="removeMeal(${m.id})">×</button>`;
+    logEl.appendChild(el);
+  });
+}
+
+function renderCatFilter() {
+  const el = document.getElementById("cat-filter");
+  el.innerHTML = "";
+  CATS.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "cat-btn" + (currentCat===c?" active":"");
+    btn.textContent = c;
+    btn.addEventListener("click", () => { currentCat = c; renderCatFilter(); renderPresets(); });
+    el.appendChild(btn);
+  });
+}
+
+function renderPresets() {
+  const filtered = currentCat==="All" ? PRESETS : PRESETS.filter(p=>p.cat===currentCat);
+  const grid = document.getElementById("preset-grid");
+  grid.innerHTML = "";
+  filtered.forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "preset-btn";
+    btn.innerHTML = `
+      <span class="preset-emoji">${p.emoji}</span>
+      <div style="flex:1;min-width:0">
+        <div class="preset-name">${p.name}</div>
+        <div class="preset-cal">${p.cal} kcal</div>
+      </div>
+      <div class="preset-plus">+</div>`;
+    btn.addEventListener("click", () => { addMeal(p); showToast(p.name+" added ✓"); });
+    grid.appendChild(btn);
+  });
+}
+
+function addMeal(preset) {
+  meals.push({ id: Date.now(), name: preset.name, cal: preset.cal, emoji: preset.emoji, time: nowTime() });
+  save();
+  renderMealLog();
+  updateHeader();
+}
+
+function removeMeal(id) {
+  meals = meals.filter(m => m.id !== id);
+  save();
+  renderMealLog();
+  updateHeader();
+}
+
+function resetMeals() {
+  if(!confirm("Reset today's calorie log?")) return;
+  meals = [];
+  save();
+  renderMealLog();
+  updateHeader();
+  showToast("Calorie log reset ✓");
+}
+
+function toggleCustom() {
+  const form = document.getElementById("custom-form");
+  const chev = document.getElementById("custom-chevron");
+  const open = form.classList.toggle("open");
+  chev.textContent = open ? "▲" : "▼";
+}
+
+function addCustom() {
+  const name = document.getElementById("custom-name").value.trim();
+  const cal = parseInt(document.getElementById("custom-cal").value);
+  if(!name || isNaN(cal) || cal<=0) { showToast("Enter name and calories"); return; }
+  addMeal({ name, cal, emoji:"🍽️" });
+  document.getElementById("custom-name").value = "";
+  document.getElementById("custom-cal").value = "";
+  document.getElementById("custom-form").classList.remove("open");
+  document.getElementById("custom-chevron").textContent = "▼";
+  showToast(name+" added ✓");
+}
+
+// ── History tab ───────────────────────────────────────────────
+function renderHistory() {
+  const all = allItems();
+  const list = document.getElementById("history-list");
+  list.innerHTML = "";
+  const last7 = Array.from({length:7},(_,i)=>{
+    const dt=new Date(); dt.setDate(dt.getDate()-i);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+  }).reverse();
+
+  last7.forEach(date => {
+    const day = history[date];
+    const isToday = date===TODAY;
+    const sc = day ? Math.round((all.filter(i=>(day.checked||{})[i.id]).length/all.length)*100) : null;
+    const ca = day && day.meals ? day.meals.reduce((s,m)=>s+m.cal,0) : null;
+
+    const el = document.createElement("div");
+    el.className = "hist-day";
+    el.innerHTML = `
+      <div class="hist-day-header">
+        <span class="hist-day-name ${isToday?"today":""}">${isToday?"Today ←":fmtDate(date)}</span>
+        <div class="hist-scores">
+          <span class="hist-score" style="color:${sc===null?"#ddd":scoreColor(sc)}">✅ ${sc===null?"—":sc+"%"}</span>
+          <span class="hist-score" style="color:${ca===null?"#ddd":ca<=TARGET?"#2e7d32":"#c62828"}">🔥 ${ca===null?"—":ca}</span>
+        </div>
+      </div>
+      <div class="mini-bar-row">
+        <span class="mini-bar-icon">✅</span>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${sc||0}%;background:${scoreColor(sc||0)}"></div></div>
+      </div>
+      <div class="mini-bar-row">
+        <span class="mini-bar-icon">🔥</span>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.min(100,(ca/TARGET*100)||0)}%;background:${ca>TARGET?"#c62828":"#2e7d32"}"></div></div>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(i) {
+  document.querySelectorAll(".content").forEach((el,j)=>{
+    el.classList.toggle("active", i===j);
+  });
+  document.querySelectorAll(".tab-btn").forEach((el,j)=>{
+    el.classList.toggle("active", i===j);
+  });
+  if(i===1) renderCalTab();
+  if(i===2) renderHistory();
+}
+
+// ── PWA Install ───────────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("install-banner").classList.add("show");
+});
+document.getElementById("install-btn").addEventListener("click", async () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const result = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById("install-banner").classList.remove("show");
+});
+
+// ── Service Worker ────────────────────────────────────────────
+if("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+// ── Init ──────────────────────────────────────────────────────
+load();
+updateHeader();
+renderRotating();
+renderPriority();
+renderSections();
+</script>
+</body>
+</html>
