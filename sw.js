@@ -1,4 +1,4 @@
-const CACHE = "diet-tracker-v1";
+const CACHE = "diet-tracker-v4";
 const ASSETS = ["./index.html", "./manifest.json"];
 
 self.addEventListener("install", e => {
