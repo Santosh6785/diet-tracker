@@ -542,8 +542,14 @@ const ROTATING = {
 const SECTIONS = [
   {id:"morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#e8f5e9",ac:"#2e7d32",items:[{id:"c_lemon",text:"Warm lemon water + ½ lemon",note:"Vitamin C"},{id:"c_almonds",text:"6 soaked almonds",note:"Vitamin E"},{id:"c_walnuts",text:"2 walnuts",note:"Omega-3"},{id:"c_amla",text:"1 amla or guava",note:"Cortisol control"},{id:"c_sunlight",text:"15 min morning sunlight",note:"Free Vitamin D"}]},
   {id:"bfast",label:"🍳 Breakfast",time:"8:00–8:30 AM",bg:"#fff8e1",ac:"#f57f17",items:[{id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs"},{id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + protein"},{id:"c_til",text:"Til on roti/sabzi",note:"Calcium"},{id:"c_tea",text:"1 cup tea (mild sugar)",note:"Max 1 sugared tea"}]},
-  {id:"snack1",label:"🥜 Desk Snack",time:"11:30 AM",bg:"#e8f4fd",ac:"#1565c0",items:[{id:"c_chana",text:"Roasted chana 40g",note:"Iron + fibre"},{id:"c_fruit",text:"1 fruit — apple/guava/pear",note:"Vitamins"}]},
-  {id:"lunch",label:"🍱 Lunch",time:"2:00–2:30 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[{id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion"},{id:"c_dal",text:"1 katori dal",note:"Protein + iron"},{id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs"},{id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control"}]},
+  {id:"snack1",label:"🥜 Mid-Morning Snack",time:"11:30 AM",bg:"#e8f4fd",ac:"#1565c0",
+    officeOnly:true,
+    items:[{id:"c_chana",text:"Roasted chana 40g (carry from home)",note:"Iron + fibre"},{id:"c_fruit",text:"1 fruit — apple/guava/pear",note:"Vitamins"}],
+    weekendItems:[{id:"c_chana_wknd",text:"1 fruit or roasted chana at home",note:"Light snack before lunch"},{id:"c_fruit_wknd",text:"1 glass chaas/nimbu pani",note:"Hydration + digestion"}]},
+  {id:"lunch",label:"🍱 Lunch",time:"2:00–2:30 PM (office) / 1:00–1:30 PM (home)",bg:"#f3e5f5",ac:"#6a1b9a",
+    items:[{id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally"},{id:"c_dal",text:"1 katori dal",note:"Protein + iron"},{id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs"},{id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control"}],
+    sundayItems:[{id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally"},{id:"c_fishLunch",text:"Fish curry (rohu/katla) — no separate dal needed",note:"Fish IS your protein today"},{id:"c_portion",text:"Max 1 bowl rice only (fish is heavy)",note:"Reduced rice with fish"},{id:"c_fishSabzi",text:"1 light sabzi — turai/lauki only",note:"Keep it light alongside fish"}],
+    tuesdayDinnerNote:true},
   {id:"snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[{id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite"},{id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat"},{id:"c_noFried",text:"Avoided canteen fried snacks",note:"Zero maida"}]},
   {id:"dinner",label:"🥣 Dinner",time:"9:00–9:30 PM",bg:"#e8eaf6",ac:"#283593",items:[{id:"c_noRice",text:"NO rice at dinner ✅",note:"Most critical rule"},{id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar"},{id:"c_dDal",text:"1 katori dal",note:"Overnight protein"},{id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night"},{id:"c_curd",text:"1 bowl curd",note:"Calcium + probiotics"},{id:"c_isabgol",text:"Isabgol 1 tsp (30 min before dinner)",note:"Fibre + bloat"}]},
   {id:"postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[{id:"c_walk",text:"15–20 min walk after dinner",note:"Blood sugar -20%"},{id:"c_water",text:"Drank 8+ glasses water today",note:"Hydration check"},{id:"c_nolate",text:"Nothing after 10 PM",note:"Critical rule"},{id:"c_sleep",text:"Sleep by 11:30 PM",note:"Cortisol control"}]},
@@ -607,7 +613,15 @@ function saveSettings(){
 // ═══════════════ HELPERS ═══════════════
 const T=()=>userSettings.target||1550;
 const W=()=>userSettings.weight||80;
-function allItems(){return[...SECTIONS.flatMap(s=>s.items),...ROTATING[DOW].items];}
+function allItems(){
+  const isWeekend=(DOW===0||DOW===6);
+  const isSunday=DOW===0;
+  return[...SECTIONS.flatMap(s=>{
+    if(s.id==="snack1" && isWeekend) return s.weekendItems||s.items;
+    if(s.id==="lunch" && isSunday) return s.sundayItems||s.items;
+    return s.items;
+  }),...ROTATING[DOW].items];
+}
 function totalCal(){return meals.reduce((s,m)=>s+m.cal,0);}
 function totalBurned(){return exercises.reduce((s,e)=>s+e.burn,0)+(Math.round(stepCount*0.04));}
 function checkPct(){const a=allItems();return Math.round((a.filter(i=>checked[i.id]).length/a.length)*100);}
@@ -671,15 +685,57 @@ function renderPriority(){
 }
 function renderSections(){
   const c=document.getElementById("sec-container");c.innerHTML="";
+  const isWeekend = (DOW===0||DOW===6); // Sunday or Saturday
+  const isSunday = DOW===0;
+
   SECTIONS.forEach((sec,si)=>{
-    const done=sec.items.filter(i=>checked[i.id]).length;
+    // Desk snack: show weekend items on Sat/Sun, office items on weekdays
+    let activeItems = sec.items;
+    let sectionLabel = sec.label;
+    let sectionTime = sec.time;
+
+    if(sec.id==="snack1"){
+      if(isWeekend){
+        activeItems = sec.weekendItems || sec.items;
+        sectionLabel = "🍎 Mid-Morning Snack";
+        sectionTime = "11:00–11:30 AM (home)";
+      } else {
+        sectionLabel = "🥜 Desk Snack";
+        sectionTime = "11:30 AM (office)";
+      }
+    }
+
+    // Sunday lunch: fish curry day — replace dal/sabzi with fish-specific items
+    if(sec.id==="lunch" && isSunday){
+      activeItems = sec.sundayItems || sec.items;
+      sectionTime = "1:00–1:30 PM (home — eat earlier!)";
+    }
+
+    const done=activeItems.filter(i=>checked[i.id]).length;
     const open=openSections.has(si);
     const card=document.createElement("div");card.className="card";
     const hdr=document.createElement("div");hdr.className="sec-hdr";hdr.style.background=sec.bg;
-    hdr.innerHTML=`<div><span style="font-weight:bold;font-size:13px;color:${sec.ac}">${sec.label}</span><span style="font-size:11px;margin-left:8px;color:${sec.ac};opacity:.7">${sec.time}</span></div><div style="display:flex;gap:7px;align-items:center"><span class="badge" style="background:${sec.ac}">${done}/${sec.items.length}</span><span style="color:${sec.ac};font-size:11px">${open?"▲":"▼"}</span></div>`;
+    hdr.innerHTML=`<div><span style="font-weight:bold;font-size:13px;color:${sec.ac}">${sectionLabel}</span><span style="font-size:11px;margin-left:8px;color:${sec.ac};opacity:.7">${sectionTime}</span></div><div style="display:flex;gap:7px;align-items:center"><span class="badge" style="background:${sec.ac}">${done}/${activeItems.length}</span><span style="color:${sec.ac};font-size:11px">${open?"▲":"▼"}</span></div>`;
     hdr.addEventListener("click",()=>{if(open)openSections.delete(si);else openSections.add(si);renderSections();});
     const items=document.createElement("div");items.className="sec-items"+(open?" open":"");
-    sec.items.forEach(item=>{
+
+    // Add a note banner for Sunday lunch
+    if(sec.id==="lunch" && isSunday){
+      const note=document.createElement("div");
+      note.style.cssText="background:#e3f2fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
+      note.textContent="🐟 Sunday: Fish curry replaces dal — no separate dal needed today";
+      items.appendChild(note);
+    }
+
+    // Add weekend snack note
+    if(sec.id==="snack1" && isWeekend){
+      const note=document.createElement("div");
+      note.style.cssText="background:#e8f4fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
+      note.textContent="🏠 Holiday: No desk snack needed — have a light home snack instead";
+      items.appendChild(note);
+    }
+
+    activeItems.forEach(item=>{
       const el=document.createElement("div");
       el.className="chk-item"+(checked[item.id]?" done":"");
       el.innerHTML=`<div class="chkbox ${checked[item.id]?"on":""}" style="--ac:${sec.ac}"><svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="it-text ${checked[item.id]?"done":""}">${item.text}</div><div class="it-note">${item.note}</div></div>`;
