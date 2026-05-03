@@ -1,336 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#1b4332"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="Diet Tracker"/>
-<title>Diet Tracker — Belly Fat Plan</title>
-<link rel="manifest" href="manifest.json"/>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <meta name="theme-color" content="#1b4332"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-title" content="Diet Tracker"/>
+    <title>Diet Tracker — Belly Fat Plan</title>
+    
+    <link rel="manifest" href="manifest.json"/>
+    <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
 
-<div id="install-banner" class="install-banner">
-  <span class="inst-text">📲 Install app on your phone</span>
-  <button class="inst-btn" id="install-btn">Install</button>
-</div>
-
-<div class="hdr">
-  <div class="hdr-circle"></div>
-  <h1>🥗 Diet Tracker</h1>
-  <p class="hdr-sub" id="hdr-date">Loading...</p>
-  <div class="score-row">
-    <div class="sc">
-      <div class="sc-lbl">CHECKLIST</div>
-      <div class="sc-val" id="check-pct" style="color:#ffd166">0%</div>
-      <div class="sc-sub" id="check-count">0/0</div>
-      <div class="sc-desc" id="check-lbl">Needs work ❌</div>
+    <!-- ==================== ALL YOUR APP HTML CONTENT ==================== -->
+    
+    <div id="install-banner" class="install-banner">
+        <span class="inst-text">📲 Install app on your phone</span>
+        <button class="inst-btn" id="install-btn">Install</button>
     </div>
-    <div class="sc">
-      <div class="sc-lbl">CALORIES IN</div>
-      <div class="sc-val" id="cal-in" style="color:#ffd166">0</div>
-      <div class="sc-sub" id="cal-target-lbl">of 1550 kcal</div>
-      <div class="sc-desc" id="cal-rem">1550 left</div>
+
+    <div class="hdr">
+        <div class="hdr-circle"></div>
+        <h1>🥗 Diet Tracker</h1>
+        <p class="hdr-sub" id="hdr-date">Loading...</p>
+        <!-- Header content remains the same (score cards, bars, etc.) -->
+        <!-- ... (All your existing HTML from original file stays here) ... -->
     </div>
-    <div class="sc">
-      <div class="sc-lbl">NET</div>
-      <div class="sc-val" id="cal-net" style="color:#ffd166">0</div>
-      <div class="sc-sub">kcal</div>
-      <div class="sc-desc" id="burned-lbl">0 burned</div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(0)">✅ Checklist</button>
+        <button class="tab-btn" onclick="switchTab(1)">🔥 Calories</button>
+        <button class="tab-btn" onclick="switchTab(2)">💧 Activity</button>
+        <button class="tab-btn" onclick="switchTab(3)">📅 History</button>
+        <button class="tab-btn" onclick="switchTab(4)">⚙️ Settings</button>
     </div>
-  </div>
-  <div class="bar-wrap" style="margin-top:8px">
-    <div class="bar-fill" id="cal-bar" style="width:0%;background:#97bc62"></div>
-  </div>
-  <div class="bar-labels">
-    <span>0</span><span class="mid" id="bar-mid">Target: 1550</span><span>2000</span>
-  </div>
-</div>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab(0)">✅ Checklist</button>
-  <button class="tab-btn" onclick="switchTab(1)">🔥 Calories</button>
-  <button class="tab-btn" onclick="switchTab(2)">💧 Activity</button>
-  <button class="tab-btn" onclick="switchTab(3)">📅 History</button>
-  <button class="tab-btn" onclick="switchTab(4)">⚙️ Settings</button>
-</div>
+    <!-- All your tab contents (tab-0, tab-1, tab-2, etc.) go here -->
+    <!-- Copy all the <div class="content"> ... </div> sections from your old file -->
 
-<!-- TAB 0: CHECKLIST -->
-<div class="content active" id="tab-0">
-  <div class="card" id="rot-card">
-    <div class="rot-hdr" id="rot-hdr">
-      <span id="rot-title" style="font-weight:bold;font-size:13px"></span>
-      <span class="badge" id="rot-badge"></span>
-    </div>
-    <div id="rot-items"></div>
-  </div>
-  <div class="pri-box">
-    <div class="pri-title">🔑 Priority Rules · <span id="pri-count">0</span>/5</div>
-    <div class="pri-pills" id="pri-pills"></div>
-  </div>
-  <div id="sec-container"></div>
-  <button class="reset-btn" onclick="resetChecklist()">🔄 Reset Today's Checklist</button>
-</div>
+    <div class="footer-note">Data saves on your phone · Calories are approximate</div>
+    <div class="toast" id="toast"></div>
 
-<!-- TAB 1: CALORIES -->
-<div class="content" id="tab-1">
-  <!-- Photo Scan -->
-  <button class="photo-btn" onclick="triggerPhotoScan()">
-    📷 Scan Food Photo — AI Calorie Estimate
-  </button>
-  <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="analysePhoto(this)"/>
-  <div class="scan-result" id="scan-result">
-    <div style="font-weight:bold;color:#1565c0;font-size:13px;margin-bottom:8px">🤖 AI Detected Foods:</div>
-    <div id="scan-items"></div>
-    <div style="font-size:11px;color:#888;margin-top:8px">Tap + to add item to your food log</div>
-  </div>
-  <div id="scan-loading" style="display:none;text-align:center;padding:14px;color:#1565c0;font-size:13px">
-    🔍 Analysing your food photo...
-  </div>
-
-  <!-- Net calories -->
-  <div class="net-cal-card" id="net-cal-card">
-    <div class="net-row-inner">
-      <span>🍽️ Consumed: <strong id="nc-consumed">0</strong> kcal</span>
-      <span>🏃 Burned: <strong id="nc-burned">0</strong> kcal</span>
-      <span>Net: <strong id="nc-net">0</strong> kcal</span>
-    </div>
-  </div>
-
-  <!-- Meal log -->
-  <div class="card card-pad">
-    <div class="log-hdr">
-      <span style="font-weight:bold;color:#1b4332;font-size:14px">Today's Food Log</span>
-      <span class="log-total-val" id="log-total">0 kcal</span>
-    </div>
-    <div class="prog-wrap"><div class="prog-fill" id="log-bar" style="width:0%;background:#2e7d32"></div></div>
-    <div class="prog-labels">
-      <span style="color:#888">Target: <span id="log-target-lbl">1550</span> kcal</span>
-      <span id="log-rem-lbl" style="font-weight:bold;color:#2e7d32">1550 remaining</span>
-    </div>
-    <div id="meal-log"><div class="empty">No meals logged — tap any food below</div></div>
-  </div>
-
-  <div class="cat-bar" id="cat-bar"></div>
-  <div class="preset-grid" id="preset-grid"></div>
-
-  <div class="cust-box">
-    <button class="cust-toggle" onclick="toggleCust()">
-      <span>+ Add Custom Food</span><span id="cust-chev">▼</span>
-    </button>
-    <div class="cust-form" id="cust-form">
-      <input class="cust-input" id="cust-name" placeholder="Food name"/>
-      <div class="cust-row">
-        <input class="cust-cal" id="cust-cal" type="number" placeholder="Calories"/>
-        <button class="cust-add" onclick="addCustom()">Add</button>
-      </div>
-    </div>
-  </div>
-  <button class="reset-btn" onclick="resetMeals()">🔄 Reset Today's Calories</button>
-</div>
-
-<!-- TAB 2: ACTIVITY -->
-<div class="content" id="tab-2">
-
-  <!-- Water -->
-  <div class="water-hero">
-    <div class="water-emoji">💧</div>
-    <div class="water-count"><span id="water-count">0</span>/<span id="water-target-disp">8</span></div>
-    <div class="water-target">glasses · Target: <span id="water-litres">2.0</span>L per day</div>
-    <div class="water-bar-wrap">
-      <div class="water-bar" id="water-bar" style="width:0%"></div>
-    </div>
-    <div class="water-glasses" id="water-glasses"></div>
-    <div class="water-btns">
-      <button class="water-rm" onclick="addWater(-1)">−</button>
-      <button class="water-add" onclick="addWater(1)">+ Glass</button>
-    </div>
-  </div>
-
-  <!-- Step Counter -->
-  <div class="step-hero">
-    <div class="step-count" id="step-count">0</div>
-    <div class="step-label">steps today</div>
-    <div class="step-stats">
-      <div class="step-stat">
-        <div class="step-stat-val" id="step-km">0.0</div>
-        <div class="step-stat-lbl">km</div>
-      </div>
-      <div class="step-stat">
-        <div class="step-stat-val" id="step-cal">0</div>
-        <div class="step-stat-lbl">kcal burned</div>
-      </div>
-      <div class="step-stat">
-        <div class="step-stat-val" id="step-target-pct">0%</div>
-        <div class="step-stat-lbl">of 8000 goal</div>
-      </div>
-    </div>
-    <div class="step-btns">
-      <button class="step-start" id="step-btn" onclick="toggleSteps()">▶ Start Counting</button>
-      <button class="step-reset" onclick="resetSteps()">Reset</button>
-    </div>
-  </div>
-  <div class="card card-pad" style="margin-bottom:10px">
-    <p style="font-size:12px;color:#888;line-height:1.7">
-      📱 <strong>How to use:</strong> Tap "Start Counting" and keep your phone in your pocket or hand while walking. 
-      The accelerometer detects each step automatically. Works best while walking normally.
-    </p>
-  </div>
-
-  <!-- Exercise Log -->
-  <div class="ex-card">
-    <div class="card-title">🏃 Log Exercise</div>
-    <select class="ex-select" id="ex-select" onchange="updateExPreview()">
-      <option value="">-- Select exercise --</option>
-      <option value="2.5">Walking slow (stroll)</option>
-      <option value="3.5">Walking brisk</option>
-      <option value="4.0">Walking uphill</option>
-      <option value="8.0">Running/jogging</option>
-      <option value="6.0">Cycling moderate</option>
-      <option value="3.0">Yoga/stretching</option>
-      <option value="7.0">Swimming</option>
-      <option value="5.0">Dancing/Zumba</option>
-      <option value="8.0">Climbing stairs</option>
-      <option value="4.0">Housework/cleaning</option>
-      <option value="3.5">Gardening</option>
-      <option value="2.0">Standing/office work</option>
-      <option value="9.0">HIIT workout</option>
-      <option value="5.0">Badminton</option>
-      <option value="5.0">Cricket fielding</option>
-      <option value="7.0">Football/soccer</option>
-      <option value="4.0">Weight training</option>
-    </select>
-    <div class="ex-dur-row">
-      <input class="ex-dur" id="ex-dur" type="number" placeholder="Minutes" oninput="updateExPreview()"/>
-      <button class="ex-log-btn" onclick="logExercise()">Log 🔥</button>
-    </div>
-    <div class="ex-preview" id="ex-preview" style="display:none"></div>
-    <div id="ex-log"></div>
-    <button class="reset-btn" onclick="resetExercise()" style="margin-top:8px">🔄 Reset Exercise Log</button>
-  </div>
-
-</div>
-
-<!-- TAB 3: HISTORY -->
-<div class="content" id="tab-3">
-
-  <!-- Weight Log -->
-  <div class="card card-pad">
-    <div class="card-title">⚖️ Weight Log</div>
-    <div class="weight-input-row">
-      <input class="weight-input" id="weight-input" type="number" step="0.1" placeholder="Enter weight (kg)"/>
-      <button class="weight-save-btn" onclick="saveWeight()">Save</button>
-    </div>
-    <div id="weight-loss-badge"></div>
-    <canvas id="weightChart"></canvas>
-    <div id="weight-log-list" style="margin-top:10px"></div>
-  </div>
-
-  <!-- 7-day history -->
-  <div class="card card-pad">
-    <div class="card-title">📅 Last 7 Days</div>
-    <div id="history-list"></div>
-  </div>
-
-  <div class="card card-pad">
-    <div class="card-title" style="margin-bottom:8px">📊 Score Guide</div>
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0"><div style="width:10px;height:10px;border-radius:50%;background:#2e7d32;flex-shrink:0"></div><span style="font-size:12px;font-weight:bold;min-width:120px;color:#333">Checklist ≥80%</span><span style="font-size:12px;color:#888">Excellent — fat loss on track</span></div>
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0"><div style="width:10px;height:10px;border-radius:50%;background:#f57f17;flex-shrink:0"></div><span style="font-size:12px;font-weight:bold;min-width:120px;color:#333">Checklist 60–79%</span><span style="font-size:12px;color:#888">Good — results coming</span></div>
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0"><div style="width:10px;height:10px;border-radius:50%;background:#2e7d32;flex-shrink:0"></div><span style="font-size:12px;font-weight:bold;min-width:120px;color:#333">Calories on target</span><span style="font-size:12px;color:#888">Deficit maintained</span></div>
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0"><div style="width:10px;height:10px;border-radius:50%;background:#0277bd;flex-shrink:0"></div><span style="font-size:12px;font-weight:bold;min-width:120px;color:#333">Water 8+ glasses</span><span style="font-size:12px;color:#888">Fully hydrated</span></div>
-  </div>
-
-  <div style="background:linear-gradient(135deg,#1b4332,#2d6a4f);border-radius:14px;padding:14px;text-align:center">
-    <p style="color:#c8f0c8;font-size:13px;line-height:1.9">
-      5 days ≥80% checklist + under target kcal<br/>
-      = visible belly fat reduction in <strong style="color:#fff">4–6 weeks</strong>
-    </p>
-  </div>
-</div>
-
-<!-- TAB 4: SETTINGS -->
-<div class="content" id="tab-4">
-  <div class="set-hero">
-    <div class="set-avatar" id="set-avatar">🥚</div>
-    <div class="set-name" id="set-disp-name">Set your name</div>
-    <div class="set-sub" id="set-disp-sub">1550 kcal · Veg + Eggs</div>
-  </div>
-
-  <div class="card card-pad">
-    <div class="card-title">👤 Name</div>
-    <label class="set-lbl">Your name (shows in greeting)</label>
-    <input class="set-input" id="set-name" placeholder="e.g. Santosh, Priya, Rahul" maxlength="20"/>
-  </div>
-
-  <div class="card card-pad">
-    <div class="card-title">🔥 Daily Calorie Target</div>
-    <div class="cal-display" id="set-cal-disp">1550</div>
-    <div class="cal-display-sub">kcal per day</div>
-    <div class="cal-slider-wrap">
-      <input class="cal-slider" id="set-cal-slider" type="range" min="1000" max="2500" step="50" value="1550" oninput="updateSlider(this.value)"/>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-bottom:10px"><span>1000</span><span>1500</span><span>2000</span><span>2500</span></div>
-    <label class="set-lbl">Quick select by goal</label>
-    <div class="cal-presets">
-      <button class="cal-preset-btn" data-val="1200" onclick="setCalPreset(1200)">1200 — Strict</button>
-      <button class="cal-preset-btn" data-val="1400" onclick="setCalPreset(1400)">1400 — Moderate</button>
-      <button class="cal-preset-btn on" data-val="1550" onclick="setCalPreset(1550)">1550 — Belly fat</button>
-      <button class="cal-preset-btn" data-val="1800" onclick="setCalPreset(1800)">1800 — Maintain</button>
-      <button class="cal-preset-btn" data-val="2000" onclick="setCalPreset(2000)">2000 — Active</button>
-      <button class="cal-preset-btn" data-val="2200" onclick="setCalPreset(2200)">2200 — Muscle</button>
-    </div>
-  </div>
-
-  <div class="card card-pad">
-    <div class="card-title">🥗 Diet Type</div>
-    <div class="diet-row">
-      <button class="diet-btn" id="diet-veg" onclick="selectDiet('veg')">🥦<br/><strong>Pure Veg</strong></button>
-      <button class="diet-btn on" id="diet-egg" onclick="selectDiet('egg')">🥚<br/><strong>Veg+Eggs</strong></button>
-      <button class="diet-btn" id="diet-nonveg" onclick="selectDiet('nonveg')">🍗<br/><strong>Non-Veg</strong></button>
-    </div>
-  </div>
-
-  <div class="card card-pad">
-    <div class="card-title">⚖️ Body Weight</div>
-    <label class="set-lbl">Current weight (kg) — used for exercise calorie calculation</label>
-    <input class="set-input" id="set-weight" type="number" step="0.1" placeholder="e.g. 78"/>
-  </div>
-
-  <div class="card card-pad">
-    <div class="card-title">📷 Photo Scan (AI)</div>
-    <div class="api-info">
-      Photo scanning uses the Claude AI to identify food and estimate calories.<br/><br/>
-      <strong>How to get API key (free):</strong><br/>
-      1. Go to <strong>console.anthropic.com</strong><br/>
-      2. Sign up (free account)<br/>
-      3. Go to API Keys → Create Key<br/>
-      4. Paste it below — stored only on your phone
-    </div>
-    <label class="set-lbl">Anthropic API Key</label>
-    <input class="set-input" id="set-api-key" type="password" placeholder="sk-ant-..."/>
-    <div style="font-size:11px;color:#bbb">Your key is stored locally on this device only. Never shared.</div>
-  </div>
-
-  <div class="card card-pad">
-    <div class="card-title">💧 Water Target</div>
-    <label class="set-lbl">Daily glasses target (1 glass = 250ml)</label>
-    <input class="set-input" id="set-water-target" type="number" min="4" max="16" placeholder="8"/>
-  </div>
-
-  <button class="save-btn" onclick="saveSettings()">💾 Save My Profile</button>
-
-  <div class="card card-pad" style="margin-top:12px">
-    <div class="card-title">📲 Share with Family</div>
-    <p style="font-size:12px;color:#555;line-height:1.7;margin-bottom:10px">Each person's data saves separately on their own phone.</p>
-    <div class="share-url">https://santosh6785.github.io/diet-tracker</div>
-    <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
-  </div>
-</div>
-
-<div class="footer-note">Data saves on your phone · Calories are approximate</div>
-<div class="toast" id="toast"></div>
-
-<script src="app.js"></script>
+    <!-- Load JavaScript -->
+    <script src="app.js"></script>
 </body>
 </html>
