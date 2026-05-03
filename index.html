@@ -10,7 +10,44 @@
 <link rel="manifest" href="manifest.json"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Georgia','Palatino',serif;background:#f4f6f4;min-height:100vh;padding-bottom:70px;overscroll-behavior:none;}
+
+/* ── Dark Mode ── */
+:root{
+  --bg:#f4f6f4;--card:#fff;--text:#222;--text2:#555;--text3:#888;
+  --border:#e0e0e0;--input-bg:#fff;--preset-bg:#fff;--empty:#ccc;
+  --hdr1:#1b4332;--hdr2:#2d6a4f;--hdr3:#40916c;
+}
+body.dark{
+  --bg:#121212;--card:#1e1e1e;--text:#eee;--text2:#bbb;--text3:#888;
+  --border:#333;--input-bg:#2a2a2a;--preset-bg:#2a2a2a;--empty:#555;
+  --hdr1:#0d2b1e;--hdr2:#1b4332;--hdr3:#2d6a4f;
+}
+body{font-family:'Georgia','Palatino',serif;background:var(--bg);min-height:100vh;padding-bottom:70px;overscroll-behavior:none;transition:background .3s;}
+
+/* Dark mode overrides */
+body.dark .card,.dark .cust-box,.dark .ex-card,.dark .net-cal-card{background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.3);}
+body.dark .tabs,.dark .tab-btn{background:var(--card);color:var(--text3);}
+body.dark .tab-btn.active{color:#97bc62;border-bottom-color:#97bc62;}
+body.dark .it-text{color:var(--text);}
+body.dark .card-title{color:#97bc62;}
+body.dark .set-input,.dark .cust-input,.dark .cust-cal,.dark .ex-select,.dark .ex-dur,.dark .weight-input{background:var(--input-bg);color:var(--text);border-color:var(--border);}
+body.dark .preset-card{background:var(--preset-bg);box-shadow:0 1px 5px rgba(0,0,0,.3);}
+body.dark .p-name{color:var(--text);}
+body.dark .cat-btn{background:var(--preset-bg);color:var(--text2);}
+body.dark .hist-name{color:var(--text2);}
+body.dark .weight-log-row{color:var(--text2);}
+body.dark .chk-item.done{background:rgba(255,255,255,.03);}
+body.dark .chk-item{border-bottom-color:#2a2a2a;}
+body.dark .sec-items .chk-item{border-bottom-color:#2a2a2a;}
+body.dark .meal-name{color:var(--text);}
+body.dark .prog-wrap,.dark .mini-bar-track,.dark .bar-wrap{background:#333;}
+body.dark .footer-note{color:#555;}
+body.dark .search-input{background:var(--input-bg);color:var(--text);border-color:var(--border);}
+body.dark .diet-btn{background:var(--input-bg);border-color:var(--border);color:var(--text);}
+
+/* Dark mode toggle button */
+.dark-toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.15);border:none;border-radius:20px;padding:5px 10px;color:#fff;font-size:14px;cursor:pointer;z-index:10;}
+
 button{cursor:pointer;font-family:inherit;border:none;outline:none;}
 input,select,textarea{font-family:inherit;outline:none;}
 /* Header */
@@ -191,6 +228,15 @@ canvas#weightChart{width:100%;height:160px;display:block;border-radius:8px;}
 .net-bar-wrap{background:#f0f0f0;border-radius:8px;height:10px;overflow:hidden;}
 .net-bar-consumed{height:100%;background:#2e7d32;border-radius:8px;transition:width .4s;float:left;}
 .net-bar-burned{height:100%;background:#e65100;border-radius:8px;transition:width .4s;float:left;}
+/* Search bar */
+.search-wrap{position:relative;margin-bottom:10px;}
+.search-input{width:100%;padding:10px 14px 10px 36px;border-radius:20px;border:1.5px solid #e0e0e0;font-size:13px;background:#fff;font-family:inherit;}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#aaa;pointer-events:none;}
+.search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;color:#aaa;background:none;border:none;cursor:pointer;display:none;}
+.search-clear.show{display:block;}
+/* Export button */
+.export-btn{width:100%;padding:12px;background:#fff;border:1.5px solid #1b4332;border-radius:12px;color:#1b4332;font-size:13px;font-weight:bold;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+body.dark .export-btn{background:var(--input-bg);border-color:#2d6a4f;color:#97bc62;}
 /* Toast + install */
 .install-banner{background:#ff6b35;padding:10px 14px;display:none;justify-content:space-between;align-items:center;}
 .install-banner.show{display:flex;}
@@ -210,6 +256,7 @@ canvas#weightChart{width:100%;height:160px;display:block;border-radius:8px;}
 
 <div class="hdr">
   <div class="hdr-circle"></div>
+  <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">🌙</button>
   <h1>🥗 Diet Tracker</h1>
   <p class="hdr-sub" id="hdr-date">Loading...</p>
   <div class="score-row">
@@ -305,6 +352,15 @@ canvas#weightChart{width:100%;height:160px;display:block;border-radius:8px;}
   </div>
 
   <div class="cat-bar" id="cat-bar"></div>
+
+  <!-- Search bar -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="food-search" placeholder="Search food... e.g. chicken, dal, roti"
+      oninput="onSearchInput(this.value)"/>
+    <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+  </div>
+
   <div class="preset-grid" id="preset-grid"></div>
 
   <div class="cust-box">
@@ -512,9 +568,29 @@ canvas#weightChart{width:100%;height:160px;display:block;border-radius:8px;}
 
   <button class="save-btn" onclick="saveSettings()">💾 Save My Profile</button>
 
+  <!-- Dark Mode -->
+  <div class="card card-pad" style="margin-top:12px">
+    <div class="card-title">🌙 Dark Mode</div>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Easier on eyes at night. Toggle anytime from the moon button in the header.</p>
+    <button class="save-btn" onclick="toggleDark()" style="background:#2c3e50">
+      🌙 Toggle Dark / Light Mode
+    </button>
+  </div>
+
+  <!-- Data Export -->
+  <div class="card card-pad" style="margin-top:12px">
+    <div class="card-title">📤 Export & Backup</div>
+    <p style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px">
+      Export your food log, checklist history and weight data to CSV. Save it to Google Drive or WhatsApp to yourself as a backup.
+    </p>
+    <button class="export-btn" onclick="exportCSV('meals')">📊 Export Food Log (CSV)</button>
+    <button class="export-btn" onclick="exportCSV('weight')">⚖️ Export Weight Log (CSV)</button>
+    <button class="export-btn" onclick="exportCSV('all')">💾 Export Everything (JSON)</button>
+  </div>
+
   <div class="card card-pad" style="margin-top:12px">
     <div class="card-title">📲 Share with Family</div>
-    <p style="font-size:12px;color:#555;line-height:1.7;margin-bottom:10px">Each person's data saves separately on their own phone.</p>
+    <p style="font-size:12px;color:#888;line-height:1.7;margin-bottom:10px">Each person's data saves separately on their own phone.</p>
     <div class="share-url">https://santosh6785.github.io/diet-tracker</div>
     <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
   </div>
@@ -829,8 +905,14 @@ function renderCatBar(){
   });
 }
 function renderPresets(){
-  const filtered=currentCat==="All"?PRESETS:PRESETS.filter(p=>p.cat===currentCat);
+  let filtered = searchQuery
+    ? PRESETS.filter(p=>p.name.toLowerCase().includes(searchQuery)||p.cat.toLowerCase().includes(searchQuery))
+    : (currentCat==="All"?PRESETS:PRESETS.filter(p=>p.cat===currentCat));
   const g=document.getElementById("preset-grid");g.innerHTML="";
+  if(filtered.length===0){
+    g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:#aaa;font-size:13px;padding:20px">No results for "${searchQuery}"</div>`;
+    return;
+  }
   filtered.forEach(p=>{
     const btn=document.createElement("button");btn.className="preset-card";
     btn.innerHTML=`<span class="p-emoji">${p.emoji}</span><div style="flex:1;min-width:0"><div class="p-name">${p.name}</div><div class="p-cal">${p.cal} kcal</div></div><div class="p-plus">+</div>`;
@@ -1028,7 +1110,88 @@ function setCalPreset(val){document.getElementById("set-cal-slider").value=val;u
 function selectDiet(d){["veg","egg","nonveg"].forEach(x=>document.getElementById("diet-"+x).classList.toggle("on",x===d));}
 function copyLink(){const url="https://santosh6785.github.io/diet-tracker";navigator.clipboard?navigator.clipboard.writeText(url).then(()=>showToast("Link copied ✓")).catch(()=>{}):showToast("Copy: "+url);}
 
-// ═══════════════ TABS ═══════════════
+// ═══════════════ DARK MODE ═══════════════
+function toggleDark(){
+  const isDark = document.body.classList.toggle("dark");
+  document.getElementById("dark-toggle").textContent = isDark ? "☀️" : "🌙";
+  try{ localStorage.setItem("diet_dark", isDark?"1":"0"); }catch(e){}
+}
+function loadDarkMode(){
+  try{
+    const d = localStorage.getItem("diet_dark");
+    if(d==="1"){ document.body.classList.add("dark"); document.getElementById("dark-toggle").textContent="☀️"; }
+  }catch(e){}
+}
+
+// ═══════════════ FOOD SEARCH ═══════════════
+let searchQuery = "";
+function onSearchInput(val){
+  searchQuery = val.trim().toLowerCase();
+  document.getElementById("search-clear").classList.toggle("show", searchQuery.length>0);
+  // Hide category bar when searching
+  document.getElementById("cat-bar").style.display = searchQuery ? "none" : "flex";
+  renderPresets();
+}
+function clearSearch(){
+  document.getElementById("food-search").value="";
+  searchQuery="";
+  document.getElementById("search-clear").classList.remove("show");
+  document.getElementById("cat-bar").style.display="flex";
+  renderPresets();
+}
+
+// ═══════════════ DATA EXPORT ═══════════════
+function exportCSV(type){
+  let content="", filename="", mimeType="text/csv";
+
+  if(type==="meals"){
+    // Export all meal logs across all days
+    const rows=[["Date","Food Item","Calories","Time"]];
+    Object.entries(history).sort().forEach(([date,day])=>{
+      (day.meals||[]).forEach(m=>{
+        rows.push([date, m.name, m.cal, m.time||""]);
+      });
+    });
+    content = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    filename = "diet-tracker-food-log.csv";
+  }
+  else if(type==="weight"){
+    // Export weight log
+    try{
+      const wdata = JSON.parse(localStorage.getItem(WEIGHT_KEY)||"[]");
+      const rows=[["Date","Weight (kg)","Note"]];
+      wdata.forEach(w=>rows.push([w.date, w.weight, w.note||""]));
+      content = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    }catch(e){ content='Date,Weight\n'; }
+    filename = "diet-tracker-weight-log.csv";
+  }
+  else if(type==="all"){
+    // Export everything as JSON
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      settings: userSettings,
+      history: history,
+      weightLog: JSON.parse(localStorage.getItem(WEIGHT_KEY)||"[]"),
+    };
+    content = JSON.stringify(exportData, null, 2);
+    filename = "diet-tracker-full-backup.json";
+    mimeType = "application/json";
+  }
+
+  if(!content){ showToast("No data to export yet"); return; }
+
+  // Create download
+  const blob = new Blob([content], {type: mimeType});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(filename+" downloaded ✓");
+}
+
+
 function switchTab(i){
   document.querySelectorAll(".content").forEach((el,j)=>el.classList.toggle("active",i===j));
   document.querySelectorAll(".tab-btn").forEach((el,j)=>el.classList.toggle("active",i===j));
@@ -1046,6 +1209,7 @@ if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch
 
 // ═══════════════ INIT ═══════════════
 loadAll();
+loadDarkMode();
 updateHeader();
 renderRotating();
 renderPriority();
