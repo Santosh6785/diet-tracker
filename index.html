@@ -589,10 +589,15 @@ body.dark .export-btn{background:var(--input-bg);border-color:#2d6a4f;color:#97b
   </div>
 
   <div class="card card-pad" style="margin-top:12px">
-    <div class="card-title">📲 Share with Family</div>
-    <p style="font-size:12px;color:#888;line-height:1.7;margin-bottom:10px">Each person's data saves separately on their own phone.</p>
+    <div class="card-title">📲 Install & Share</div>
+    <p style="font-size:12px;color:#888;line-height:1.7;margin-bottom:10px">
+      Install this app on your home screen or share with family.
+    </p>
+    <button class="save-btn" id="install-btn-settings" onclick="installApp()" style="background:#ff6b35;margin-bottom:10px">
+      📲 Install on This Phone
+    </button>
     <div class="share-url">https://santosh6785.github.io/diet-tracker</div>
-    <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
+    <button class="copy-btn" onclick="copyLink()">📋 Copy Link to Share</button>
   </div>
 </div>
 
@@ -1203,8 +1208,35 @@ function switchTab(i){
 
 // ═══════════════ PWA INSTALL ═══════════════
 let deferredPrompt;
-window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;document.getElementById("install-banner").classList.add("show");});
-document.getElementById("install-btn").addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById("install-banner").classList.remove("show");});
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById("install-banner").classList.add("show");
+});
+document.getElementById("install-btn").addEventListener("click",async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  document.getElementById("install-banner").classList.remove("show");
+});
+async function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    if(result.outcome==="accepted"){
+      deferredPrompt=null;
+      document.getElementById("install-banner").classList.remove("show");
+      showToast("App installed successfully ✓");
+    }
+  } else {
+    // Already installed or browser doesn't support — show manual instructions
+    showToast("Open in Chrome → 3 dots → Add to Home Screen");
+    setTimeout(()=>{
+      alert("To install:\n\n1. Open this page in Chrome browser\n2. Tap the 3 dots ⋮ (top right)\n3. Tap 'Add to Home Screen'\n4. Tap 'Install'\n\nIf already installed, the app is on your home screen!");
+    }, 500);
+  }
+}
 if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 
 // ═══════════════ INIT ═══════════════
