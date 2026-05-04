@@ -237,6 +237,24 @@ canvas#weightChart{width:100%;height:160px;display:block;border-radius:8px;}
 /* Export button */
 .export-btn{width:100%;padding:12px;background:#fff;border:1.5px solid #1b4332;border-radius:12px;color:#1b4332;font-size:13px;font-weight:bold;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
 body.dark .export-btn{background:var(--input-bg);border-color:#2d6a4f;color:#97bc62;}
+/* ── Macros ── */
+.macro-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+body.dark .macro-card{background:var(--card);}
+.macro-title{font-weight:bold;color:#1b4332;font-size:13px;margin-bottom:10px;}
+body.dark .macro-title{color:#97bc62;}
+.macro-row{display:flex;gap:8px;}
+.macro-item{flex:1;text-align:center;background:#f8f8f8;border-radius:10px;padding:8px 4px;}
+body.dark .macro-item{background:#2a2a2a;}
+.macro-val{font-weight:bold;font-size:16px;color:#1b4332;}
+body.dark .macro-val{color:#97bc62;}
+.macro-lbl{font-size:9px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.macro-bar-wrap{margin-top:6px;background:#f0f0f0;border-radius:4px;height:4px;overflow:hidden;}
+body.dark .macro-bar-wrap{background:#333;}
+.macro-bar-fill{height:100%;border-radius:4px;transition:width .4s;}
+/* ── Favorites ── */
+.fav-btn{background:none;border:none;font-size:16px;padding:2px;flex-shrink:0;line-height:1;opacity:.35;transition:opacity .2s;}
+.fav-btn.on{opacity:1;}
+.fav-empty{text-align:center;padding:24px;color:#aaa;font-size:13px;grid-column:1/-1;line-height:1.7;}
 /* ── Onboarding ── */
 .onboard-overlay{position:fixed;inset:0;background:#1b4332;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;}
 .onboard-overlay.hide{opacity:0;pointer-events:none;}
@@ -447,6 +465,34 @@ canvas.chart{width:100%;height:140px;display:block;}
     <input class="search-input" id="food-search" placeholder="Search food... e.g. chicken, dal, roti"
       oninput="onSearchInput(this.value)"/>
     <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+  </div>
+
+  <!-- Macros summary -->
+  <div class="macro-card" id="macro-card">
+    <div class="macro-title">📊 Today's Macros</div>
+    <div class="macro-row">
+      <div class="macro-item">
+        <div class="macro-val" id="m-protein">0g</div>
+        <div class="macro-lbl">Protein</div>
+        <div class="macro-bar-wrap"><div class="macro-bar-fill" id="mb-protein" style="width:0%;background:#1565c0"></div></div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-val" id="m-carbs">0g</div>
+        <div class="macro-lbl">Carbs</div>
+        <div class="macro-bar-wrap"><div class="macro-bar-fill" id="mb-carbs" style="width:0%;background:#f57f17"></div></div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-val" id="m-fat">0g</div>
+        <div class="macro-lbl">Fat</div>
+        <div class="macro-bar-wrap"><div class="macro-bar-fill" id="mb-fat" style="width:0%;background:#c62828"></div></div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-val" id="m-fiber">0g</div>
+        <div class="macro-lbl">Fibre</div>
+        <div class="macro-bar-wrap"><div class="macro-bar-fill" id="mb-fiber" style="width:0%;background:#2e7d32"></div></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#bbb;margin-top:8px;text-align:center">Targets: Protein 60g · Carbs 180g · Fat 50g · Fibre 25g</div>
   </div>
 
   <div class="preset-grid" id="preset-grid"></div>
@@ -759,15 +805,15 @@ const PRIORITY = [
 const PRESETS = [
   {name:"Milk tea with sugar",cal:65,emoji:"☕",cat:"Drinks"},{name:"Milk tea mild sugar",cal:50,emoji:"☕",cat:"Drinks"},{name:"Milk tea no sugar",cal:35,emoji:"☕",cat:"Drinks"},{name:"Green tea",cal:5,emoji:"🍵",cat:"Drinks"},{name:"Black coffee no sugar",cal:5,emoji:"☕",cat:"Drinks"},{name:"Black coffee with sugar",cal:30,emoji:"☕",cat:"Drinks"},{name:"Lemon water",cal:10,emoji:"🍋",cat:"Drinks"},{name:"Milk 250ml full fat",cal:150,emoji:"🥛",cat:"Drinks"},{name:"Milk 250ml toned",cal:120,emoji:"🥛",cat:"Drinks"},{name:"Buttermilk/chaas",cal:35,emoji:"🥛",cat:"Drinks"},{name:"Sweet lassi 1 glass",cal:180,emoji:"🥛",cat:"Drinks"},{name:"Salted lassi 1 glass",cal:120,emoji:"🥛",cat:"Drinks"},{name:"Coconut water 1 glass",cal:45,emoji:"🥥",cat:"Drinks"},{name:"Nimbu pani with sugar",cal:60,emoji:"🍋",cat:"Drinks"},{name:"Nimbu pani no sugar",cal:15,emoji:"🍋",cat:"Drinks"},{name:"Aam panna 1 glass",cal:90,emoji:"🥭",cat:"Drinks"},{name:"Jaljeera 1 glass",cal:40,emoji:"🫙",cat:"Drinks"},{name:"Turmeric milk haldi doodh",cal:120,emoji:"🥛",cat:"Drinks"},{name:"Sugarcane juice 1 glass",cal:180,emoji:"🌿",cat:"Drinks"},{name:"Badam milk 1 glass",cal:200,emoji:"🥛",cat:"Drinks"},{name:"Protein shake 1 scoop",cal:150,emoji:"💪",cat:"Drinks"},{name:"Cold drink 300ml",cal:130,emoji:"🥤",cat:"Drinks"},{name:"Fruit juice 1 glass",cal:120,emoji:"🧃",cat:"Drinks"},{name:"Horlicks/Bournvita",cal:160,emoji:"🥛",cat:"Drinks"},
   {name:"Roti (1) whole wheat",cal:75,emoji:"🫓",cat:"Grains"},{name:"Rotis (2) whole wheat",cal:150,emoji:"🫓",cat:"Grains"},{name:"Rotis (3) whole wheat",cal:225,emoji:"🫓",cat:"Grains"},{name:"Butter roti (1)",cal:115,emoji:"🫓",cat:"Grains"},{name:"Paratha plain (1)",cal:200,emoji:"🫓",cat:"Grains"},{name:"Paratha aloo (1)",cal:260,emoji:"🫓",cat:"Grains"},{name:"Puri (1)",cal:110,emoji:"🫓",cat:"Grains"},{name:"Bhatura (1)",cal:280,emoji:"🫓",cat:"Grains"},{name:"Naan (1)",cal:260,emoji:"🫓",cat:"Grains"},{name:"Rice 1 bowl",cal:165,emoji:"🍚",cat:"Grains"},{name:"Rice 1.5 bowl",cal:245,emoji:"🍚",cat:"Grains"},{name:"Rice 2 bowl",cal:330,emoji:"🍚",cat:"Grains"},{name:"Brown rice 1 bowl",cal:150,emoji:"🍚",cat:"Grains"},{name:"Biryani chicken 1 plate",cal:450,emoji:"🍚",cat:"Grains"},{name:"Biryani veg 1 plate",cal:350,emoji:"🍚",cat:"Grains"},{name:"Khichdi 1 bowl",cal:220,emoji:"🍚",cat:"Grains"},{name:"Dal khichdi 1 bowl",cal:250,emoji:"🍚",cat:"Grains"},{name:"Poha 1 bowl",cal:180,emoji:"🥣",cat:"Grains"},{name:"Upma 1 bowl",cal:200,emoji:"🥣",cat:"Grains"},{name:"Oats plain 1 bowl",cal:150,emoji:"🥣",cat:"Grains"},{name:"Idli 2 pieces",cal:130,emoji:"🍚",cat:"Grains"},{name:"Dosa plain 1",cal:170,emoji:"🥞",cat:"Grains"},{name:"Masala dosa 1",cal:300,emoji:"🥞",cat:"Grains"},{name:"White bread 2 slices",cal:160,emoji:"🍞",cat:"Grains"},{name:"Brown bread 2 slices",cal:140,emoji:"🍞",cat:"Grains"},{name:"Sandwich veg 1",cal:250,emoji:"🥪",cat:"Grains"},{name:"Bajra roti (1)",cal:105,emoji:"🫓",cat:"Grains"},{name:"Besan chilla (1)",cal:130,emoji:"🥞",cat:"Grains"},
-  {name:"Toor/masoor dal 1 katori",cal:140,emoji:"🫘",cat:"Protein"},{name:"Moong dal 1 katori",cal:120,emoji:"🫘",cat:"Protein"},{name:"Rajma/chana dal 1 katori",cal:165,emoji:"🫘",cat:"Protein"},{name:"Kala chana ½ katori",cal:140,emoji:"🫘",cat:"Protein"},{name:"Chana masala 1 katori",cal:200,emoji:"🫘",cat:"Protein"},{name:"Rajma masala 1 katori",cal:210,emoji:"🫘",cat:"Protein"},{name:"Sprouts boiled 1 katori",cal:90,emoji:"🌱",cat:"Protein"},{name:"Paneer 50g",cal:140,emoji:"🧀",cat:"Protein"},{name:"Paneer 100g",cal:280,emoji:"🧀",cat:"Protein"},{name:"Paneer bhurji 1 katori",cal:250,emoji:"🧀",cat:"Protein"},{name:"Shahi paneer 1 katori",cal:320,emoji:"🧀",cat:"Protein"},{name:"Boiled egg (1)",cal:70,emoji:"🥚",cat:"Protein"},{name:"Boiled eggs (2)",cal:140,emoji:"🥚",cat:"Protein"},{name:"Egg bhurji 1 egg",cal:105,emoji:"🍳",cat:"Protein"},{name:"Egg bhurji 2 eggs",cal:185,emoji:"🍳",cat:"Protein"},{name:"Omelette 2 eggs",cal:190,emoji:"🍳",cat:"Protein"},{name:"Egg curry 2 eggs",cal:220,emoji:"🍳",cat:"Protein"},{name:"Soya chunks sabzi 1 katori",cal:180,emoji:"🫘",cat:"Protein"},
+  {name:"Toor/masoor dal 1 katori",cal:140,emoji:"🫘",cat:"Protein",p:9,c:20,fa:1,fi:4},{name:"Moong dal 1 katori",cal:120,emoji:"🫘",cat:"Protein",p:8,c:18,fa:1,fi:3},{name:"Rajma/chana dal 1 katori",cal:165,emoji:"🫘",cat:"Protein",p:11,c:25,fa:1,fi:6},{name:"Kala chana ½ katori",cal:140,emoji:"🫘",cat:"Protein",p:10,c:20,fa:1,fi:5},{name:"Chana masala 1 katori",cal:200,emoji:"🫘",cat:"Protein",p:10,c:28,fa:5,fi:6},{name:"Rajma masala 1 katori",cal:210,emoji:"🫘",cat:"Protein",p:12,c:30,fa:4,fi:7},{name:"Sprouts boiled 1 katori",cal:90,emoji:"🌱",cat:"Protein",p:7,c:14,fa:0,fi:4},{name:"Paneer 50g",cal:140,emoji:"🧀",cat:"Protein",p:7,c:1,fa:11,fi:0},{name:"Paneer 100g",cal:280,emoji:"🧀",cat:"Protein",p:14,c:2,fa:22,fi:0},{name:"Paneer bhurji 1 katori",cal:250,emoji:"🧀",cat:"Protein",p:12,c:5,fa:18,fi:1},{name:"Shahi paneer 1 katori",cal:320,emoji:"🧀",cat:"Protein",p:12,c:10,fa:24,fi:1},{name:"Boiled egg (1)",cal:70,emoji:"🥚",cat:"Protein",p:6,c:0,fa:5,fi:0},{name:"Boiled eggs (2)",cal:140,emoji:"🥚",cat:"Protein",p:12,c:0,fa:10,fi:0},{name:"Egg bhurji 1 egg",cal:105,emoji:"🍳",cat:"Protein",p:6,c:1,fa:8,fi:0},{name:"Egg bhurji 2 eggs",cal:185,emoji:"🍳",cat:"Protein",p:12,c:2,fa:14,fi:0},{name:"Omelette 2 eggs",cal:190,emoji:"🍳",cat:"Protein",p:13,c:1,fa:14,fi:0},{name:"Egg curry 2 eggs",cal:220,emoji:"🍳",cat:"Protein",p:13,c:5,fa:15,fi:1},{name:"Soya chunks sabzi 1 katori",cal:180,emoji:"🫘",cat:"Protein",p:18,c:12,fa:2,fi:3},
   {name:"Roasted chana 30g",cal:110,emoji:"🌰",cat:"Snacks"},{name:"Roasted chana 40g",cal:147,emoji:"🌰",cat:"Snacks"},{name:"Roasted chana 50g",cal:183,emoji:"🌰",cat:"Snacks"},{name:"Roasted chana 75g",cal:275,emoji:"🌰",cat:"Snacks"},{name:"Peanuts roasted 20g",cal:114,emoji:"🥜",cat:"Snacks"},{name:"Peanuts roasted 30g",cal:170,emoji:"🥜",cat:"Snacks"},{name:"Peanuts roasted 50g",cal:285,emoji:"🥜",cat:"Snacks"},{name:"Almonds 6 + Walnuts 2",cal:80,emoji:"🌰",cat:"Snacks"},{name:"Mixed nuts 30g",cal:180,emoji:"🌰",cat:"Snacks"},{name:"Makhana fox nuts 30g",cal:105,emoji:"🌰",cat:"Snacks"},{name:"Sprouts chaat 1 bowl",cal:130,emoji:"🌱",cat:"Snacks"},{name:"Dhokla 2 pieces",cal:150,emoji:"🟡",cat:"Snacks"},{name:"Murmura 1 bowl",cal:110,emoji:"🍚",cat:"Snacks"},{name:"Bhel puri 1 plate",cal:180,emoji:"🍿",cat:"Snacks"},{name:"Biscuits Marie 4",cal:120,emoji:"🍪",cat:"Snacks"},{name:"Biscuits Parle-G 4",cal:160,emoji:"🍪",cat:"Snacks"},{name:"Khakhra 2 pieces",cal:120,emoji:"🫓",cat:"Snacks"},{name:"Thepla 1 piece",cal:150,emoji:"🫓",cat:"Snacks"},
   {name:"Apple medium",cal:80,emoji:"🍎",cat:"Fruits"},{name:"Guava medium",cal:55,emoji:"🍏",cat:"Fruits"},{name:"Pear medium",cal:85,emoji:"🍐",cat:"Fruits"},{name:"Banana medium",cal:90,emoji:"🍌",cat:"Fruits"},{name:"Mango 1 cup sliced",cal:100,emoji:"🥭",cat:"Fruits"},{name:"Watermelon 2 cups",cal:80,emoji:"🍉",cat:"Fruits"},{name:"Papaya 200g",cal:78,emoji:"🍈",cat:"Fruits"},{name:"Orange medium",cal:60,emoji:"🍊",cat:"Fruits"},{name:"Grapes 1 cup",cal:105,emoji:"🍇",cat:"Fruits"},{name:"Pomegranate ½ cup",cal:70,emoji:"🔴",cat:"Fruits"},{name:"Kiwi 1 medium",cal:45,emoji:"🥝",cat:"Fruits"},{name:"Strawberries 1 cup",cal:50,emoji:"🍓",cat:"Fruits"},{name:"Amla fresh 1",cal:10,emoji:"🟢",cat:"Fruits"},{name:"Dates 3 pieces",cal:70,emoji:"🟤",cat:"Fruits"},{name:"Coconut fresh ½ cup",cal:140,emoji:"🥥",cat:"Fruits"},
   {name:"Plain sabzi 1 katori",cal:90,emoji:"🥬",cat:"Sabzi"},{name:"Palak sabzi 1 katori",cal:95,emoji:"🥬",cat:"Sabzi"},{name:"Turai/lauki 1 katori",cal:80,emoji:"🥒",cat:"Sabzi"},{name:"Kaddu sabzi 1 katori",cal:110,emoji:"🎃",cat:"Sabzi"},{name:"Hari saag ½ katori",cal:45,emoji:"🌿",cat:"Sabzi"},{name:"Dal wadi+brinjal 1 katori",cal:180,emoji:"🍆",cat:"Sabzi"},{name:"Aloo chokha",cal:120,emoji:"🥔",cat:"Sabzi"},{name:"Aloo+gobi 1 katori",cal:150,emoji:"🥔",cat:"Sabzi"},{name:"Aloo matar 1 katori",cal:180,emoji:"🥔",cat:"Sabzi"},{name:"Bhindi masala 1 katori",cal:120,emoji:"🥬",cat:"Sabzi"},{name:"Baingan bharta 1 katori",cal:130,emoji:"🍆",cat:"Sabzi"},{name:"Karela sabzi 1 katori",cal:85,emoji:"🥬",cat:"Sabzi"},{name:"Methi sabzi 1 katori",cal:80,emoji:"🌿",cat:"Sabzi"},{name:"Palak paneer 1 katori",cal:280,emoji:"🥬",cat:"Sabzi"},{name:"Matar paneer 1 katori",cal:310,emoji:"🧀",cat:"Sabzi"},{name:"Mix veg sabzi 1 katori",cal:140,emoji:"🥗",cat:"Sabzi"},{name:"Mushroom masala 1 katori",cal:145,emoji:"🍄",cat:"Sabzi"},{name:"Sarson da saag 1 katori",cal:130,emoji:"🌿",cat:"Sabzi"},
   {name:"Curd 1 bowl 150ml",cal:90,emoji:"🥛",cat:"Dairy"},{name:"Curd ½ bowl 75ml",cal:45,emoji:"🥛",cat:"Dairy"},{name:"Cucumber+tomato salad",cal:35,emoji:"🥗",cat:"Dairy"},{name:"Salad with onion+beetroot",cal:55,emoji:"🥗",cat:"Dairy"},{name:"Isabgol 1 tsp",cal:15,emoji:"🌿",cat:"Dairy"},{name:"Paneer 50g raw",cal:140,emoji:"🧀",cat:"Dairy"},{name:"Butter 1 tsp",cal:35,emoji:"🧈",cat:"Dairy"},{name:"Ghee 1 tsp",cal:45,emoji:"🧈",cat:"Dairy"},{name:"Ice cream 1 scoop",cal:140,emoji:"🍦",cat:"Dairy"},{name:"Kheer 1 bowl",cal:280,emoji:"🍚",cat:"Dairy"},{name:"Raita 1 katori",cal:75,emoji:"🥛",cat:"Dairy"},{name:"Shrikhand 1 katori",cal:250,emoji:"🥛",cat:"Dairy"},{name:"Dahi vada 2 pieces",cal:220,emoji:"🥛",cat:"Dairy"},
-  {name:"Chicken curry 2 pieces",cal:160,emoji:"🍗",cat:"Meat"},{name:"Chicken curry 3 pieces",cal:240,emoji:"🍗",cat:"Meat"},{name:"Chicken tandoori 2 pieces",cal:200,emoji:"🍗",cat:"Meat"},{name:"Chicken tikka 6 pieces",cal:230,emoji:"🍗",cat:"Meat"},{name:"Chicken biryani 1 plate",cal:450,emoji:"🍗",cat:"Meat"},{name:"Butter chicken 1 katori",cal:380,emoji:"🍗",cat:"Meat"},{name:"Fish curry rohu 1 katori",cal:180,emoji:"🐟",cat:"Meat"},{name:"Fish fry 1 piece",cal:200,emoji:"🐟",cat:"Meat"},{name:"Hilsa fish 1 piece",cal:195,emoji:"🐟",cat:"Meat"},{name:"Katla fish 1 katori",cal:170,emoji:"🐟",cat:"Meat"},{name:"Prawn curry 1 katori",cal:165,emoji:"🦐",cat:"Meat"},{name:"Mutton curry 2 pieces",cal:280,emoji:"🥩",cat:"Meat"},{name:"Mutton curry 3 pieces",cal:420,emoji:"🥩",cat:"Meat"},{name:"Mutton biryani 1 plate",cal:520,emoji:"🥩",cat:"Meat"},{name:"Egg curry 2 eggs",cal:220,emoji:"🥚",cat:"Meat"},
+  {name:"Chicken curry 2 pieces",cal:160,emoji:"🍗",cat:"Meat",p:20,c:3,fa:7,fi:0},{name:"Chicken curry 3 pieces",cal:240,emoji:"🍗",cat:"Meat",p:30,c:4,fa:10,fi:0},{name:"Chicken tandoori 2 pieces",cal:200,emoji:"🍗",cat:"Meat",p:25,c:2,fa:8,fi:0},{name:"Chicken tikka 6 pieces",cal:230,emoji:"🍗",cat:"Meat",p:28,c:4,fa:9,fi:0},{name:"Chicken biryani 1 plate",cal:450,emoji:"🍗",cat:"Meat",p:22,c:55,fa:12,fi:2},{name:"Butter chicken 1 katori",cal:380,emoji:"🍗",cat:"Meat",p:22,c:10,fa:26,fi:1},{name:"Fish curry rohu 1 katori",cal:180,emoji:"🐟",cat:"Meat",p:22,c:4,fa:7,fi:0},{name:"Fish fry 1 piece",cal:200,emoji:"🐟",cat:"Meat",p:18,c:8,fa:10,fi:0},{name:"Hilsa fish 1 piece",cal:195,emoji:"🐟",cat:"Meat",p:20,c:2,fa:11,fi:0},{name:"Katla fish 1 katori",cal:170,emoji:"🐟",cat:"Meat",p:21,c:3,fa:7,fi:0},{name:"Prawn curry 1 katori",cal:165,emoji:"🦐",cat:"Meat",p:18,c:5,fa:7,fi:0},{name:"Mutton curry 2 pieces",cal:280,emoji:"🥩",cat:"Meat",p:22,c:4,fa:18,fi:0},{name:"Mutton curry 3 pieces",cal:420,emoji:"🥩",cat:"Meat",p:33,c:6,fa:27,fi:0},{name:"Mutton biryani 1 plate",cal:520,emoji:"🥩",cat:"Meat",p:28,c:58,fa:18,fi:2},{name:"Egg curry 2 eggs",cal:220,emoji:"🥚",cat:"Meat",p:13,c:5,fa:15,fi:1},
   {name:"Samosa 1 piece",cal:130,emoji:"🫔",cat:"Junk"},{name:"Samosa 2 pieces",cal:260,emoji:"🫔",cat:"Junk"},{name:"Kachori 1 piece",cal:180,emoji:"🫔",cat:"Junk"},{name:"Pakoda 4 pieces",cal:200,emoji:"🍟",cat:"Junk"},{name:"Pani puri 6 pieces",cal:200,emoji:"🫙",cat:"Junk"},{name:"Vada pav 1",cal:290,emoji:"🍔",cat:"Junk"},{name:"Burger veg 1",cal:350,emoji:"🍔",cat:"Junk"},{name:"Burger chicken 1",cal:450,emoji:"🍔",cat:"Junk"},{name:"Pizza veg 2 slices",cal:400,emoji:"🍕",cat:"Junk"},{name:"Pizza chicken 2 slices",cal:480,emoji:"🍕",cat:"Junk"},{name:"French fries medium",cal:360,emoji:"🍟",cat:"Junk"},{name:"Chips packet 26g",cal:135,emoji:"🥔",cat:"Junk"},{name:"Maggi 1 packet",cal:350,emoji:"🍜",cat:"Junk"},{name:"Chowmein 1 plate",cal:380,emoji:"🍜",cat:"Junk"},{name:"Momos veg 6 pieces",cal:200,emoji:"🥟",cat:"Junk"},{name:"Momos chicken 6 pieces",cal:260,emoji:"🥟",cat:"Junk"},{name:"Chole bhature 1 plate",cal:580,emoji:"🍽️",cat:"Junk"},{name:"Pav bhaji 1 plate",cal:450,emoji:"🍽️",cat:"Junk"},{name:"Cold drink 300ml",cal:130,emoji:"🥤",cat:"Junk"},{name:"Gulab jamun 2 pieces",cal:200,emoji:"🍮",cat:"Junk"},{name:"Ladoo besan 1",cal:180,emoji:"🟡",cat:"Junk"},{name:"Jalebi 2 pieces",cal:160,emoji:"🟠",cat:"Junk"},{name:"Chocolate bar 40g",cal:210,emoji:"🍫",cat:"Junk"},
 ];
-const CATS = ["All","Drinks","Grains","Protein","Snacks","Fruits","Sabzi","Dairy","Meat","Junk"];
+const CATS = ["⭐ Favs","All","Drinks","Grains","Protein","Snacks","Fruits","Sabzi","Dairy","Meat","Junk"];
 
 // ═══════════════ STATE ═══════════════
 const _d = new Date();
@@ -777,11 +823,13 @@ let checked={}, meals=[], exercises=[], history={}, weightLog=[];
 let waterCount=0, stepCount=0, stepTracking=false, lastMag=0, stepCooldown=false;
 let currentCat="All", openSections=new Set();
 let userSettings={name:"",target:1550,diet:"egg",weight:80,apiKey:"",waterTarget:8};
+let favorites = []; // array of food names
 
 // ═══════════════ STORAGE ═══════════════
 function loadAll() {
   try{const s=localStorage.getItem(SETTINGS_KEY);if(s)userSettings={...userSettings,...JSON.parse(s)};}catch(e){}
   try{const w=localStorage.getItem(WEIGHT_KEY);if(w)weightLog=JSON.parse(w);}catch(e){}
+  try{const f=localStorage.getItem("dt_favs");if(f)favorites=JSON.parse(f);}catch(e){}
   try{
     const r=localStorage.getItem(STORE_KEY);
     if(r){history=JSON.parse(r);const t=history[TODAY];if(t){checked=t.checked||{};meals=t.meals||[];exercises=t.exercises||[];waterCount=t.water||0;stepCount=t.steps||0;}}
@@ -938,7 +986,11 @@ function renderSections(){
     card.appendChild(hdr);card.appendChild(items);c.appendChild(card);
   });
 }
-function toggleItem(id){checked[id]=!checked[id];saveAll();}
+function toggleItem(id){
+  checked[id]=!checked[id];
+  haptic(checked[id]?"success":"light");
+  saveAll();
+}
 function resetChecklist(){if(!confirm("Reset checklist?"))return;checked={};saveAll();renderRotating();renderPriority();renderSections();updateHeader();showToast("Checklist reset ✓");}
 
 // ═══════════════ PHOTO SCAN ═══════════════
@@ -991,7 +1043,7 @@ function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReade
 function addScannedMeal(name,cal,emoji){addMealEntry({name,cal,emoji});showToast(name+" added ✓");}
 
 // ═══════════════ CALORIES ═══════════════
-function renderCalTab(){renderMealLog();renderCatBar();renderPresets();}
+function renderCalTab(){renderMealLog();renderCatBar();renderPresets();renderMacros();}
 function renderMealLog(){
   const cal=totalCal(),burned=totalBurned(),rem=T()-cal,pct=Math.min(100,Math.round((cal/T())*100));
   document.getElementById("log-total").textContent=cal+" kcal";
@@ -1014,35 +1066,87 @@ function renderMealLog(){
   });
 }
 function renderCatBar(){
-  const c=document.getElementById("cat-bar");c.innerHTML="";
+  const c=document.getElementById("cat-bar");if(!c)return;c.innerHTML="";
   CATS.forEach(cat=>{
-    const btn=document.createElement("button");btn.className="cat-btn"+(currentCat===cat?" on":"");btn.textContent=cat;
-    btn.addEventListener("click",()=>{currentCat=cat;renderCatBar();renderPresets();});
+    const btn=document.createElement("button");
+    btn.className="cat-btn"+(currentCat===cat?" on":"");
+    btn.textContent = cat==="⭐ Favs" ? "⭐ Favs"+(favorites.length>0?" ("+favorites.length+")":"") : cat;
+    btn.addEventListener("click",()=>{currentCat=cat;clearSearch();renderCatBar();renderPresets();});
     c.appendChild(btn);
   });
 }
 function renderPresets(){
-  let filtered = searchQuery
-    ? PRESETS.filter(p=>p.name.toLowerCase().includes(searchQuery)||p.cat.toLowerCase().includes(searchQuery))
-    : (currentCat==="All"?PRESETS:PRESETS.filter(p=>p.cat===currentCat));
+  let filtered;
+  if(searchQuery){
+    filtered=PRESETS.filter(p=>p.name.toLowerCase().includes(searchQuery)||p.cat.toLowerCase().includes(searchQuery));
+  } else if(currentCat==="⭐ Favs"){
+    filtered=PRESETS.filter(p=>favorites.includes(p.name));
+  } else if(currentCat==="All"){
+    filtered=PRESETS;
+  } else {
+    filtered=PRESETS.filter(p=>p.cat===currentCat);
+  }
   const g=document.getElementById("preset-grid");g.innerHTML="";
   if(filtered.length===0){
-    g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:#aaa;font-size:13px;padding:20px">No results for "${searchQuery}"</div>`;
+    if(currentCat==="⭐ Favs"){
+      g.innerHTML=`<div class="fav-empty">🤍 No favourites yet!<br/>Tap the ♡ on any food to save it here for quick access.</div>`;
+    } else {
+      g.innerHTML=`<div class="fav-empty">No results for "${searchQuery}"</div>`;
+    }
     return;
   }
   filtered.forEach(p=>{
-    const btn=document.createElement("button");btn.className="preset-card";
-    btn.innerHTML=`<span class="p-emoji">${p.emoji}</span><div style="flex:1;min-width:0"><div class="p-name">${p.name}</div><div class="p-cal">${p.cal} kcal</div></div><div class="p-plus">+</div>`;
-    btn.addEventListener("click",()=>{addMealEntry(p);showToast(p.name.split(" ").slice(0,3).join(" ")+" ✓");});
-    g.appendChild(btn);
+    const card=document.createElement("div");
+    card.className="preset-card";
+    const favOn=favorites.includes(p.name);
+    card.innerHTML=`
+      <span class="p-emoji">${p.emoji}</span>
+      <div style="flex:1;min-width:0">
+        <div class="p-name">${p.name}</div>
+        <div class="p-cal">${p.cal} kcal${p.p?" · "+p.p+"g prot":""}</div>
+      </div>
+      <button class="fav-btn${favOn?" on":""}" onclick="event.stopPropagation();toggleFav('${p.name.replace(/'/g,"\\'")}')">
+        ${favOn?"❤️":"🤍"}
+      </button>
+      <div class="p-plus" style="cursor:pointer">+</div>`;
+    card.querySelector(".p-plus").addEventListener("click",e=>{e.stopPropagation();addMealEntry(p);haptic("light");showToast(p.name.split(" ").slice(0,3).join(" ")+" ✓");});
+    g.appendChild(card);
   });
 }
 function addMealEntry(p){
-  meals.push({id:Date.now(),name:p.name,cal:p.cal,emoji:p.emoji||"🍽️",time:nowTime()});
-  saveAll();renderMealLog();updateHeader();
+  meals.push({id:Date.now(),name:p.name,cal:p.cal,emoji:p.emoji||"🍽️",time:nowTime(),p:p.p||0,c:p.c||0,fa:p.fa||0,fi:p.fi||0});
+  saveAll();renderMealLog();renderMacros();updateHeader();
 }
-function removeMeal(id){meals=meals.filter(m=>m.id!==id);saveAll();renderMealLog();updateHeader();}
-function resetMeals(){if(!confirm("Reset calorie log?"))return;meals=[];saveAll();renderMealLog();updateHeader();showToast("Calories reset ✓");}
+function removeMeal(id){meals=meals.filter(m=>m.id!==id);saveAll();renderMealLog();renderMacros();updateHeader();}
+function resetMeals(){if(!confirm("Reset calorie log?"))return;meals=[];saveAll();renderMealLog();renderMacros();updateHeader();showToast("Calories reset ✓");}
+
+// ─── Haptic ───
+function haptic(type="light"){if(!navigator.vibrate)return;const p={light:25,medium:50,success:[30,20,40]};navigator.vibrate(p[type]||25);}
+
+// ─── Favourites ───
+function toggleFav(name){
+  const idx=favorites.indexOf(name);
+  if(idx>=0){favorites.splice(idx,1);haptic("light");}
+  else{favorites.push(name);haptic("success");showToast("❤️ Added to Favourites");}
+  try{localStorage.setItem("dt_favs",JSON.stringify(favorites));}catch(e){}
+  renderPresets();renderCatBar();
+}
+
+// ─── Macros ───
+function totalMacros(){
+  return meals.reduce((t,m)=>({p:t.p+(m.p||0),c:t.c+(m.c||0),fa:t.fa+(m.fa||0),fi:t.fi+(m.fi||0)}),{p:0,c:0,fa:0,fi:0});
+}
+function renderMacros(){
+  const m=totalMacros();
+  const targets={p:60,c:180,fa:50,fi:25};
+  [["protein","p"],["carbs","c"],["fat","fa"],["fiber","fi"]].forEach(([key,k])=>{
+    const ve=document.getElementById("m-"+key);
+    const be=document.getElementById("mb-"+key);
+    if(ve)ve.textContent=m[k]+"g";
+    if(be)be.style.width=Math.min(100,Math.round((m[k]/targets[key])*100))+"%";
+  });
+}
+
 function toggleCust(){const f=document.getElementById("cust-form"),ch=document.getElementById("cust-chev");const o=f.classList.toggle("open");ch.textContent=o?"▲":"▼";}
 function addCustom(){
   const n=document.getElementById("cust-name").value.trim();
@@ -1053,6 +1157,7 @@ function addCustom(){
   document.getElementById("cust-form").classList.remove("open");document.getElementById("cust-chev").textContent="▼";
   showToast(n+" added ✓");
 }
+
 
 // ═══════════════ WATER ═══════════════
 function renderWater(){
