@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="theme-color" content="#1b4332"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Diet Tracker"/>
@@ -1766,7 +1766,6 @@ async function installApp(){
     }, 500);
   }
 }
-if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 
 // ═══════════════ INIT ═══════════════
 loadAll();
@@ -1776,6 +1775,25 @@ updateHeader();
 renderRotating();
 renderPriority();
 renderSections();
+
+// ═══════════════ SERVICE WORKER REGISTRATION ═══════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg=>{
+      console.log('SW registered ✓',reg.scope);
+      // Check for updates every time app loads
+      reg.addEventListener('updatefound',()=>{
+        const newWorker=reg.installing;
+        newWorker.addEventListener('statechange',()=>{
+          if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+            // New version available — show update toast
+            showToast("App updated! Close and reopen for latest version 🔄");
+          }
+        });
+      });
+    })
+    .catch(err=>console.error('SW registration failed:',err));
+}
 </script>
 </body>
 </html>
