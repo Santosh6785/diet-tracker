@@ -237,6 +237,38 @@ canvas#weightChart{width:100%;height:160px;display:block;border-radius:8px;}
 /* Export button */
 .export-btn{width:100%;padding:12px;background:#fff;border:1.5px solid #1b4332;border-radius:12px;color:#1b4332;font-size:13px;font-weight:bold;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
 body.dark .export-btn{background:var(--input-bg);border-color:#2d6a4f;color:#97bc62;}
+/* ── Onboarding ── */
+.onboard-overlay{position:fixed;inset:0;background:#1b4332;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;}
+.onboard-overlay.hide{opacity:0;pointer-events:none;}
+.onboard-step{display:none;flex-direction:column;align-items:center;width:100%;max-width:340px;}
+.onboard-step.active{display:flex;}
+.onboard-icon{font-size:72px;margin-bottom:16px;}
+.onboard-title{color:#fff;font-size:22px;font-weight:bold;text-align:center;margin-bottom:8px;font-family:'Georgia',serif;}
+.onboard-desc{color:rgba(255,255,255,.7);font-size:14px;text-align:center;line-height:1.7;margin-bottom:24px;}
+.onboard-input{width:100%;padding:14px 16px;border-radius:14px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:16px;font-family:inherit;margin-bottom:12px;}
+.onboard-input::placeholder{color:rgba(255,255,255,.4);}
+.onboard-input:focus{border-color:#97bc62;outline:none;}
+.onboard-diet-row{display:flex;gap:10px;width:100%;margin-bottom:20px;}
+.onboard-diet-btn{flex:1;padding:14px 6px;border-radius:14px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;font-family:inherit;text-align:center;transition:all .2s;}
+.onboard-diet-btn.on{border-color:#97bc62;background:rgba(151,188,98,.2);color:#97bc62;font-weight:bold;}
+.onboard-cal-presets{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-bottom:20px;justify-content:center;}
+.onboard-cal-btn{padding:8px 14px;border-radius:20px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;font-family:inherit;transition:all .2s;}
+.onboard-cal-btn.on{border-color:#97bc62;background:rgba(151,188,98,.2);color:#97bc62;font-weight:bold;}
+.onboard-next{width:100%;padding:16px;background:#97bc62;color:#1b4332;border:none;border-radius:14px;font-size:16px;font-weight:bold;font-family:inherit;margin-top:4px;}
+.onboard-skip{background:none;border:none;color:rgba(255,255,255,.4);font-size:12px;font-family:inherit;margin-top:12px;padding:8px;}
+.onboard-dots{display:flex;gap:8px;margin-bottom:24px;}
+.onboard-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);transition:all .3s;}
+.onboard-dot.on{background:#97bc62;width:24px;border-radius:4px;}
+/* ── Charts ── */
+.chart-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+body.dark .chart-card{background:var(--card);}
+.chart-title{font-weight:bold;color:#1b4332;font-size:14px;margin-bottom:4px;}
+body.dark .chart-title{color:#97bc62;}
+.chart-sub{font-size:11px;color:#aaa;margin-bottom:12px;}
+canvas.chart{width:100%;height:140px;display:block;}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#888;}
+.chart-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 /* Toast + install */
 .install-banner{background:#ff6b35;padding:10px 14px;display:none;justify-content:space-between;align-items:center;}
 .install-banner.show{display:flex;}
@@ -248,6 +280,62 @@ body.dark .export-btn{background:var(--input-bg);border-color:#2d6a4f;color:#97b
 </style>
 </head>
 <body>
+
+<div id="onboard" class="onboard-overlay">
+  <!-- Dots -->
+  <div class="onboard-dots">
+    <div class="onboard-dot on" id="dot-0"></div>
+    <div class="onboard-dot" id="dot-1"></div>
+    <div class="onboard-dot" id="dot-2"></div>
+    <div class="onboard-dot" id="dot-3"></div>
+  </div>
+
+  <!-- Step 0: Welcome -->
+  <div class="onboard-step active" id="ob-step-0">
+    <div class="onboard-icon">🥗</div>
+    <div class="onboard-title">Welcome to Diet Tracker</div>
+    <div class="onboard-desc">Your personal Indian belly fat reduction companion. Let's set up your profile in 3 quick steps.</div>
+    <button class="onboard-next" onclick="obNext(1)">Get Started →</button>
+    <button class="onboard-skip" onclick="obSkip()">Skip setup</button>
+  </div>
+
+  <!-- Step 1: Name -->
+  <div class="onboard-step" id="ob-step-1">
+    <div class="onboard-icon">👤</div>
+    <div class="onboard-title">What's your name?</div>
+    <div class="onboard-desc">We'll personalise your daily greeting and tracking.</div>
+    <input class="onboard-input" id="ob-name" placeholder="Enter your name" maxlength="20"/>
+    <button class="onboard-next" onclick="obNext(2)">Continue →</button>
+  </div>
+
+  <!-- Step 2: Diet type -->
+  <div class="onboard-step" id="ob-step-2">
+    <div class="onboard-icon">🍽️</div>
+    <div class="onboard-title">Your diet type?</div>
+    <div class="onboard-desc">This personalises your meal suggestions and checklist items.</div>
+    <div class="onboard-diet-row">
+      <button class="onboard-diet-btn" id="ob-veg" onclick="obSelectDiet('veg')">🥦<br/><strong>Pure Veg</strong></button>
+      <button class="onboard-diet-btn on" id="ob-egg" onclick="obSelectDiet('egg')">🥚<br/><strong>Veg+Eggs</strong></button>
+      <button class="onboard-diet-btn" id="ob-nonveg" onclick="obSelectDiet('nonveg')">🍗<br/><strong>Non-Veg</strong></button>
+    </div>
+    <button class="onboard-next" onclick="obNext(3)">Continue →</button>
+  </div>
+
+  <!-- Step 3: Calorie target -->
+  <div class="onboard-step" id="ob-step-3">
+    <div class="onboard-icon">🎯</div>
+    <div class="onboard-title">Daily calorie target?</div>
+    <div class="onboard-desc">Choose based on your goal. You can change this anytime in Settings.</div>
+    <div class="onboard-cal-presets">
+      <button class="onboard-cal-btn" data-val="1200" onclick="obSelectCal(this,1200)">1200<br/><small>Strict loss</small></button>
+      <button class="onboard-cal-btn" data-val="1400" onclick="obSelectCal(this,1400)">1400<br/><small>Moderate</small></button>
+      <button class="onboard-cal-btn on" data-val="1550" onclick="obSelectCal(this,1550)">1550<br/><small>Belly fat ⭐</small></button>
+      <button class="onboard-cal-btn" data-val="1800" onclick="obSelectCal(this,1800)">1800<br/><small>Maintain</small></button>
+      <button class="onboard-cal-btn" data-val="2000" onclick="obSelectCal(this,2000)">2000<br/><small>Active</small></button>
+    </div>
+    <button class="onboard-next" onclick="obFinish()">✅ Start Tracking!</button>
+  </div>
+</div>
 
 <div id="install-banner" class="install-banner">
   <span class="inst-text">📲 Install app on your phone</span>
@@ -479,6 +567,30 @@ body.dark .export-btn{background:var(--input-bg);border-color:#2d6a4f;color:#97b
   <div class="card card-pad">
     <div class="card-title">📅 Last 7 Days</div>
     <div id="history-list"></div>
+  </div>
+
+  <!-- 7-day calorie chart -->
+  <div class="chart-card">
+    <div class="chart-title">🔥 7-Day Calorie Intake</div>
+    <div class="chart-sub">Daily calories vs your target</div>
+    <canvas class="chart" id="calChart"></canvas>
+    <div class="chart-legend">
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#2e7d32"></div>Calories eaten</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ef5350"></div>Over target</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:rgba(0,0,0,.1)"></div>Target line</div>
+    </div>
+  </div>
+
+  <!-- 7-day checklist chart -->
+  <div class="chart-card">
+    <div class="chart-title">✅ 7-Day Habit Score</div>
+    <div class="chart-sub">Daily checklist completion %</div>
+    <canvas class="chart" id="habitChart"></canvas>
+    <div class="chart-legend">
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#2e7d32"></div>≥80% Excellent</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#f57f17"></div>60–79% Good</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ef5350"></div>&lt;60% Needs work</div>
+    </div>
   </div>
 
   <div class="card card-pad">
@@ -1115,7 +1227,144 @@ function setCalPreset(val){document.getElementById("set-cal-slider").value=val;u
 function selectDiet(d){["veg","egg","nonveg"].forEach(x=>document.getElementById("diet-"+x).classList.toggle("on",x===d));}
 function copyLink(){const url="https://santosh6785.github.io/diet-tracker";navigator.clipboard?navigator.clipboard.writeText(url).then(()=>showToast("Link copied ✓")).catch(()=>{}):showToast("Copy: "+url);}
 
-// ═══════════════ DARK MODE ═══════════════
+// ═══════════════ ONBOARDING ═══════════════
+let obCalTarget = 1550;
+let obDiet = "egg";
+
+function obNext(step){
+  document.querySelectorAll(".onboard-step").forEach((el,i)=>el.classList.toggle("active",i===step));
+  document.querySelectorAll(".onboard-dot").forEach((el,i)=>{el.classList.toggle("on",i<=step);});
+}
+function obSkip(){
+  document.getElementById("onboard").classList.add("hide");
+  setTimeout(()=>document.getElementById("onboard").style.display="none",400);
+  try{localStorage.setItem("dt_onboarded","1");}catch(e){}
+}
+function obSelectDiet(d){
+  obDiet=d;
+  ["veg","egg","nonveg"].forEach(x=>document.getElementById("ob-"+x).classList.toggle("on",x===d));
+}
+function obSelectCal(btn,val){
+  obCalTarget=val;
+  document.querySelectorAll(".onboard-cal-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===val));
+}
+function obFinish(){
+  const name = document.getElementById("ob-name").value.trim();
+  userSettings.name = name;
+  userSettings.target = obCalTarget;
+  userSettings.diet = obDiet;
+  persistSettings();
+  obSkip();
+  updateHeader();
+  showToast("Welcome"+(name?" "+name:"")+"! Profile saved ✓");
+}
+function checkOnboarding(){
+  try{
+    const done = localStorage.getItem("dt_onboarded");
+    if(!done || !userSettings.name){
+      document.getElementById("onboard").style.display="flex";
+      // Pre-fill name if already set
+      if(userSettings.name) document.getElementById("ob-name").value=userSettings.name;
+    } else {
+      document.getElementById("onboard").style.display="none";
+    }
+  }catch(e){ document.getElementById("onboard").style.display="none"; }
+}
+
+// ═══════════════ CHARTS ═══════════════
+function drawBarChart(canvasId, labels, values, colors, targetLine){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.offsetWidth || 300;
+  const H = 140;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  canvas.style.width = W+"px";
+  canvas.style.height = H+"px";
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  ctx.clearRect(0,0,W,H);
+
+  const isDark = document.body.classList.contains("dark");
+  const pad={top:10,bottom:28,left:32,right:8};
+  const chartW=W-pad.left-pad.right;
+  const chartH=H-pad.top-pad.bottom;
+  const maxVal=Math.max(...values, targetLine||0)*1.1||100;
+  const barW=chartW/values.length*0.6;
+  const barGap=chartW/values.length;
+
+  // Grid lines
+  ctx.strokeStyle=isDark?"rgba(255,255,255,.08)":"rgba(0,0,0,.06)";
+  ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.top+chartH*(1-i/4);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(W-pad.right,y);ctx.stroke();
+    ctx.fillStyle=isDark?"#666":"#bbb";
+    ctx.font=`${9*window.devicePixelRatio/window.devicePixelRatio}px Georgia`;
+    ctx.textAlign="right";
+    ctx.fillText(Math.round(maxVal*i/4),pad.left-3,y+3);
+  }
+
+  // Target line
+  if(targetLine){
+    const ty=pad.top+chartH*(1-targetLine/maxVal);
+    ctx.strokeStyle="#ef5350";ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(pad.left,ty);ctx.lineTo(W-pad.right,ty);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Bars
+  values.forEach((val,i)=>{
+    const x=pad.left+i*barGap+(barGap-barW)/2;
+    const barH=val?(chartH*val/maxVal):2;
+    const y=pad.top+chartH-barH;
+    ctx.fillStyle=colors[i]||"#2e7d32";
+    const r=4;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+barW-r,y);
+    ctx.quadraticCurveTo(x+barW,y,x+barW,y+r);
+    ctx.lineTo(x+barW,y+barH);ctx.lineTo(x,y+barH);ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+    ctx.fill();
+
+    // X-axis label
+    ctx.fillStyle=isDark?"#888":"#aaa";
+    ctx.font=`${9*window.devicePixelRatio/window.devicePixelRatio}px Georgia`;
+    ctx.textAlign="center";
+    ctx.fillText(labels[i],x+barW/2,H-pad.bottom+12);
+  });
+}
+
+function renderCharts(){
+  const all=allItems();
+  const last7=Array.from({length:7},(_,i)=>{
+    const dt=new Date();dt.setDate(dt.getDate()-i);
+    return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+  }).reverse();
+
+  const shortDays=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const labels=last7.map(d=>shortDays[new Date(d+"T12:00:00").getDay()]);
+
+  // Calorie chart
+  const calVals=last7.map(d=>{
+    const day=history[d];
+    return day&&day.meals?day.meals.reduce((s,m)=>s+m.cal,0):0;
+  });
+  const target=T();
+  const calColors=calVals.map(v=>v===0?"rgba(0,0,0,.08)":v>target?"#ef5350":"#2e7d32");
+  drawBarChart("calChart",labels,calVals,calColors,target);
+
+  // Habit chart
+  const habitVals=last7.map(d=>{
+    const day=history[d];
+    if(!day) return 0;
+    return Math.round((all.filter(i=>(day.checked||{})[i.id]).length/all.length)*100);
+  });
+  const habitColors=habitVals.map(v=>v===0?"rgba(0,0,0,.08)":v>=80?"#2e7d32":v>=60?"#f57f17":"#ef5350");
+  drawBarChart("habitChart",labels,habitVals,habitColors,80);
+}
+
+
 function toggleDark(){
   const isDark = document.body.classList.toggle("dark");
   document.getElementById("dark-toggle").textContent = isDark ? "☀️" : "🌙";
@@ -1202,7 +1451,7 @@ function switchTab(i){
   document.querySelectorAll(".tab-btn").forEach((el,j)=>el.classList.toggle("active",i===j));
   if(i===1){renderCalTab();}
   if(i===2){renderWater();renderExLog();renderSteps();}
-  if(i===3){renderHistory();renderWeightLog();}
+  if(i===3){renderHistory();renderWeightLog();setTimeout(renderCharts,100);}
   if(i===4){renderSettings();}
 }
 
@@ -1242,6 +1491,7 @@ if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch
 // ═══════════════ INIT ═══════════════
 loadAll();
 loadDarkMode();
+checkOnboarding();
 updateHeader();
 renderRotating();
 renderPriority();
