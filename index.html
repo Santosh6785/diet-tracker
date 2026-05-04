@@ -703,6 +703,48 @@ canvas.chart{width:100%;height:140px;display:block;}
     <input class="set-input" id="set-weight" type="number" step="0.1" placeholder="e.g. 78"/>
   </div>
 
+  <!-- BMR / Calorie Calculator -->
+  <div class="card card-pad">
+    <div class="card-title">🧮 Calorie Calculator (Age & Height)</div>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.6">
+      Enter your details to automatically calculate your ideal daily calorie target based on age, height, weight and activity level.
+    </p>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="flex:1">
+        <label class="set-lbl">Age (years)</label>
+        <input class="set-input" id="bmr-age" type="number" placeholder="e.g. 35" min="10" max="80"/>
+      </div>
+      <div style="flex:1">
+        <label class="set-lbl">Height (cm)</label>
+        <input class="set-input" id="bmr-height" type="number" placeholder="e.g. 170" min="100" max="220"/>
+      </div>
+    </div>
+    <label class="set-lbl">Gender</label>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="diet-btn on" id="bmr-male" onclick="selectGender('male')" style="flex:1">👨 Male</button>
+      <button class="diet-btn" id="bmr-female" onclick="selectGender('female')" style="flex:1">👩 Female</button>
+    </div>
+    <label class="set-lbl">Activity Level</label>
+    <select class="set-input" id="bmr-activity" style="margin-bottom:12px">
+      <option value="1.2">Sedentary (desk job, little exercise)</option>
+      <option value="1.375">Lightly active (light exercise 1–3 days/week)</option>
+      <option value="1.55">Moderately active (exercise 3–5 days/week)</option>
+      <option value="1.725">Very active (hard exercise 6–7 days/week)</option>
+    </select>
+    <label class="set-lbl">Goal</label>
+    <select class="set-input" id="bmr-goal" style="margin-bottom:12px">
+      <option value="0.8">Lose weight fast (−500 kcal/day)</option>
+      <option value="0.9" selected>Lose weight moderate (−300 kcal/day) ⭐</option>
+      <option value="0.95">Lose weight slowly (−150 kcal/day)</option>
+      <option value="1.0">Maintain weight</option>
+      <option value="1.1">Gain muscle (+200 kcal/day)</option>
+    </select>
+    <button class="save-btn" onclick="calcBMR()" style="background:#0277bd;margin-bottom:10px">
+      🧮 Calculate My Calorie Target
+    </button>
+    <div id="bmr-result" style="display:none;background:#e3f2fd;border-radius:10px;padding:12px;font-size:13px;line-height:1.8;color:#1565c0;border-left:3px solid #1565c0"></div>
+  </div>
+
   <div class="card card-pad">
     <div class="card-title">📷 Photo Scan (AI)</div>
     <div class="api-info">
@@ -747,6 +789,31 @@ canvas.chart{width:100%;height:140px;display:block;}
   </div>
 
   <div class="card card-pad" style="margin-top:12px">
+    <div class="card-title">💬 Feedback & Contact</div>
+    <p style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px">
+      Found a bug? Want a new food item added? Have a suggestion? Share your feedback!
+    </p>
+    <label class="set-lbl">Your feedback</label>
+    <textarea id="feedback-text"
+      style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0e0e0;
+      font-size:13px;font-family:inherit;resize:none;height:90px;margin-bottom:10px;background:var(--input-bg);color:var(--text)"
+      placeholder="e.g. Please add poha to the food list, or the step counter is not working on my phone..."></textarea>
+    <button class="save-btn" onclick="sendFeedback()" style="background:#2d6a4f;margin-bottom:10px">
+      📧 Send Feedback via WhatsApp
+    </button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="openLink('https://github.com/Santosh6785/diet-tracker/issues')"
+        style="flex:1;padding:10px;background:#f0f0f0;border:none;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer;color:#444">
+        🐛 Report Bug on GitHub
+      </button>
+      <button onclick="copyLink()"
+        style="flex:1;padding:10px;background:#f0f0f0;border:none;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer;color:#444">
+        📋 Copy App Link
+      </button>
+    </div>
+  </div>
+
+  <div class="card card-pad" style="margin-top:12px">
     <div class="card-title">📲 Install & Share</div>
     <p style="font-size:12px;color:#888;line-height:1.7;margin-bottom:10px">
       Install this app on your home screen or share with family.
@@ -779,19 +846,60 @@ const ROTATING = {
 };
 
 const SECTIONS = [
-  {id:"morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#e8f5e9",ac:"#2e7d32",items:[{id:"c_lemon",text:"Warm lemon water + ½ lemon",note:"Vitamin C"},{id:"c_almonds",text:"6 soaked almonds",note:"Vitamin E"},{id:"c_walnuts",text:"2 walnuts",note:"Omega-3"},{id:"c_amla",text:"1 amla or guava",note:"Cortisol control"},{id:"c_sunlight",text:"15 min morning sunlight",note:"Free Vitamin D"}]},
-  {id:"bfast",label:"🍳 Breakfast",time:"8:00–8:30 AM",bg:"#fff8e1",ac:"#f57f17",items:[{id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs"},{id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + protein"},{id:"c_til",text:"Til on roti/sabzi",note:"Calcium"},{id:"c_tea",text:"1 cup tea (mild sugar)",note:"Max 1 sugared tea"}]},
+  {id:"morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#e8f5e9",ac:"#2e7d32",items:[
+    {id:"c_lemon",text:"Warm lemon water + ½ lemon",note:"Vitamin C"},
+    {id:"c_almonds",text:"6 soaked almonds",note:"Vitamin E"},
+    {id:"c_walnuts",text:"2 walnuts",note:"Omega-3"},
+    {id:"c_amla",text:"1 amla or guava",note:"Cortisol control"},
+    {id:"c_sunlight",text:"15 min morning sunlight",note:"Free Vitamin D"},
+  ]},
+  {id:"bfast",label:"🍳 Breakfast",time:"8:00–8:30 AM",bg:"#fff8e1",ac:"#f57f17",items:[
+    {id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs"},
+    {id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + protein",diet:["egg","nonveg"]},
+    {id:"c_bfast_protein",text:"1 bowl sprouts OR paneer bhurji",note:"Protein for veg",diet:["veg"]},
+    {id:"c_til",text:"Til on roti/sabzi",note:"Calcium"},
+    {id:"c_tea",text:"1 cup tea (mild sugar)",note:"Max 1 sugared tea"},
+  ]},
   {id:"snack1",label:"🥜 Mid-Morning Snack",time:"11:30 AM",bg:"#e8f4fd",ac:"#1565c0",
     officeOnly:true,
     items:[{id:"c_chana",text:"Roasted chana 40g (carry from home)",note:"Iron + fibre"},{id:"c_fruit",text:"1 fruit — apple/guava/pear",note:"Vitamins"}],
-    weekendItems:[{id:"c_chana_wknd",text:"1 fruit or roasted chana at home",note:"Light snack before lunch"},{id:"c_fruit_wknd",text:"1 glass chaas/nimbu pani",note:"Hydration + digestion"}]},
+    weekendItems:[{id:"c_chana_wknd",text:"1 fruit or roasted chana at home",note:"Light snack"},{id:"c_fruit_wknd",text:"1 glass chaas/nimbu pani",note:"Hydration"}]},
   {id:"lunch",label:"🍱 Lunch",time:"2:00–2:30 PM (office) / 1:00–1:30 PM (home)",bg:"#f3e5f5",ac:"#6a1b9a",
-    items:[{id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally"},{id:"c_dal",text:"1 katori dal",note:"Protein + iron"},{id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs"},{id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control"}],
-    sundayItems:[{id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally"},{id:"c_fishLunch",text:"Fish curry (rohu/katla) — no separate dal needed",note:"Fish IS your protein today"},{id:"c_portion",text:"Max 1 bowl rice only (fish is heavy)",note:"Reduced rice with fish"},{id:"c_fishSabzi",text:"1 light sabzi — turai/lauki only",note:"Keep it light alongside fish"}],
-    tuesdayDinnerNote:true},
-  {id:"snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[{id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite"},{id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat"},{id:"c_noFried",text:"Avoided canteen fried snacks",note:"Zero maida"}]},
-  {id:"dinner",label:"🥣 Dinner",time:"9:00–9:30 PM",bg:"#e8eaf6",ac:"#283593",items:[{id:"c_noRice",text:"NO rice at dinner ✅",note:"Most critical rule"},{id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar"},{id:"c_dDal",text:"1 katori dal",note:"Overnight protein"},{id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night"},{id:"c_curd",text:"1 bowl curd",note:"Calcium + probiotics"},{id:"c_isabgol",text:"Isabgol 1 tsp (30 min before dinner)",note:"Fibre + bloat"}]},
-  {id:"postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[{id:"c_walk",text:"15–20 min walk after dinner",note:"Blood sugar -20%"},{id:"c_water",text:"Drank 8+ glasses water today",note:"Hydration check"},{id:"c_nolate",text:"Nothing after 10 PM",note:"Critical rule"},{id:"c_sleep",text:"Sleep by 11:30 PM",note:"Cortisol control"}]},
+    items:[
+      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally"},
+      {id:"c_dal",text:"1 katori dal",note:"Protein + iron"},
+      {id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs"},
+      {id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control"},
+      {id:"c_lunch_egg",text:"1 boiled egg with lunch",note:"Extra protein",diet:["egg"]},
+      {id:"c_lunch_chicken",text:"Chicken/fish curry instead of dal (2–3×/week)",note:"High protein non-veg",diet:["nonveg"]},
+    ],
+    sundayItems:[
+      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion"},
+      {id:"c_fishLunch",text:"Fish curry — no separate dal needed",note:"Omega-3",diet:["egg","nonveg"]},
+      {id:"c_vegSundayLunch",text:"Rajma or chana masala — protein rich",note:"Veg Sunday special",diet:["veg"]},
+      {id:"c_portion",text:"Max 1 bowl rice only",note:"Portion control"},
+      {id:"c_fishSabzi",text:"1 light sabzi — turai/lauki only",note:"Keep it light"},
+    ]},
+  {id:"snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+    {id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite"},
+    {id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat"},
+    {id:"c_noFried",text:"Avoided canteen fried snacks",note:"Zero maida"},
+  ]},
+  {id:"dinner",label:"🥣 Dinner",time:"9:00–9:30 PM",bg:"#e8eaf6",ac:"#283593",items:[
+    {id:"c_noRice",text:"NO rice at dinner ✅",note:"Most critical rule"},
+    {id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar"},
+    {id:"c_dDal",text:"1 katori dal",note:"Overnight protein"},
+    {id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night"},
+    {id:"c_curd",text:"1 bowl curd",note:"Calcium + probiotics"},
+    {id:"c_isabgol",text:"Isabgol 1 tsp (30 min before dinner)",note:"Fibre + bloat"},
+    {id:"c_dinner_fish",text:"Fish curry 2×/week at dinner (replace dal)",note:"Omega-3 weekly dose",diet:["nonveg","egg"]},
+  ]},
+  {id:"postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+    {id:"c_walk",text:"15–20 min walk after dinner",note:"Blood sugar -20%"},
+    {id:"c_water",text:"Drank 8+ glasses water today",note:"Hydration check"},
+    {id:"c_nolate",text:"Nothing after 10 PM",note:"Critical rule"},
+    {id:"c_sleep",text:"Sleep by 11:30 PM",note:"Cortisol control"},
+  ]},
 ];
 
 const PRIORITY = [
@@ -857,10 +965,14 @@ const W=()=>userSettings.weight||80;
 function allItems(){
   const isWeekend=(DOW===0||DOW===6);
   const isSunday=DOW===0;
+  const diet=userSettings.diet||"egg";
   return[...SECTIONS.flatMap(s=>{
-    if(s.id==="snack1" && isWeekend) return s.weekendItems||s.items;
-    if(s.id==="lunch" && isSunday) return s.sundayItems||s.items;
-    return s.items;
+    let items;
+    if(s.id==="snack1" && isWeekend) items=s.weekendItems||s.items;
+    else if(s.id==="lunch" && isSunday) items=s.sundayItems||s.items;
+    else items=s.items;
+    // Filter by diet type — show item if no diet restriction, or if diet matches
+    return items.filter(i=>!i.diet||i.diet.includes(diet));
   }),...ROTATING[DOW].items];
 }
 function totalCal(){return meals.reduce((s,m)=>s+m.cal,0);}
@@ -960,8 +1072,7 @@ function renderSections(){
     hdr.addEventListener("click",()=>{if(open)openSections.delete(si);else openSections.add(si);renderSections();});
     const items=document.createElement("div");items.className="sec-items"+(open?" open":"");
 
-    // Add a note banner for Sunday lunch
-    if(sec.id==="lunch" && isSunday){
+    activeItems = activeItems.filter(i=>!i.diet||i.diet.includes(userSettings.diet||"egg"));    if(sec.id==="lunch" && isSunday){
       const note=document.createElement("div");
       note.style.cssText="background:#e3f2fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
       note.textContent="🐟 Sunday: Fish curry replaces dal — no separate dal needed today";
@@ -1158,6 +1269,58 @@ function addCustom(){
   showToast(n+" added ✓");
 }
 
+
+// ═══════════════ BMR CALCULATOR ═══════════════
+let bmrGender="male";
+function selectGender(g){
+  bmrGender=g;
+  document.getElementById("bmr-male").classList.toggle("on",g==="male");
+  document.getElementById("bmr-female").classList.toggle("on",g==="female");
+}
+function calcBMR(){
+  const age=parseInt(document.getElementById("bmr-age").value)||0;
+  const height=parseInt(document.getElementById("bmr-height").value)||0;
+  const weight=parseFloat(document.getElementById("set-weight").value)||userSettings.weight||75;
+  const activity=parseFloat(document.getElementById("bmr-activity").value)||1.2;
+  const goal=parseFloat(document.getElementById("bmr-goal").value)||0.9;
+  if(!age||!height||age<10||age>100||height<100||height>250){showToast("Enter valid age and height");return;}
+  // Mifflin-St Jeor formula
+  let bmr = bmrGender==="male"?(10*weight+6.25*height-5*age+5):(10*weight+6.25*height-5*age-161);
+  const tdee=Math.round(bmr*activity);
+  const target=Math.round(tdee*goal);
+  const deficit=tdee-target;
+  const actLbl={1.2:"Sedentary",1.375:"Lightly active",1.55:"Moderately active",1.725:"Very active"};
+  const goalLbl={0.8:"Fast loss (−500/day)",0.9:"Moderate loss (−300/day)",0.95:"Slow loss (−150/day)",1.0:"Maintain weight",1.1:"Muscle gain (+200/day)"};
+  const res=document.getElementById("bmr-result");
+  res.style.display="block";
+  res.innerHTML=`<strong>${bmrGender==="male"?"👨 Male":"👩 Female"} · ${age}yrs · ${height}cm · ${weight}kg</strong><br/><br/>
+    🔥 <strong>BMR:</strong> ${Math.round(bmr)} kcal (at complete rest)<br/>
+    🏃 <strong>TDEE:</strong> ${tdee} kcal (${actLbl[activity]||""})<br/>
+    🎯 <strong>Recommended target:</strong> <span style="font-size:17px;font-weight:bold;color:#1b4332">${target} kcal/day</span><br/>
+    📉 <strong>Daily deficit:</strong> ${Math.abs(deficit)} kcal (${goalLbl[goal]||""})<br/>
+    ⏱ <strong>Est. time to lose 8kg:</strong> ~${Math.round(8/(deficit*7/7700))} weeks<br/><br/>
+    <button onclick="applyBMRTarget(${target})" style="background:#1b4332;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-family:inherit;cursor:pointer;width:100%;font-weight:bold">
+      ✅ Apply ${target} kcal as My Daily Target
+    </button>`;
+  haptic("success");
+}
+function applyBMRTarget(t){
+  document.getElementById("set-cal-slider").value=t;
+  updateSlider(t);
+  showToast("Target set to "+t+" kcal — save profile to confirm ✓");
+  document.getElementById("set-cal-disp").scrollIntoView({behavior:"smooth"});
+}
+
+// ═══════════════ FEEDBACK ═══════════════
+function sendFeedback(){
+  const text=document.getElementById("feedback-text").value.trim();
+  if(!text){showToast("Please write your feedback first");return;}
+  const msg=encodeURIComponent("🥗 Diet Tracker Feedback:\n\n"+text+"\n\nApp link: santosh6785.github.io/diet-tracker");
+  window.open("https://wa.me/?text="+msg,"_blank");
+  document.getElementById("feedback-text").value="";
+  showToast("Opening WhatsApp ✓");
+}
+function openLink(url){window.open(url,"_blank");}
 
 // ═══════════════ WATER ═══════════════
 function renderWater(){
