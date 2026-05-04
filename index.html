@@ -26,42 +26,32 @@
   const app=initializeApp(FB_CONFIG);
   const auth=getAuth(app);
   const db=getFirestore(app);
-  const provider=new GoogleAuthProvider();
 
   // Expose to global scope
-  window._fb={auth,db,provider,
+  window._fb={auth,db,
     signInWithRedirect,getRedirectResult,signOut,onAuthStateChanged,
-    doc,setDoc,getDoc,collection,getDocs,onSnapshot,
-    GoogleAuthProvider
+    GoogleAuthProvider,
+    doc,setDoc,getDoc,collection,getDocs,onSnapshot
   };
 
-  // Handle redirect result first (after Google sign-in redirect)
-  getRedirectResult(auth).then(result=>{
-    if(result && result.user){
-      // Successfully signed in via redirect
-      window._fbUser=result.user;
-    }
-  }).catch(err=>{
-    console.error("Redirect result error:",err);
-    const el=document.getElementById("login-err");
-    if(el){el.textContent="Sign in failed: "+err.message;el.style.display="block";}
-  });
-
-  // Listen for auth state changes
+  // onAuthStateChanged handles everything
+  // This fires after redirect AND on normal load
   onAuthStateChanged(auth, user=>{
     if(user){
+      // User is signed in
       window._fbUser=user;
       document.getElementById("login-screen").style.display="none";
       document.getElementById("app-root").style.display="block";
       window._loadFromFirebase(user.uid);
     } else {
-      window._fbUser=null;
-      // Only show login if app-root is not already visible (guest mode)
-      if(document.getElementById("app-root").style.display==="none"){
+      // Not signed in — check if guest mode already active
+      if(document.getElementById("app-root").style.display!=="block"){
         document.getElementById("login-screen").style.display="flex";
+        document.getElementById("app-root").style.display="none";
       }
     }
   });
+</script>
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
