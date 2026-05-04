@@ -292,7 +292,11 @@ canvas.chart{width:100%;height:140px;display:block;}
 .install-banner.show{display:flex;}
 .inst-text{color:#fff;font-size:13px;}
 .inst-btn{background:#fff;color:#ff6b35;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:bold;}
-.toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(27,67,50,.95);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;opacity:0;transition:all .25s;pointer-events:none;z-index:99999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* Tick pop animation */
+@keyframes tickPop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+.chkbox.on{animation:tickPop .18s ease;}
 .toast.show{opacity:1;}
 .footer-note{text-align:center;color:#ccc;font-size:10px;padding:6px 14px;font-style:italic;}
 </style>
@@ -982,7 +986,14 @@ function scoreColor(p){return p>=80?"#2e7d32":p>=60?"#f57f17":"#c62828";}
 function scoreLabel(p){return p===100?"Perfect 🏆":p>=80?"Excellent 💪":p>=60?"Good 👍":p>=40?"Average ⚠️":"Needs work ❌";}
 function nowTime(){return new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});}
 function fmtDate(s){return new Date(s+"T12:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"});}
-function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
+function showToast(msg,dur=2200){
+  const t=document.getElementById("toast");
+  if(!t)return;
+  t.textContent=msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove("show"),dur);
+}
 
 // ═══════════════ HEADER ═══════════════
 function updateHeader(){
@@ -1072,7 +1083,9 @@ function renderSections(){
     hdr.addEventListener("click",()=>{if(open)openSections.delete(si);else openSections.add(si);renderSections();});
     const items=document.createElement("div");items.className="sec-items"+(open?" open":"");
 
-    activeItems = activeItems.filter(i=>!i.diet||i.diet.includes(userSettings.diet||"egg"));    if(sec.id==="lunch" && isSunday){
+    activeItems = activeItems.filter(i=>!i.diet||i.diet.includes(userSettings.diet||"egg"));
+
+    if(sec.id==="lunch" && isSunday){
       const note=document.createElement("div");
       note.style.cssText="background:#e3f2fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
       note.textContent="🐟 Sunday: Fish curry replaces dal — no separate dal needed today";
@@ -1768,13 +1781,21 @@ async function installApp(){
 }
 
 // ═══════════════ INIT ═══════════════
-loadAll();
-loadDarkMode();
-checkOnboarding();
-updateHeader();
-renderRotating();
-renderPriority();
-renderSections();
+function init(){
+  loadAll();
+  loadDarkMode();
+  checkOnboarding();
+  updateHeader();
+  renderRotating();
+  renderPriority();
+  renderSections();
+}
+// Wait for DOM to be fully ready
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 
 // ═══════════════ SERVICE WORKER REGISTRATION ═══════════════
 if('serviceWorker' in navigator){
