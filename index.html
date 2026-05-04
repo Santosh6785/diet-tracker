@@ -1249,26 +1249,38 @@ function obSelectCal(btn,val){
   document.querySelectorAll(".onboard-cal-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===val));
 }
 function obFinish(){
-  const name = document.getElementById("ob-name").value.trim();
-  userSettings.name = name;
-  userSettings.target = obCalTarget;
-  userSettings.diet = obDiet;
-  persistSettings();
-  obSkip();
+  try{
+    const nameEl = document.getElementById("ob-name");
+    const name = nameEl ? nameEl.value.trim() : "";
+    userSettings.name = name || userSettings.name || "";
+    userSettings.target = obCalTarget || 1550;
+    userSettings.diet = obDiet || "egg";
+    persistSettings();
+  }catch(e){ console.log("obFinish error:",e); }
+  // Mark onboarded regardless
+  try{ localStorage.setItem("dt_onboarded","1"); }catch(e){}
+  // Hide overlay
+  const overlay = document.getElementById("onboard");
+  if(overlay){ overlay.classList.add("hide"); setTimeout(()=>overlay.style.display="none",400); }
   updateHeader();
-  showToast("Welcome"+(name?" "+name:"")+"! Profile saved ✓");
+  showToast("Profile saved ✓ Let's start tracking!");
 }
 function checkOnboarding(){
   try{
     const done = localStorage.getItem("dt_onboarded");
-    if(!done || !userSettings.name){
-      document.getElementById("onboard").style.display="flex";
-      // Pre-fill name if already set
-      if(userSettings.name) document.getElementById("ob-name").value=userSettings.name;
+    const overlay = document.getElementById("onboard");
+    if(!overlay) return;
+    if(done){
+      overlay.style.display="none";
     } else {
-      document.getElementById("onboard").style.display="none";
+      overlay.style.display="flex";
+      const nameEl = document.getElementById("ob-name");
+      if(nameEl && userSettings.name) nameEl.value = userSettings.name;
     }
-  }catch(e){ document.getElementById("onboard").style.display="none"; }
+  }catch(e){
+    const overlay = document.getElementById("onboard");
+    if(overlay) overlay.style.display="none";
+  }
 }
 
 // ═══════════════ CHARTS ═══════════════
