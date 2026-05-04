@@ -997,26 +997,30 @@ function showToast(msg,dur=2200){
 
 // ═══════════════ HEADER ═══════════════
 function updateHeader(){
-  const pct=checkPct(),cal=totalCal(),burned=totalBurned(),rem=T()-cal,net=cal-burned;
-  const calPct=Math.min(100,Math.round((cal/T())*100));
-  const name=userSettings.name;
-  const greeting=name?"Hi "+name+" · ":"";
-  document.getElementById("hdr-date").textContent=greeting+_d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})+" · "+ROTATING[DOW].emoji+" "+ROTATING[DOW].label;
-  document.getElementById("check-pct").textContent=pct+"%";
-  document.getElementById("check-pct").style.color=pct>=80?"#97bc62":pct>=60?"#ffd166":"#ef476f";
-  document.getElementById("check-count").textContent=allItems().filter(i=>checked[i.id]).length+"/"+allItems().length;
-  document.getElementById("check-lbl").textContent=scoreLabel(pct);
-  document.getElementById("cal-in").textContent=cal;
-  document.getElementById("cal-in").style.color=cal>T()?"#ef476f":cal>(T()*.85)?"#97bc62":"#ffd166";
-  document.getElementById("cal-target-lbl").textContent="of "+T()+" kcal";
-  document.getElementById("cal-rem").textContent=rem<0?Math.abs(rem)+" over ⚠️":rem+" left";
-  document.getElementById("cal-rem").style.color=rem<0?"#ef476f":"rgba(255,255,255,.6)";
-  document.getElementById("cal-net").textContent=net;
-  document.getElementById("cal-net").style.color=net>T()?"#ef476f":net>0?"#ffd166":"#97bc62";
-  document.getElementById("burned-lbl").textContent=burned+" burned 🔥";
-  document.getElementById("cal-bar").style.width=calPct+"%";
-  document.getElementById("cal-bar").style.background=cal>T()?"#ef476f":"#97bc62";
-  document.getElementById("bar-mid").textContent="Target: "+T();
+  try{
+    const pct=checkPct(),cal=totalCal(),burned=totalBurned(),rem=T()-cal,net=cal-burned;
+    const calPct=Math.min(100,Math.round((cal/T())*100));
+    const name=userSettings.name;
+    const greeting=name?"Hi "+name+" · ":"";
+    const setEl=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
+    const setStyle=(id,prop,val)=>{const e=document.getElementById(id);if(e)e.style[prop]=val;};
+    setEl("hdr-date", greeting+_d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})+" · "+ROTATING[DOW].emoji+" "+ROTATING[DOW].label);
+    setEl("check-pct", pct+"%");
+    setStyle("check-pct","color",pct>=80?"#97bc62":pct>=60?"#ffd166":"#ef476f");
+    setEl("check-count", allItems().filter(i=>checked[i.id]).length+"/"+allItems().length);
+    setEl("check-lbl", pct===100?"Perfect 🏆":pct>=80?"Excellent 💪":pct>=60?"Good 👍":pct>=40?"Average ⚠️":"Needs work ❌");
+    setEl("cal-in", cal);
+    setStyle("cal-in","color",cal>T()?"#ef476f":cal>(T()*.85)?"#97bc62":"#ffd166");
+    setEl("cal-target-lbl","of "+T()+" kcal");
+    setEl("cal-rem",rem<0?Math.abs(rem)+" over ⚠️":rem+" left");
+    setStyle("cal-rem","color",rem<0?"#ef476f":"rgba(255,255,255,.6)");
+    setEl("cal-net",net);
+    setStyle("cal-net","color",net>T()?"#ef476f":net>0?"#ffd166":"#97bc62");
+    setEl("burned-lbl",burned+" burned 🔥");
+    setStyle("cal-bar","width",calPct+"%");
+    setStyle("cal-bar","background",cal>T()?"#ef476f":"#97bc62");
+    setEl("bar-mid","Target: "+T());
+  }catch(err){console.error("updateHeader error:",err);}
 }
 
 // ═══════════════ CHECKLIST ═══════════════
@@ -1048,67 +1052,86 @@ function renderPriority(){
   });
 }
 function renderSections(){
-  const c=document.getElementById("sec-container");c.innerHTML="";
-  const isWeekend = (DOW===0||DOW===6); // Sunday or Saturday
-  const isSunday = DOW===0;
+  try{
+    const c=document.getElementById("sec-container");
+    if(!c) return;
+    c.innerHTML="";
+    const isWeekend=(DOW===0||DOW===6);
+    const isSunday=DOW===0;
+    const diet=userSettings.diet||"egg";
 
-  SECTIONS.forEach((sec,si)=>{
-    // Desk snack: show weekend items on Sat/Sun, office items on weekdays
-    let activeItems = sec.items;
-    let sectionLabel = sec.label;
-    let sectionTime = sec.time;
+    SECTIONS.forEach((sec,si)=>{
+      let activeItems=sec.items;
+      let sectionLabel=sec.label;
+      let sectionTime=sec.time;
 
-    if(sec.id==="snack1"){
-      if(isWeekend){
-        activeItems = sec.weekendItems || sec.items;
-        sectionLabel = "🍎 Mid-Morning Snack";
-        sectionTime = "11:00–11:30 AM (home)";
-      } else {
-        sectionLabel = "🥜 Desk Snack";
-        sectionTime = "11:30 AM (office)";
+      // Weekend desk snack
+      if(sec.id==="snack1"){
+        if(isWeekend){
+          activeItems=sec.weekendItems||sec.items;
+          sectionLabel="🍎 Mid-Morning Snack";
+          sectionTime="11:00–11:30 AM (home)";
+        } else {
+          sectionLabel="🥜 Desk Snack";
+          sectionTime="11:30 AM (office)";
+        }
       }
-    }
 
-    // Sunday lunch: fish curry day — replace dal/sabzi with fish-specific items
-    if(sec.id==="lunch" && isSunday){
-      activeItems = sec.sundayItems || sec.items;
-      sectionTime = "1:00–1:30 PM (home — eat earlier!)";
-    }
+      // Sunday lunch
+      if(sec.id==="lunch" && isSunday){
+        activeItems=sec.sundayItems||sec.items;
+        sectionTime="1:00–1:30 PM (home — eat earlier!)";
+      }
 
-    const done=activeItems.filter(i=>checked[i.id]).length;
-    const open=openSections.has(si);
-    const card=document.createElement("div");card.className="card";
-    const hdr=document.createElement("div");hdr.className="sec-hdr";hdr.style.background=sec.bg;
-    hdr.innerHTML=`<div><span style="font-weight:bold;font-size:13px;color:${sec.ac}">${sectionLabel}</span><span style="font-size:11px;margin-left:8px;color:${sec.ac};opacity:.7">${sectionTime}</span></div><div style="display:flex;gap:7px;align-items:center"><span class="badge" style="background:${sec.ac}">${done}/${activeItems.length}</span><span style="color:${sec.ac};font-size:11px">${open?"▲":"▼"}</span></div>`;
-    hdr.addEventListener("click",()=>{if(open)openSections.delete(si);else openSections.add(si);renderSections();});
-    const items=document.createElement("div");items.className="sec-items"+(open?" open":"");
+      // Apply diet filter FIRST — then calculate done count
+      activeItems=activeItems.filter(i=>!i.diet||i.diet.includes(diet));
+      const done=activeItems.filter(i=>checked[i.id]).length;
+      const total=activeItems.length;
 
-    activeItems = activeItems.filter(i=>!i.diet||i.diet.includes(userSettings.diet||"egg"));
+      const open=openSections.has(si);
+      const card=document.createElement("div");card.className="card";
+      const hdr=document.createElement("div");hdr.className="sec-hdr";hdr.style.background=sec.bg;
+      hdr.innerHTML=`<div><span style="font-weight:bold;font-size:13px;color:${sec.ac}">${sectionLabel}</span><span style="font-size:11px;margin-left:8px;color:${sec.ac};opacity:.7">${sectionTime}</span></div><div style="display:flex;gap:7px;align-items:center"><span class="badge" style="background:${sec.ac}">${done}/${total}</span><span style="color:${sec.ac};font-size:11px">${open?"▲":"▼"}</span></div>`;
+      hdr.addEventListener("click",()=>{if(open)openSections.delete(si);else openSections.add(si);renderSections();updateHeader();});
 
-    if(sec.id==="lunch" && isSunday){
-      const note=document.createElement("div");
-      note.style.cssText="background:#e3f2fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
-      note.textContent="🐟 Sunday: Fish curry replaces dal — no separate dal needed today";
-      items.appendChild(note);
-    }
+      const itemsDiv=document.createElement("div");
+      itemsDiv.className="sec-items"+(open?" open":"");
 
-    // Add weekend snack note
-    if(sec.id==="snack1" && isWeekend){
-      const note=document.createElement("div");
-      note.style.cssText="background:#e8f4fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
-      note.textContent="🏠 Holiday: No desk snack needed — have a light home snack instead";
-      items.appendChild(note);
-    }
+      // Info banners
+      if(sec.id==="lunch" && isSunday){
+        const note=document.createElement("div");
+        note.style.cssText="background:#e3f2fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
+        note.textContent="🐟 Sunday: Fish curry replaces dal — no separate dal needed today";
+        itemsDiv.appendChild(note);
+      }
+      if(sec.id==="snack1" && isWeekend){
+        const note=document.createElement("div");
+        note.style.cssText="background:#e8f4fd;padding:8px 14px;font-size:11px;color:#1565c0;border-bottom:1px solid #f0f0f0;";
+        note.textContent="🏠 Holiday: Have a light home snack instead";
+        itemsDiv.appendChild(note);
+      }
 
-    activeItems.forEach(item=>{
-      const el=document.createElement("div");
-      el.className="chk-item"+(checked[item.id]?" done":"");
-      el.innerHTML=`<div class="chkbox ${checked[item.id]?"on":""}" style="--ac:${sec.ac}"><svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="it-text ${checked[item.id]?"done":""}">${item.text}</div><div class="it-note">${item.note}</div></div>`;
-      el.addEventListener("click",()=>{toggleItem(item.id);renderSections();renderPriority();updateHeader();});
-      items.appendChild(el);
+      activeItems.forEach(item=>{
+        const el=document.createElement("div");
+        el.className="chk-item"+(checked[item.id]?" done":"");
+        el.innerHTML=`<div class="chkbox ${checked[item.id]?"on":""}" style="--ac:${sec.ac}"><svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="it-text ${checked[item.id]?"done":""}">${item.text}</div><div class="it-note">${item.note}</div></div>`;
+        el.addEventListener("click",e=>{
+          e.stopPropagation();
+          toggleItem(item.id);
+          renderSections();
+          renderPriority();
+          updateHeader();
+        });
+        itemsDiv.appendChild(el);
+      });
+
+      card.appendChild(hdr);card.appendChild(itemsDiv);c.appendChild(card);
     });
-    card.appendChild(hdr);card.appendChild(items);c.appendChild(card);
-  });
+  }catch(err){
+    console.error("renderSections error:",err);
+    // Ensure header still updates even if render fails
+    try{updateHeader();}catch(e){}
+  }
 }
 function toggleItem(id){
   checked[id]=!checked[id];
