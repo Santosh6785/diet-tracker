@@ -8,6 +8,48 @@
 <meta name="apple-mobile-web-app-title" content="Diet Tracker"/>
 <title>Diet Tracker — Belly Fat Plan</title>
 <link rel="manifest" href="manifest.json"/>
+<!-- Firebase SDK -->
+<script type="module">
+  import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import{getFirestore,doc,setDoc,getDoc,collection,getDocs,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const FB_CONFIG={
+    apiKey:"AIzaSyBF0ZZqCyNRdHQAD2eBU32obdVNQG84C70",
+    authDomain:"diet-tracker-app-c22f4.firebaseapp.com",
+    projectId:"diet-tracker-app-c22f4",
+    storageBucket:"diet-tracker-app-c22f4.firebasestorage.app",
+    messagingSenderId:"64330985373",
+    appId:"1:64330985373:web:d74e375b4a2d1c55dc0974"
+  };
+
+  const app=initializeApp(FB_CONFIG);
+  const auth=getAuth(app);
+  const db=getFirestore(app);
+  const provider=new GoogleAuthProvider();
+
+  // Expose to global scope for non-module JS
+  window._fb={auth,db,provider,
+    signInWithPopup,signOut,onAuthStateChanged,
+    doc,setDoc,getDoc,collection,getDocs,onSnapshot,
+    GoogleAuthProvider
+  };
+
+  // Listen for auth state changes
+  onAuthStateChanged(auth, user=>{
+    if(user){
+      window._fbUser=user;
+      document.getElementById("login-screen").style.display="none";
+      document.getElementById("app-root").style.display="block";
+      // Load user data from Firestore
+      window._loadFromFirebase(user.uid);
+    } else {
+      window._fbUser=null;
+      document.getElementById("login-screen").style.display="flex";
+      document.getElementById("app-root").style.display="none";
+    }
+  });
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 
@@ -255,6 +297,27 @@ body.dark .macro-bar-wrap{background:#333;}
 .fav-btn{background:none;border:none;font-size:16px;padding:2px;flex-shrink:0;line-height:1;opacity:.35;transition:opacity .2s;}
 .fav-btn.on{opacity:1;}
 .fav-empty{text-align:center;padding:24px;color:#aaa;font-size:13px;grid-column:1/-1;line-height:1.7;}
+/* ── Login Screen ── */
+.login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#1b4332 0%,#2d6a4f 60%,#40916c 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;z-index:99998;}
+.login-logo{font-size:80px;margin-bottom:16px;}
+.login-title{color:#fff;font-size:26px;font-weight:bold;font-family:'Georgia',serif;text-align:center;margin-bottom:8px;}
+.login-sub{color:rgba(255,255,255,.7);font-size:13px;text-align:center;line-height:1.7;margin-bottom:28px;}
+.login-features{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;width:100%;max-width:300px;}
+.login-feature{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.85);font-size:13px;}
+.login-google-btn{background:#fff;color:#1b4332;border:none;border-radius:14px;padding:16px 24px;font-size:15px;font-weight:bold;font-family:inherit;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.25);width:100%;max-width:300px;justify-content:center;margin-bottom:10px;transition:transform .1s;}
+.login-google-btn:active{transform:scale(.97);}
+.login-guest-btn{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1.5px solid rgba(255,255,255,.25);border-radius:14px;padding:13px 24px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;max-width:300px;text-align:center;}
+.login-err{color:#ffcdd2;font-size:12px;text-align:center;margin-top:10px;display:none;}
+/* User bar in header */
+.user-bar{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:rgba(255,255,255,.1);border-radius:20px;margin-bottom:8px;}
+.user-photo{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.4);}
+.user-name-sm{color:rgba(255,255,255,.9);font-size:11px;font-weight:bold;margin-left:6px;}
+.sign-out-btn{background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.65);font-size:11px;font-family:inherit;padding:3px 8px;border-radius:8px;cursor:pointer;}
+.sync-status{font-size:10px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:4px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#97bc62;}
+.sync-dot.syncing{background:#ffd166;animation:blink .8s infinite;}
+.sync-dot.err{background:#ef5350;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 /* ── Onboarding ── */
 .onboard-overlay{position:fixed;inset:0;background:#1b4332;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;}
 .onboard-overlay.hide{opacity:0;pointer-events:none;}
@@ -359,6 +422,30 @@ canvas.chart{width:100%;height:140px;display:block;}
   </div>
 </div>
 
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-logo">🥗</div>
+  <div class="login-title">Diet Tracker</div>
+  <div class="login-sub">Your personal Indian belly fat reduction companion.<br/>Sign in to sync your data across all devices.</div>
+  <div class="login-features">
+    <div class="login-feature"><span>☁️</span> Data saved permanently in cloud</div>
+    <div class="login-feature"><span>📱</span> Works on any device, never lost</div>
+    <div class="login-feature"><span>🔒</span> Your data is private and secure</div>
+    <div class="login-feature"><span>👨‍👩‍👧</span> Each family member has own account</div>
+  </div>
+  <button class="login-google-btn" onclick="signInWithGoogle()">
+    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+    Sign in with Google
+  </button>
+  <button class="login-guest-btn" onclick="continueAsGuest()">
+    Continue without account (data stays on this device only)
+  </button>
+  <div class="login-err" id="login-err"></div>
+</div>
+
+<!-- APP ROOT -->
+<div id="app-root" style="display:none">
+
 <div id="install-banner" class="install-banner">
   <span class="inst-text">📲 Install app on your phone</span>
   <button class="inst-btn" id="install-btn">Install</button>
@@ -367,6 +454,17 @@ canvas.chart{width:100%;height:140px;display:block;}
 <div class="hdr">
   <div class="hdr-circle"></div>
   <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">🌙</button>
+  <!-- User bar -->
+  <div class="user-bar" id="user-bar" style="display:none">
+    <div style="display:flex;align-items:center">
+      <img class="user-photo" id="user-photo" src="" alt=""/>
+      <span class="user-name-sm" id="user-name-sm"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-lbl">Synced</span></div>
+      <button class="sign-out-btn" onclick="doSignOut()">Sign out</button>
+    </div>
+  </div>
   <h1>🥗 Diet Tracker</h1>
   <p class="hdr-sub" id="hdr-date">Loading...</p>
   <div class="score-row">
@@ -833,6 +931,8 @@ canvas.chart{width:100%;height:140px;display:block;}
 <div class="footer-note">Data saves on your phone · Calories are approximate</div>
 <div class="toast" id="toast"></div>
 
+</div><!-- end app-root -->
+
 <script>
 // ═══════════════ DATA ═══════════════
 const STORE_KEY = "dt_v4";
@@ -948,8 +1048,11 @@ function loadAll() {
   }catch(e){}
 }
 function saveAll(){
+  // Always save to localStorage first (offline fallback)
   try{history[TODAY]={checked,meals,exercises,water:waterCount,steps:stepCount};localStorage.setItem(STORE_KEY,JSON.stringify(history));}catch(e){}
   try{localStorage.setItem(WEIGHT_KEY,JSON.stringify(weightLog));}catch(e){}
+  // Also sync to Firebase if logged in
+  if(window._fbUser) _saveTodayToFirebase();
 }
 function saveSettings(){
   const n=document.getElementById("set-name").value.trim();
@@ -960,6 +1063,8 @@ function saveSettings(){
   const wt=parseInt(document.getElementById("set-water-target").value)||8;
   userSettings={name:n,target:t,diet,weight:w,apiKey,waterTarget:wt};
   try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(userSettings));}catch(e){}
+  // Sync to Firebase if logged in
+  if(window._fbUser) _saveSettingsToFirebase();
   updateHeader();renderSettings();showToast("Profile saved ✓");
 }
 
@@ -1276,6 +1381,7 @@ function toggleFav(name){
   if(idx>=0){favorites.splice(idx,1);haptic("light");}
   else{favorites.push(name);haptic("success");showToast("❤️ Added to Favourites");}
   try{localStorage.setItem("dt_favs",JSON.stringify(favorites));}catch(e){}
+  if(window._fbUser) _saveFavsToFirebase();
   renderPresets();renderCatBar();
 }
 
@@ -1453,6 +1559,7 @@ function saveWeight(){
   weightLog.sort((a,b)=>a.date.localeCompare(b.date));
   if(weightLog.length>90)weightLog=weightLog.slice(-90);
   localStorage.setItem(WEIGHT_KEY,JSON.stringify(weightLog));
+  if(window._fbUser) _saveWeightToFirebase();
   renderWeightLog();showToast("Weight saved: "+val+" kg ✓");
   document.getElementById("weight-input").value="";
 }
@@ -1803,6 +1910,164 @@ async function installApp(){
   }
 }
 
+// ═══════════════ FIREBASE AUTH & SYNC ═══════════════
+async function signInWithGoogle(){
+  try{
+    const fb=window._fb;
+    if(!fb){showLoginError("Firebase not loaded. Check connection.");return;}
+    const result=await fb.signInWithPopup(fb.auth,new fb.GoogleAuthProvider());
+    // onAuthStateChanged handles the rest
+  }catch(err){
+    console.error("Sign in error:",err);
+    if(err.code==="auth/popup-blocked"){
+      showLoginError("Popup blocked. Please allow popups for this site.");
+    } else if(err.code==="auth/cancelled-popup-request"){
+      // User closed popup — ignore
+    } else {
+      showLoginError("Sign in failed. Try again.");
+    }
+  }
+}
+
+function continueAsGuest(){
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("app-root").style.display="block";
+  // Guest mode — use localStorage only
+  window._fbUser=null;
+  init();
+}
+
+async function doSignOut(){
+  if(!confirm("Sign out? Your data is saved in the cloud.")) return;
+  try{
+    if(window._fb) await window._fb.signOut(window._fb.auth);
+    document.getElementById("login-screen").style.display="flex";
+    document.getElementById("app-root").style.display="none";
+    document.getElementById("user-bar").style.display="none";
+  }catch(e){showToast("Sign out failed");}
+}
+
+function showLoginError(msg){
+  const el=document.getElementById("login-err");
+  if(el){el.textContent=msg;el.style.display="block";}
+}
+
+function setSyncStatus(state){
+  // state: "synced" | "syncing" | "error"
+  const dot=document.getElementById("sync-dot");
+  const lbl=document.getElementById("sync-lbl");
+  if(!dot||!lbl)return;
+  dot.className="sync-dot"+(state==="syncing"?" syncing":state==="error"?" err":"");
+  lbl.textContent=state==="syncing"?"Syncing...":state==="error"?"Sync error":"Synced ✓";
+}
+
+// Load data from Firestore for a user
+window._loadFromFirebase = async function(uid){
+  try{
+    const fb=window._fb;
+    const user=window._fbUser;
+    if(!fb||!user) return;
+
+    // Show user bar
+    const bar=document.getElementById("user-bar");
+    const photo=document.getElementById("user-photo");
+    const nameSm=document.getElementById("user-name-sm");
+    if(bar) bar.style.display="flex";
+    if(photo && user.photoURL) photo.src=user.photoURL;
+    if(nameSm) nameSm.textContent=user.displayName||user.email||"";
+
+    setSyncStatus("syncing");
+
+    // Load settings
+    const settingsDoc=await fb.getDoc(fb.doc(fb.db,"users",uid,"data","settings"));
+    if(settingsDoc.exists()){
+      userSettings={...userSettings,...settingsDoc.data()};
+    } else {
+      // First login — save current settings to Firebase
+      await _saveSettingsToFirebase();
+    }
+
+    // Load today's data
+    const todayDoc=await fb.getDoc(fb.doc(fb.db,"users",uid,"daily",TODAY));
+    if(todayDoc.exists()){
+      const d=todayDoc.data();
+      checked=d.checked||{};
+      meals=d.meals||[];
+      exercises=d.exercises||[];
+      waterCount=d.water||0;
+      stepCount=d.steps||0;
+    }
+
+    // Load weight log
+    const weightDoc=await fb.getDoc(fb.doc(fb.db,"users",uid,"data","weightLog"));
+    if(weightDoc.exists()) weightLog=weightDoc.data().entries||[];
+
+    // Load favorites
+    const favDoc=await fb.getDoc(fb.doc(fb.db,"users",uid,"data","favorites"));
+    if(favDoc.exists()) favorites=favDoc.data().items||[];
+
+    setSyncStatus("synced");
+    init();
+
+  }catch(err){
+    console.error("Firebase load error:",err);
+    setSyncStatus("error");
+    // Fall back to localStorage
+    init();
+  }
+};
+
+// Save today's data to Firestore
+async function _saveTodayToFirebase(){
+  try{
+    const fb=window._fb;
+    const user=window._fbUser;
+    if(!fb||!user) return;
+    setSyncStatus("syncing");
+    await fb.setDoc(fb.doc(fb.db,"users",user.uid,"daily",TODAY),{
+      checked,meals,exercises,water:waterCount,steps:stepCount,
+      updatedAt:new Date().toISOString()
+    });
+    setSyncStatus("synced");
+  }catch(err){
+    console.error("Firebase save error:",err);
+    setSyncStatus("error");
+  }
+}
+
+async function _saveSettingsToFirebase(){
+  try{
+    const fb=window._fb;
+    const user=window._fbUser;
+    if(!fb||!user) return;
+    await fb.setDoc(fb.doc(fb.db,"users",user.uid,"data","settings"),{
+      ...userSettings, updatedAt:new Date().toISOString()
+    });
+  }catch(err){console.error("Settings save error:",err);}
+}
+
+async function _saveWeightToFirebase(){
+  try{
+    const fb=window._fb;
+    const user=window._fbUser;
+    if(!fb||!user) return;
+    await fb.setDoc(fb.doc(fb.db,"users",user.uid,"data","weightLog"),{
+      entries:weightLog, updatedAt:new Date().toISOString()
+    });
+  }catch(err){console.error("Weight save error:",err);}
+}
+
+async function _saveFavsToFirebase(){
+  try{
+    const fb=window._fb;
+    const user=window._fbUser;
+    if(!fb||!user) return;
+    await fb.setDoc(fb.doc(fb.db,"users",user.uid,"data","favorites"),{
+      items:favorites, updatedAt:new Date().toISOString()
+    });
+  }catch(err){console.error("Favs save error:",err);}
+}
+
 // ═══════════════ INIT ═══════════════
 function init(){
   loadAll();
@@ -1812,12 +2077,28 @@ function init(){
   renderRotating();
   renderPriority();
   renderSections();
+  // Set user name from Google profile if not set
+  if(window._fbUser && !userSettings.name){
+    userSettings.name = window._fbUser.displayName || "";
+    updateHeader();
+  }
 }
-// Wait for DOM to be fully ready
+
+// Wait for DOM + Firebase auth state
 if(document.readyState==="loading"){
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    // Firebase module handles auth state — init is called from _loadFromFirebase
+    // or from continueAsGuest
+    // If Firebase fails to load (offline), show app after 3 seconds
+    setTimeout(()=>{
+      if(document.getElementById("app-root").style.display==="none" &&
+         document.getElementById("login-screen").style.display!=="none"){
+        // Still on login screen — Firebase may have loaded
+      }
+    }, 3000);
+  });
 } else {
-  init();
+  // DOM already ready — Firebase module will trigger init
 }
 
 // ═══════════════ SERVICE WORKER REGISTRATION ═══════════════
