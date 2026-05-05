@@ -1,85 +1,47 @@
-# 🥗 Diet Tracker PWA — Installation Guide
+# 🥗 Diet Tracker PWA
+### Made with ❤️ for Indian users focusing on belly fat reduction
 
-## What you have
-- `index.html` — The complete app
-- `manifest.json` — Makes it installable as an app
-- `sw.js` — Makes it work offline
-- This README
+**Live App:** https://santosh6785.github.io/diet-tracker
 
 ---
 
-## Step 1: Create GitHub Account (Free)
-1. Go to **github.com**
-2. Click "Sign up" — it's free
-3. Create account with your email
+## What is this?
 
----
-
-## Step 2: Create a New Repository
-1. After login, click the **"+"** button (top right)
-2. Select **"New repository"**
-3. Name it: `diet-tracker`
-4. Make sure it is set to **Public**
-5. Click **"Create repository"**
-
----
-
-## Step 3: Upload Files
-1. In your new repository, click **"uploading an existing file"**
-2. Drag and drop ALL 4 files:
-   - index.html
-   - manifest.json
-   - sw.js
-   - icon-192.svg
-3. Scroll down, click **"Commit changes"**
-
----
-
-## Step 4: Enable GitHub Pages
-1. Go to your repository **Settings** (top menu)
-2. Scroll down to **"Pages"** (left sidebar)
-3. Under "Source", select **"Deploy from a branch"**
-4. Select branch: **main**
-5. Select folder: **/ (root)**
-6. Click **Save**
-7. Wait 2-3 minutes
-
----
-
-## Step 5: Get Your App URL
-After a few minutes, GitHub Pages will give you a URL like:
-**https://yourusername.github.io/diet-tracker**
-
-This is your app! Share it with anyone.
-
----
-
-## Step 6: Install on Your Android Phone
-1. Open **Chrome** on your Android phone
-2. Go to your URL: `https://yourusername.github.io/diet-tracker`
-3. Chrome will show a banner: **"Add to Home Screen"**
-4. Tap it → Tap **"Install"**
-5. The app icon appears on your home screen like any other app!
+A free, installable Progressive Web App (PWA) for tracking daily diet, calories, and healthy habits — built specifically for Indian food and the Indian lifestyle. No subscription, no ads, no bloat.
 
 ---
 
 ## Features
-- ✅ Daily habit checklist
-- 🔑 5 priority rules
-- 📅 Day-specific rotating weekly menu
-- 🔥 Calorie counter with 45+ Indian food presets
-- 📊 7-day history tracking
-- 📴 Works offline
-- 💾 Data saves on your phone (localStorage)
-- 📲 Installable on Android home screen
+
+- ✅ **Daily Habit Checklist** — Rotating weekly menu (Mon–Sun) with morning ritual, breakfast, snacks, lunch, dinner and post-dinner habits
+- 🔥 **Calorie Counter** — 190+ Indian food presets including Bihari foods (litti chokha, dal pitha, sattu)
+- 📊 **Macro Tracking** — Protein, Carbs, Fat and Fibre progress bars
+- 📷 **AI Photo Scan** — Point camera at food, AI estimates calories automatically
+- 💧 **Activity Tracking** — Water intake, step counter, exercise log
+- ⚖️ **Weight Logger** — Track weight over time with chart
+- 🧮 **BMR Calculator** — Enter age, height, gender → get personalised calorie target
+- ☁️ **Cloud Sync** — Sign in with Google, data saved permanently across all devices
+- 🌙 **Dark Mode** — Easy on eyes at night
+- 📤 **Export** — Download food log or full backup as CSV/JSON
+- 📲 **Installable PWA** — Add to home screen, works offline
 
 ---
 
-## Troubleshooting
-- **App not installing?** Must open in Chrome (not Firefox/Samsung Browser)
-- **URL not working?** Wait 5 minutes after enabling GitHub Pages
-- **Data lost?** Don't clear browser data/cache for this site
+## How to Install
+
+1. Open https://santosh6785.github.io/diet-tracker in Chrome
+2. Tap **3 dots → Add to Home Screen → Install**
+3. Sign in with Google (optional) or continue as guest
 
 ---
 
-Built with ❤️ for belly fat reduction — Patna, Bihar
+## Tech Stack
+
+- Pure HTML + CSS + JavaScript (single file)
+- Firebase Authentication + Firestore (cloud backend)
+- Service Worker (offline support)
+- GitHub Pages (free hosting)
+
+---
+
+*Built for the Indian belly fat reduction journey — practical, habit-focused, and free forever.*
