@@ -16,7 +16,7 @@
 
   const FB_CONFIG={
     apiKey:"AIzaSyBF0ZZqCyNRdHQAD2eBU32obdVNQG84C70",
-    authDomain:"diet-tracker-app-c22f4.firebaseapp.com",
+    authDomain:"santosh6785.github.io",
     projectId:"diet-tracker-app-c22f4",
     storageBucket:"diet-tracker-app-c22f4.firebasestorage.app",
     messagingSenderId:"64330985373",
@@ -35,23 +35,19 @@
   };
 
   // onAuthStateChanged handles everything
-  // This fires after redirect AND on normal load
   onAuthStateChanged(auth, user=>{
     if(user){
-      // User is signed in
       window._fbUser=user;
       document.getElementById("login-screen").style.display="none";
       document.getElementById("app-root").style.display="block";
       window._loadFromFirebase(user.uid);
     } else {
-      // Not signed in — check if guest mode already active
       if(document.getElementById("app-root").style.display!=="block"){
         document.getElementById("login-screen").style.display="flex";
         document.getElementById("app-root").style.display="none";
       }
     }
   });
-</script>
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
