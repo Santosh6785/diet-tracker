@@ -600,6 +600,13 @@ canvas.chart{width:100%;height:140px;display:block;}
     <div style="font-size:10px;color:#bbb;margin-top:8px;text-align:center">Targets: Protein 60g · Carbs 180g · Fat 50g · Fibre 25g</div>
   </div>
 
+  <!-- Food logging hint for new users -->
+  <div id="food-hint" style="background:#e8f5e9;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:12px;color:#2e7d32;border-left:3px solid #2e7d32">
+    <span style="font-size:20px">👇</span>
+    <span>Tap any food below to log it. Use <strong>search</strong> to find quickly. Tap <strong>+ Add Custom</strong> for anything not listed.</span>
+    <button onclick="document.getElementById('food-hint').style.display='none'" style="background:none;border:none;font-size:16px;color:#2e7d32;flex-shrink:0;cursor:pointer">✕</button>
+  </div>
+
   <div class="preset-grid" id="preset-grid"></div>
 
   <div class="cust-box">
@@ -1376,6 +1383,9 @@ function renderPresets(){
 function addMealEntry(p){
   meals.push({id:Date.now(),name:p.name,cal:p.cal,emoji:p.emoji||"🍽️",time:nowTime(),p:p.p||0,c:p.c||0,fa:p.fa||0,fi:p.fi||0});
   saveAll();renderMealLog();renderMacros();updateHeader();
+  // Hide the hint after first food is logged
+  const hint=document.getElementById("food-hint");
+  if(hint) hint.style.display="none";
 }
 function removeMeal(id){meals=meals.filter(m=>m.id!==id);saveAll();renderMealLog();renderMacros();updateHeader();}
 function resetMeals(){if(!confirm("Reset calorie log?"))return;meals=[];saveAll();renderMealLog();renderMacros();updateHeader();showToast("Calories reset ✓");}
