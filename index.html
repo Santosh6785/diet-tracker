@@ -971,51 +971,57 @@ const ROTATING = {
 const SECTIONS = [
   {id:"morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#e8f5e9",ac:"#2e7d32",items:[
     {id:"c_lemon",text:"Warm lemon water + ½ lemon",note:"Vitamin C"},
-    {id:"c_almonds",text:"6 soaked almonds",note:"Vitamin E"},
-    {id:"c_walnuts",text:"2 walnuts",note:"Omega-3"},
-    {id:"c_amla",text:"1 amla or guava",note:"Cortisol control"},
+    {id:"c_almonds",text:"6 soaked almonds",note:"Vitamin E",cal:42,emoji:"🌰"},
+    {id:"c_walnuts",text:"2 walnuts",note:"Omega-3",cal:52,emoji:"🌰"},
+    {id:"c_amla",text:"1 amla or guava",note:"Cortisol control",cal:25,emoji:"🍈"},
     {id:"c_sunlight",text:"15 min morning sunlight",note:"Free Vitamin D"},
   ]},
   {id:"bfast",label:"🍳 Breakfast",time:"8:00–8:30 AM",bg:"#fff8e1",ac:"#f57f17",items:[
-    {id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs"},
-    {id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + protein",diet:["egg","nonveg"]},
-    {id:"c_bfast_protein",text:"1 bowl sprouts OR paneer bhurji",note:"Protein for veg",diet:["veg"]},
-    {id:"c_til",text:"Til on roti/sabzi",note:"Calcium"},
-    {id:"c_tea",text:"1 cup tea (mild sugar)",note:"Max 1 sugared tea"},
+    {id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs",cal:150,emoji:"🫓"},
+    {id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + protein",cal:140,emoji:"🥚",diet:["egg","nonveg"]},
+    {id:"c_bfast_protein",text:"1 bowl sprouts OR paneer bhurji",note:"Protein for veg",cal:160,emoji:"🌱",diet:["veg"]},
+    {id:"c_til",text:"Til on roti/sabzi",note:"Calcium",cal:18,emoji:"🌿"},
+    {id:"c_tea",text:"1 cup tea (mild sugar)",note:"Max 1 sugared tea",cal:50,emoji:"☕"},
   ]},
   {id:"snack1",label:"🥜 Mid-Morning Snack",time:"11:30 AM",bg:"#e8f4fd",ac:"#1565c0",
     officeOnly:true,
-    items:[{id:"c_chana",text:"Roasted chana 40g (carry from home)",note:"Iron + fibre"},{id:"c_fruit",text:"1 fruit — apple/guava/pear",note:"Vitamins"}],
-    weekendItems:[{id:"c_chana_wknd",text:"1 fruit or roasted chana at home",note:"Light snack"},{id:"c_fruit_wknd",text:"1 glass chaas/nimbu pani",note:"Hydration"}]},
+    items:[
+      {id:"c_chana",text:"Roasted chana 40g (carry from home)",note:"Iron + fibre",cal:140,emoji:"🫘"},
+      {id:"c_fruit",text:"1 fruit — apple/guava/pear",note:"Vitamins",cal:60,emoji:"🍎"}
+    ],
+    weekendItems:[
+      {id:"c_chana_wknd",text:"1 fruit or roasted chana at home",note:"Light snack",cal:100,emoji:"🍎"},
+      {id:"c_fruit_wknd",text:"1 glass chaas/nimbu pani",note:"Hydration",cal:35,emoji:"🥛"}
+    ]},
   {id:"lunch",label:"🍱 Lunch",time:"2:00–2:30 PM (office) / 1:00–1:30 PM (home)",bg:"#f3e5f5",ac:"#6a1b9a",
     items:[
-      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally"},
-      {id:"c_dal",text:"1 katori dal",note:"Protein + iron"},
-      {id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs"},
-      {id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control"},
-      {id:"c_lunch_egg",text:"1 boiled egg with lunch",note:"Extra protein",diet:["egg"]},
-      {id:"c_lunch_chicken",text:"Chicken/fish curry instead of dal (2–3×/week)",note:"High protein non-veg",diet:["nonveg"]},
+      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally",cal:30,emoji:"🥗"},
+      {id:"c_dal",text:"1 katori dal",note:"Protein + iron",cal:140,emoji:"🫘"},
+      {id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs",cal:80,emoji:"🥬"},
+      {id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control",cal:245,emoji:"🍚"},
+      {id:"c_lunch_egg",text:"1 boiled egg with lunch",note:"Extra protein",cal:70,emoji:"🥚",diet:["egg"]},
+      {id:"c_lunch_chicken",text:"Chicken/fish curry instead of dal",note:"High protein non-veg",cal:180,emoji:"🍗",diet:["nonveg"]},
     ],
     sundayItems:[
-      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion"},
-      {id:"c_fishLunch",text:"Fish curry — no separate dal needed",note:"Omega-3",diet:["egg","nonveg"]},
-      {id:"c_vegSundayLunch",text:"Rajma or chana masala — protein rich",note:"Veg Sunday special",diet:["veg"]},
-      {id:"c_portion",text:"Max 1 bowl rice only",note:"Portion control"},
-      {id:"c_fishSabzi",text:"1 light sabzi — turai/lauki only",note:"Keep it light"},
+      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion",cal:30,emoji:"🥗"},
+      {id:"c_fishLunch",text:"Fish curry — no separate dal needed",note:"Omega-3",cal:180,emoji:"🐟",diet:["egg","nonveg"]},
+      {id:"c_vegSundayLunch",text:"Rajma or chana masala — protein rich",note:"Veg Sunday special",cal:210,emoji:"🫘",diet:["veg"]},
+      {id:"c_portion",text:"Max 1 bowl rice only",note:"Portion control",cal:165,emoji:"🍚"},
+      {id:"c_fishSabzi",text:"1 light sabzi — turai/lauki only",note:"Keep it light",cal:60,emoji:"🥬"},
     ]},
   {id:"snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
-    {id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite"},
-    {id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat"},
+    {id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite",cal:185,emoji:"🥜"},
+    {id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat",cal:5,emoji:"🍵"},
     {id:"c_noFried",text:"Avoided canteen fried snacks",note:"Zero maida"},
   ]},
   {id:"dinner",label:"🥣 Dinner",time:"9:00–9:30 PM",bg:"#e8eaf6",ac:"#283593",items:[
     {id:"c_noRice",text:"NO rice at dinner ✅",note:"Most critical rule"},
-    {id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar"},
-    {id:"c_dDal",text:"1 katori dal",note:"Overnight protein"},
-    {id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night"},
-    {id:"c_curd",text:"1 bowl curd",note:"Calcium + probiotics"},
-    {id:"c_isabgol",text:"Isabgol 1 tsp (30 min before dinner)",note:"Fibre + bloat"},
-    {id:"c_dinner_fish",text:"Fish curry 2×/week at dinner (replace dal)",note:"Omega-3 weekly dose",diet:["nonveg","egg"]},
+    {id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar",cal:150,emoji:"🫓"},
+    {id:"c_dDal",text:"1 katori dal",note:"Overnight protein",cal:140,emoji:"🫘"},
+    {id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night",cal:70,emoji:"🥬"},
+    {id:"c_curd",text:"1 bowl curd",note:"Calcium + probiotics",cal:100,emoji:"🥛"},
+    {id:"c_isabgol",text:"Isabgol 1 tsp (30 min before dinner)",note:"Fibre + bloat",cal:15,emoji:"🌿"},
+    {id:"c_dinner_fish",text:"Fish curry 2×/week at dinner",note:"Omega-3 weekly dose",cal:180,emoji:"🐟",diet:["nonveg","egg"]},
   ]},
   {id:"postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
     {id:"c_walk",text:"15–20 min walk after dinner",note:"Blood sugar -20%"},
@@ -1256,11 +1262,53 @@ function renderSections(){
     try{updateHeader();}catch(e){}
   }
 }
+// Build a lookup map of all checklist items with calories
+function getChecklistItemMap(){
+  const map={};
+  const isWeekend=(DOW===0||DOW===6);
+  const isSunday=DOW===0;
+  const diet=userSettings.diet||"egg";
+  SECTIONS.forEach(s=>{
+    let items=s.items;
+    if(s.id==="snack1"&&isWeekend) items=s.weekendItems||s.items;
+    if(s.id==="lunch"&&isSunday) items=s.sundayItems||s.items;
+    items.filter(i=>!i.diet||i.diet.includes(diet)).forEach(i=>{ map[i.id]=i; });
+  });
+  ROTATING[DOW].items.forEach(i=>{ map[i.id]=i; });
+  return map;
+}
+
 function toggleItem(id){
-  checked[id]=!checked[id];
+  const wasChecked = checked[id];
+  checked[id] = !checked[id];
   haptic(checked[id]?"success":"light");
+
+  // Auto-add or remove calories if item has calorie value
+  const itemMap = getChecklistItemMap();
+  const item = itemMap[id];
+  if(item && item.cal){
+    const mealId = "chk_"+id; // unique ID for checklist-sourced meal
+    if(checked[id]){
+      // Add to calorie log
+      meals.push({
+        id: mealId,
+        name: item.text,
+        cal: item.cal,
+        emoji: item.emoji||"✅",
+        time: nowTime(),
+        p:0,c:0,fa:0,fi:0,
+        fromChecklist: true
+      });
+      showToast("+"+ item.cal +" kcal added ✓");
+    } else {
+      // Remove from calorie log
+      meals = meals.filter(m => m.id !== mealId);
+    }
+    renderMealLog();
+    renderMacros();
+  }
+
   saveAll();
-  // Update header immediately — most important
   updateHeader();
 }
 
@@ -1943,18 +1991,19 @@ async function signInWithGoogle(){
   if(!fb){showLoginError("Loading... please wait and try again.");return;}
   const btn=document.querySelector(".login-google-btn");
   try{
-    if(btn){
-      btn.textContent="⏳ Opening Google...";
-      btn.disabled=true;
-    }
+    if(btn){btn.textContent="⏳ Signing in...";btn.disabled=true;}
     const provider=new fb.GoogleAuthProvider();
     provider.setCustomParameters({prompt:"select_account"});
-    // Use redirect — most reliable for mobile Chrome
-    await fb.signInWithRedirect(fb.auth, provider);
-    // Browser will navigate to Google then return automatically
+    // Use popup — works perfectly on Firebase Hosting (same domain)
+    const result = await fb.signInWithPopup(fb.auth, provider);
+    // onAuthStateChanged will handle showing the app
   }catch(err){
-    console.error("Sign in error:",err);
-    showLoginError("Sign in failed. Please try again.");
+    console.error("Sign in error:",err.code, err.message);
+    if(err.code==="auth/popup-closed-by-user"||err.code==="auth/cancelled-popup-request"){
+      // User closed popup — reset button silently
+    } else {
+      showLoginError("Sign in failed: "+err.message);
+    }
     if(btn){
       btn.innerHTML='<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg> Sign in with Google';
       btn.disabled=false;
