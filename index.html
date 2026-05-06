@@ -1385,7 +1385,7 @@ function renderMealLog(){
   log.innerHTML="";
   meals.forEach(m=>{
     const el=document.createElement("div");el.className="meal-row";
-    el.innerHTML=`<span class="meal-emoji">${m.emoji}</span><div style="flex:1"><div class="meal-name">${m.name}</div><div class="meal-time">${m.time}</div></div><span class="meal-cal">${m.cal}</span><button class="meal-rm" onclick="removeMeal(${m.id})">×</button>`;
+    el.innerHTML=`<span class="meal-emoji">${m.emoji}</span><div style="flex:1"><div class="meal-name">${m.name}</div><div class="meal-time">${m.time}</div></div><span class="meal-cal">${m.cal}</span><button class="meal-rm" onclick="removeMeal('${m.id}')">×</button>`;
     log.appendChild(el);
   });
 }
