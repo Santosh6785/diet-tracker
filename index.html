@@ -619,6 +619,12 @@ canvas.chart{width:100%;height:140px;display:block;}
     </div>
   </div>
 
+  <!-- Daily Summary Card -->
+  <div id="daily-summary-card" style="display:none;border-radius:14px;padding:14px 16px;margin-bottom:10px;background:linear-gradient(135deg,#1b4332,#2d6a4f);color:#fff">
+    <div style="font-size:11px;font-weight:bold;opacity:.7;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">📊 Today's Summary</div>
+    <div id="daily-summary-text" style="font-size:14px;line-height:1.7"></div>
+  </div>
+
   <!-- Meal log -->
   <div class="card card-pad">
     <div class="log-hdr">
@@ -1403,6 +1409,29 @@ function triggerPhotoScan(){
   }
   document.getElementById("photo-input").click();
 }
+// Compress image to 480p JPEG before sending to Gemini
+async function compressImage(file){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const canvas=document.createElement("canvas");
+      const MAX=480;
+      let w=img.width, h=img.height;
+      if(w>h){ if(w>MAX){h=Math.round(h*MAX/w);w=MAX;} }
+      else { if(h>MAX){w=Math.round(w*MAX/h);h=MAX;} }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext("2d").drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      // Convert to base64 JPEG at 80% quality
+      const dataUrl=canvas.toDataURL("image/jpeg",0.8);
+      resolve(dataUrl.split(",")[1]);
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); fileToBase64(file).then(resolve); };
+    img.src=url;
+  });
+}
+
 async function analysePhoto(input){
   if(!input.files[0])return;
   const file=input.files[0];
@@ -1410,10 +1439,11 @@ async function analysePhoto(input){
   const resultEl=document.getElementById("scan-result");
   resultEl.classList.remove("show");
   loading.style.display="block";
-  loading.textContent="🔍 Analysing your food photo...";
+  loading.textContent="🔍 Compressing and analysing...";
   try{
-    const base64=await fileToBase64(file);
-    const mediaType=file.type||"image/jpeg";
+    // Compress to 480p JPEG first — 3x faster API response
+    const base64=await compressImage(file);
+    const mediaType="image/jpeg";
 
     // Using Gemini Flash — free, no credit needed
     const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userSettings.apiKey}`,{
@@ -1454,7 +1484,40 @@ function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReade
 function addScannedMeal(name,cal,emoji){addMealEntry({name,cal,emoji});showToast(name+" added ✓");}
 
 // ═══════════════ CALORIES ═══════════════
-function renderCalTab(){renderMealLog();renderCatBar();renderPresets();renderMacros();}
+function renderCalTab(){renderMealLog();renderCatBar();renderPresets();renderMacros();renderDailySummary();}
+function renderDailySummary(){
+  const card=document.getElementById("daily-summary-card");
+  const txt=document.getElementById("daily-summary-text");
+  if(!card||!txt) return;
+  const cal=totalCal();
+  const target=T();
+  const burned=totalBurned();
+  const checkedCount=Object.values(checked).filter(Boolean).length;
+  const totalItems=getAllItems().length;
+  const pct=Math.round(checkedCount/Math.max(totalItems,1)*100);
+
+  if(cal===0 && checkedCount===0){card.style.display="none";return;}
+  card.style.display="block";
+
+  const diff=target-cal;
+  let calMsg="";
+  if(cal===0) calMsg="No calories logged yet today.";
+  else if(diff>300) calMsg="🟢 You're <strong>"+diff+" kcal under</strong> your target. Great discipline!";
+  else if(diff>0) calMsg="🟡 You're <strong>"+diff+" kcal away</strong> from your target. Almost there!";
+  else if(diff===0) calMsg="🎯 <strong>Exactly on target!</strong> Perfect balance today.";
+  else calMsg="🔴 You're <strong>"+Math.abs(diff)+" kcal over</strong> your target. Walk it off tonight!";
+
+  let habitMsg="";
+  if(pct>=80) habitMsg="⭐ Habit score: <strong>"+pct+"%</strong> — Excellent day!";
+  else if(pct>=50) habitMsg="👍 Habit score: <strong>"+pct+"%</strong> — Keep going!";
+  else if(pct>0) habitMsg="💪 Habit score: <strong>"+pct+"%</strong> — More to tick off!";
+
+  let burnMsg="";
+  if(burned>0) burnMsg="🔥 <strong>"+burned+" kcal</strong> burned from activity.";
+
+  txt.innerHTML=[calMsg,habitMsg,burnMsg].filter(Boolean).join("<br/>");
+}
+
 function renderMealLog(){
   const cal=totalCal(),burned=totalBurned(),rem=T()-cal,pct=Math.min(100,Math.round((cal/T())*100));
   document.getElementById("log-total").textContent=cal+" kcal";
@@ -1468,7 +1531,14 @@ function renderMealLog(){
   document.getElementById("nc-burned").textContent=burned;
   document.getElementById("nc-net").textContent=cal-burned;
   const log=document.getElementById("meal-log");
-  if(!meals.length){log.innerHTML='<div class="empty">No meals logged — tap any food below</div>';return;}
+  if(!meals.length){
+    log.innerHTML='<div style="text-align:center;padding:20px 14px">'
+      +'<div style="font-size:36px;margin-bottom:8px">🍽️</div>'
+      +'<div style="font-weight:bold;color:#1b4332;font-size:14px;margin-bottom:4px">No meals logged yet</div>'
+      +'<div style="color:#aaa;font-size:12px;line-height:1.6">Tap any food below to start logging.<br/>Or tick items in your Checklist — calories auto-add!</div>'
+      +'</div>';
+    return;
+  }
   log.innerHTML="";
   meals.forEach(m=>{
     const el=document.createElement("div");el.className="meal-row";
@@ -1529,13 +1599,12 @@ function renderPresets(){
 }
 function addMealEntry(p){
   meals.push({id:Date.now(),name:p.name,cal:p.cal,emoji:p.emoji||"🍽️",time:nowTime(),p:p.p||0,c:p.c||0,fa:p.fa||0,fi:p.fi||0});
-  saveAll();renderMealLog();renderMacros();updateHeader();
-  // Hide the hint after first food is logged
+  saveAll();renderMealLog();renderMacros();updateHeader();renderDailySummary();
   const hint=document.getElementById("food-hint");
   if(hint) hint.style.display="none";
 }
-function removeMeal(id){meals=meals.filter(m=>m.id!==id);saveAll();renderMealLog();renderMacros();updateHeader();}
-function resetMeals(){if(!confirm("Reset calorie log?"))return;meals=[];saveAll();renderMealLog();renderMacros();updateHeader();showToast("Calories reset ✓");}
+function removeMeal(id){meals=meals.filter(m=>m.id!==id);saveAll();renderMealLog();renderMacros();updateHeader();renderDailySummary();}
+function resetMeals(){if(!confirm("Reset calorie log?"))return;meals=[];saveAll();renderMealLog();renderMacros();updateHeader();renderDailySummary();showToast("Calories reset ✓");}
 
 // ─── Haptic ───
 function haptic(type="light"){if(!navigator.vibrate)return;const p={light:25,medium:50,success:[30,20,40]};navigator.vibrate(p[type]||25);}
