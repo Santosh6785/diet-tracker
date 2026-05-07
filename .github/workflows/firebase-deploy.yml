@@ -8,14 +8,22 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+
+      - name: Copy files to public folder
+        run: |
+          mkdir -p public
+          cp index.html public/index.html
+          cp sw.js public/sw.js
+          cp manifest.json public/manifest.json
+          cp icon-192.png public/icon-192.png
+          cp icon-512.png public/icon-512.png
+
       - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
+        uses: w9jds/firebase-action@master
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: diet-tracker-app-c22f4
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: diet-tracker-app-c22f4
