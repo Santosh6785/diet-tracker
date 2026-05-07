@@ -1511,14 +1511,17 @@ function renderPresets(){
     const card=document.createElement("div");
     card.className="preset-card";
     const favOn=favorites.includes(p.name);
+    const favClass="fav-btn"+(favOn?" on":"");
+    const favIcon=favOn?"❤️":"🤍";
+    const proteinStr=p.p?" · "+p.p+"g prot":"";
     card.innerHTML=`
       <span class="p-emoji">${p.emoji}</span>
       <div style="flex:1;min-width:0">
         <div class="p-name">${p.name}</div>
-        <div class="p-cal">${p.cal} kcal${p.p?" · "+p.p+"g prot":""}</div>
+        <div class="p-cal">${p.cal} kcal${proteinStr}</div>
       </div>
-      <button class="fav-btn${favOn?" on":""}" onclick="event.stopPropagation();toggleFav('${p.name.replace(/'/g,"\\'")}')">
-        ${favOn?"❤️":"🤍"}
+      <button class="${favClass}" onclick="event.stopPropagation();toggleFav('${p.name.replace(/'/g,"\\'")}')">
+        ${favIcon}
       </button>
       <div class="p-plus" style="cursor:pointer">+</div>`;
     card.querySelector(".p-plus").addEventListener("click",e=>{e.stopPropagation();addMealEntry(p);haptic("light");showToast(p.name.split(" ").slice(0,3).join(" ")+" ✓");});
@@ -1880,19 +1883,19 @@ async function lookupBarcode(barcode){
       const infoDiv = document.getElementById("barcode-product-info");
       resultDiv.style.display = "block";
 
+      const fibreStr = fibre ? " · "+fibre+"g fibre" : "";
+      const servingBtn = p.serving_size ? `<button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${Math.round(cal*parseFloat(p.serving_size)/100)},${Math.round(protein*parseFloat(p.serving_size)/100)},${Math.round(carbs*parseFloat(p.serving_size)/100)},${Math.round(fat*parseFloat(p.serving_size)/100)},${Math.round(fibre*parseFloat(p.serving_size)/100)},'${servingSize}')" style="padding:8px 16px;background:#2d6a4f;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">+ Add 1 serving (${servingSize})</button>` : "";
+
       infoDiv.innerHTML = `
-        <div style="font-size:14px;font-weight:bold;color:#1b4332;margin-bottom:4px">${name}${brand?" · <span style='font-weight:normal;color:#888'>${brand}</span>":""}</div>
-        <div style="font-size:12px;color:#555;margin-bottom:10px">Per 100g: ${cal} kcal · ${protein}g protein · ${carbs}g carbs · ${fat}g fat${fibre?` · ${fibre}g fibre`:""}</div>
+        <div style="font-size:14px;font-weight:bold;color:#1b4332;margin-bottom:4px">${name}${brand ? " · <span style='font-weight:normal;color:#888'>"+brand+"</span>" : ""}</div>
+        <div style="font-size:12px;color:#555;margin-bottom:10px">Per 100g: ${cal} kcal · ${protein}g protein · ${carbs}g carbs · ${fat}g fat${fibreStr}</div>
         <div style="font-size:11px;color:#888;margin-bottom:10px">Serving size: ${servingSize}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${cal},${protein},${carbs},${fat},${fibre},'per 100g')"
             style="padding:8px 16px;background:#1b4332;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">
             + Add 100g (${cal} kcal)
           </button>
-          ${p.serving_size ? `<button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${Math.round(cal*parseFloat(p.serving_size)/100)},${Math.round(protein*parseFloat(p.serving_size)/100)},${Math.round(carbs*parseFloat(p.serving_size)/100)},${Math.round(fat*parseFloat(p.serving_size)/100)},${Math.round(fibre*parseFloat(p.serving_size)/100)},'${servingSize}')"
-            style="padding:8px 16px;background:#2d6a4f;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">
-            + Add 1 serving (${servingSize})
-          </button>` : ""}
+          ${servingBtn}
         </div>`;
       showToast("Product found: "+name.split(" ").slice(0,3).join(" "));
     } else {
@@ -2011,20 +2014,22 @@ function renderHealthCards(){
   toShow.forEach(c=>{
     const card=document.createElement("div");
     card.className="health-card";
-    card.innerHTML=`
-      <div class="health-card-hdr" style="background:${c.bg}">
-        <div class="health-card-icon">${c.label.split(" ")[0]}</div>
-        <div><div class="health-card-title">${c.label.substring(2)}</div><div class="health-card-sub">${c.subtitle}</div></div>
-      </div>
-      <div class="health-section">
-        <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">${c.overview}</div>
-        <div class="health-section-title" style="color:#2e7d32">✅ Eat More</div>
-        <div class="health-food-grid">${c.eat.map(f=>`<div class="health-food-tag eat">${f.e} ${f.n}</div>`).join("")}</div>
-        <div class="health-section-title" style="color:#c62828;margin-top:12px">❌ Avoid</div>
-        <div class="health-food-grid">${c.avoid.map(f=>`<div class="health-food-tag avoid">${f.e} ${f.n}</div>`).join("")}</div>
-        <div class="health-tip">${c.tips}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:6px;font-style:italic">${c.target}</div>
-      </div>`;
+    const eatTags=c.eat.map(f=>'<div class="health-food-tag eat">'+f.e+' '+f.n+'</div>').join("");
+    const avoidTags=c.avoid.map(f=>'<div class="health-food-tag avoid">'+f.e+' '+f.n+'</div>').join("");
+    card.innerHTML=
+      '<div class="health-card-hdr" style="background:'+c.bg+'">'
+      +'<div class="health-card-icon">'+c.label.split(" ")[0]+'</div>'
+      +'<div><div class="health-card-title">'+c.label.substring(2)+'</div>'
+      +'<div class="health-card-sub">'+c.subtitle+'</div></div></div>'
+      +'<div class="health-section">'
+      +'<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">'+c.overview+'</div>'
+      +'<div class="health-section-title" style="color:#2e7d32">✅ Eat More</div>'
+      +'<div class="health-food-grid">'+eatTags+'</div>'
+      +'<div class="health-section-title" style="color:#c62828;margin-top:12px">❌ Avoid</div>'
+      +'<div class="health-food-grid">'+avoidTags+'</div>'
+      +'<div class="health-tip">'+c.tips+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin-top:6px;font-style:italic">'+c.target+'</div>'
+      +'</div>';
     container.appendChild(card);
   });
 }
