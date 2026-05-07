@@ -1463,7 +1463,6 @@ function getChecklistItemMap(){
 }
 
 function toggleItem(id){
-  const wasChecked = checked[id];
   checked[id] = !checked[id];
   haptic(checked[id]?"success":"light");
 
@@ -1471,27 +1470,29 @@ function toggleItem(id){
   const itemMap = getChecklistItemMap();
   const item = itemMap[id];
   if(item && item.cal){
-    const mealId = "chk_"+id; // unique ID for checklist-sourced meal
+    const mealId = "chk_"+id;
     if(checked[id]){
-      // Add to calorie log
       meals.push({
         id: mealId,
         name: item.text,
         cal: item.cal,
         emoji: item.emoji||"✅",
         time: nowTime(),
-        p:0,c:0,fa:0,fi:0,
+        p: item.p||0,   // ← include macro data
+        c: item.c||0,
+        fa: item.fa||0,
+        fi: item.fi||0,
         fromChecklist: true
       });
-      showToast("+"+ item.cal +" kcal added ✓");
+      showToast("+"+ item.cal +" kcal · "+item.text.split(" ").slice(0,3).join(" ")+" ✓");
     } else {
-      // Remove from calorie log
       meals = meals.filter(m => m.id !== mealId);
     }
     renderMealLog();
-    renderMacros();
   }
 
+  // Always update macros and header
+  renderMacros();
   saveAll();
   updateHeader();
 }
