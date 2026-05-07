@@ -1020,7 +1020,7 @@ canvas.chart{width:100%;height:140px;display:block;}
     <button class="save-btn" id="install-btn-settings" onclick="installApp()" style="background:#ff6b35;margin-bottom:10px">
       📲 Install on This Phone
     </button>
-    <div class="share-url">https://santosh6785.github.io/diet-tracker</div>
+    <div class="share-url">https://diet-tracker-app-c22f4.web.app</div>
     <button class="copy-btn" onclick="copyLink()">📋 Copy Link to Share</button>
   </div>
 </div>
@@ -1623,7 +1623,7 @@ function applyBMRTarget(t){
 function sendFeedback(){
   const text=document.getElementById("feedback-text").value.trim();
   if(!text){showToast("Please write your feedback first");return;}
-  const msg=encodeURIComponent("🥗 Diet Tracker Feedback:\n\n"+text+"\n\nApp link: santosh6785.github.io/diet-tracker");
+  const msg=encodeURIComponent("🥗 Diet Tracker Feedback:\n\n"+text+"\n\nApp link: diet-tracker-app-c22f4.web.app");
   window.open("https://wa.me/?text="+msg,"_blank");
   document.getElementById("feedback-text").value="";
   showToast("Opening WhatsApp ✓");
@@ -1802,7 +1802,7 @@ function renderSettings(){
 function updateSlider(val){document.getElementById("set-cal-disp").textContent=val;document.querySelectorAll(".cal-preset-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===parseInt(val)));}
 function setCalPreset(val){document.getElementById("set-cal-slider").value=val;updateSlider(val);}
 function selectDiet(d){["veg","egg","nonveg"].forEach(x=>document.getElementById("diet-"+x).classList.toggle("on",x===d));}
-function copyLink(){const url="https://santosh6785.github.io/diet-tracker";navigator.clipboard?navigator.clipboard.writeText(url).then(()=>showToast("Link copied ✓")).catch(()=>{}):showToast("Copy: "+url);}
+function copyLink(){const url="https://diet-tracker-app-c22f4.web.app";navigator.clipboard?navigator.clipboard.writeText(url).then(()=>showToast("Link copied ✓")).catch(()=>{}):showToast("Copy: "+url);}
 
 // ═══════════════ BARCODE SCANNER ═══════════════
 let barcodeStream = null;
