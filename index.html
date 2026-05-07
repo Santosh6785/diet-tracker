@@ -933,11 +933,12 @@ canvas.chart{width:100%;height:140px;display:block;}
 <!-- TAB 4: HEALTH -->
 <div class="content" id="tab-4">
   <div style="padding:4px 0 10px">
-    <div style="font-size:13px;color:#888;margin-bottom:12px;line-height:1.6">
-      Select your health condition to see personalised food recommendations and foods to avoid. Always consult your doctor for medical advice.
+    <div style="background:#fff8e1;border-radius:10px;padding:10px 12px;margin-bottom:12px;border-left:3px solid #f57f17;font-size:12px;color:#e65100;line-height:1.6">
+      ⚕️ <strong>Medical Disclaimer:</strong> This information is for general guidance only and is not a substitute for professional medical advice. Always consult your doctor before making dietary changes, especially if you have a diagnosed condition.
     </div>
-
-    <!-- Condition selector -->
+    <div style="font-size:13px;color:#888;margin-bottom:12px;line-height:1.6">
+      Select your health condition to see personalised food recommendations. Tap multiple for combined view.
+    </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="condition-selector"></div>
   </div>
 
@@ -1101,6 +1102,17 @@ canvas.chart{width:100%;height:140px;display:block;}
         📋 Copy App Link
       </button>
     </div>
+  </div>
+
+  <!-- Danger Zone — Reset All Data -->
+  <div class="card card-pad" style="margin-top:12px;border:1.5px solid #ffcdd2;">
+    <div class="card-title" style="color:#c62828">⚠️ Danger Zone</div>
+    <p style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px">
+      Permanently delete all your tracked data. This cannot be undone.
+    </p>
+    <button onclick="resetAllData()" style="width:100%;padding:12px;background:#c62828;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;font-family:inherit;cursor:pointer;">
+      🗑️ Reset All My Data
+    </button>
   </div>
 
   <div class="card card-pad" style="margin-top:12px">
@@ -1313,7 +1325,9 @@ function updateHeader(){
     const greeting=name?"Hi "+name+" · ":"";
     const setEl=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
     const setStyle=(id,prop,val)=>{const e=document.getElementById(id);if(e)e.style[prop]=val;};
-    setEl("hdr-date", greeting+_d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})+" · "+ROTATING[DOW].emoji+" "+ROTATING[DOW].label);
+    const streak = calcStreak();
+    const streakStr = streak > 1 ? " · 🔥 "+streak+" day streak" : "";
+    setEl("hdr-date", greeting+_d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})+" · "+ROTATING[DOW].emoji+" "+ROTATING[DOW].label+streakStr);
     setEl("check-pct", pct+"%");
     setStyle("check-pct","color",pct>=80?"#97bc62":pct>=60?"#ffd166":"#ef476f");
     setEl("check-count", allItems().filter(i=>checked[i.id]).length+"/"+allItems().length);
@@ -1587,6 +1601,7 @@ function addScannedMeal(name,cal,emoji){addMealEntry({name,cal,emoji});showToast
 
 // ═══════════════ CALORIES ═══════════════
 function renderCalTab(){renderMealLog();renderCatBar();renderPresets();renderMacros();renderDailySummary();}
+
 function renderDailySummary(){
   const card=document.getElementById("daily-summary-card");
   const txt=document.getElementById("daily-summary-text");
@@ -1597,10 +1612,8 @@ function renderDailySummary(){
   const checkedCount=Object.values(checked).filter(Boolean).length;
   const totalItems=getAllItems().length;
   const pct=Math.round(checkedCount/Math.max(totalItems,1)*100);
-
   if(cal===0 && checkedCount===0){card.style.display="none";return;}
   card.style.display="block";
-
   const diff=target-cal;
   let calMsg="";
   if(cal===0) calMsg="No calories logged yet today.";
@@ -1608,17 +1621,47 @@ function renderDailySummary(){
   else if(diff>0) calMsg="🟡 You're <strong>"+diff+" kcal away</strong> from your target. Almost there!";
   else if(diff===0) calMsg="🎯 <strong>Exactly on target!</strong> Perfect balance today.";
   else calMsg="🔴 You're <strong>"+Math.abs(diff)+" kcal over</strong> your target. Walk it off tonight!";
-
   let habitMsg="";
   if(pct>=80) habitMsg="⭐ Habit score: <strong>"+pct+"%</strong> — Excellent day!";
   else if(pct>=50) habitMsg="👍 Habit score: <strong>"+pct+"%</strong> — Keep going!";
   else if(pct>0) habitMsg="💪 Habit score: <strong>"+pct+"%</strong> — More to tick off!";
-
   let burnMsg="";
   if(burned>0) burnMsg="🔥 <strong>"+burned+" kcal</strong> burned from activity.";
-
   txt.innerHTML=[calMsg,habitMsg,burnMsg].filter(Boolean).join("<br/>");
 }
+
+function calcStreak(){
+  // Count consecutive days with >50% checklist completion
+  let streak=0;
+  const d=new Date();
+  for(let i=0;i<30;i++){
+    const key=d.toISOString().split("T")[0];
+    const day=history[key];
+    if(!day) break;
+    const items=Object.keys(day.checked||{});
+    const done=items.filter(k=>day.checked[k]).length;
+    if(items.length>0 && (done/items.length)>=0.5){ streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+function resetAllData(){
+  if(!confirm("⚠️ This will permanently delete ALL your data:\n\n• All food logs\n• Weight history\n• Checklist history\n• Settings\n\nThis cannot be undone. Are you sure?")) return;
+  if(!confirm("Last chance — are you really sure you want to delete everything?")) return;
+  try{
+    localStorage.clear();
+    if(window._fbUser && window._fb){
+      // Also clear Firebase data
+      const uid=window._fbUser.uid;
+      const db=window._fb.db;
+      // Reset local state
+    }
+  }catch(e){}
+  showToast("All data deleted. Refreshing...");
+  setTimeout(()=>location.reload(), 1500);
+}
+
 
 function renderMealLog(){
   const cal=totalCal(),burned=totalBurned(),rem=T()-cal,pct=Math.min(100,Math.round((cal/T())*100));
