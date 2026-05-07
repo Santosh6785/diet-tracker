@@ -378,6 +378,15 @@ canvas.chart{width:100%;height:140px;display:block;}
 </head>
 <body>
 
+<!-- Food Fact of the Day -->
+<div class="card card-pad" id="food-fact-card" style="margin-bottom:10px;background:linear-gradient(135deg,#1b4332,#2d6a4f);color:#fff;border-radius:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <span style="font-size:12px;font-weight:bold;opacity:.7;letter-spacing:1px;text-transform:uppercase">💡 Food Fact</span>
+    <button onclick="nextFoodFact()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;border-radius:8px;padding:3px 8px;font-family:inherit;cursor:pointer">Next →</button>
+  </div>
+  <div id="food-fact-text" style="font-size:13px;line-height:1.7;opacity:.95"></div>
+</div>
+
 <div id="onboard" class="onboard-overlay">
   <!-- Dots -->
   <div class="onboard-dots">
@@ -534,11 +543,42 @@ canvas.chart{width:100%;height:140px;display:block;}
 
 <!-- TAB 1: CALORIES -->
 <div class="content" id="tab-1">
-  <!-- Photo Scan -->
-  <button class="photo-btn" onclick="triggerPhotoScan()">
-    📷 Scan Food Photo — AI Calorie Estimate
-  </button>
+  <!-- Scan buttons row -->
+  <div style="display:flex;gap:8px;margin-bottom:8px">
+    <button class="photo-btn" style="flex:1" onclick="triggerPhotoScan()">
+      📷 Photo Scan
+    </button>
+    <button class="photo-btn" style="flex:1;background:linear-gradient(135deg,#1565c0,#1976d2)" onclick="openBarcodeScanner()">
+      📦 Barcode Scan
+    </button>
+  </div>
   <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="analysePhoto(this)"/>
+
+  <!-- Barcode Scanner Modal -->
+  <div id="barcode-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center">
+    <div style="color:#fff;font-size:15px;font-weight:bold;margin-bottom:12px">📦 Point camera at barcode</div>
+    <div style="position:relative;width:300px;height:220px;border-radius:12px;overflow:hidden;border:3px solid #97bc62">
+      <video id="barcode-video" style="width:100%;height:100%;object-fit:cover" playsinline autoplay></video>
+      <!-- Scan line animation -->
+      <div style="position:absolute;left:0;right:0;height:2px;background:#97bc62;opacity:.8;animation:scanline 2s linear infinite;top:50%"></div>
+      <style>@keyframes scanline{0%{top:10%}50%{top:90%}100%{top:10%}}</style>
+    </div>
+    <!-- Manual barcode entry -->
+    <div style="margin-top:14px;display:flex;gap:8px;width:300px">
+      <input id="barcode-input" type="number" placeholder="Or type barcode number..."
+        style="flex:1;padding:10px;border-radius:10px;border:none;font-size:14px;font-family:inherit"/>
+      <button onclick="lookupBarcode(document.getElementById('barcode-input').value)"
+        style="padding:10px 14px;background:#97bc62;border:none;border-radius:10px;font-weight:bold;font-family:inherit;cursor:pointer">Go</button>
+    </div>
+    <button onclick="closeBarcodeScanner()" style="margin-top:14px;background:rgba(255,255,255,.15);border:none;color:#fff;padding:10px 24px;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer">✕ Close</button>
+    <div id="barcode-status" style="color:rgba(255,255,255,.7);font-size:13px;margin-top:10px;text-align:center"></div>
+  </div>
+
+  <!-- Barcode result card -->
+  <div id="barcode-result" style="display:none;background:#e3f2fd;border-radius:12px;padding:12px 14px;margin-bottom:10px;border-left:3px solid #1565c0">
+    <div style="font-weight:bold;color:#1565c0;font-size:13px;margin-bottom:8px">📦 Product Found:</div>
+    <div id="barcode-product-info"></div>
+  </div>
   <div class="scan-result" id="scan-result">
     <div style="font-weight:bold;color:#1565c0;font-size:13px;margin-bottom:8px">🤖 AI Detected Foods:</div>
     <div id="scan-items"></div>
@@ -977,11 +1017,11 @@ const SECTIONS = [
     {id:"c_sunlight",text:"15 min morning sunlight",note:"Free Vitamin D"},
   ]},
   {id:"bfast",label:"🍳 Breakfast",time:"8:00–8:30 AM",bg:"#fff8e1",ac:"#f57f17",items:[
-    {id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs",cal:150,emoji:"🫓"},
-    {id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + protein",cal:140,emoji:"🥚",diet:["egg","nonveg"]},
-    {id:"c_bfast_protein",text:"1 bowl sprouts OR paneer bhurji",note:"Protein for veg",cal:160,emoji:"🌱",diet:["veg"]},
-    {id:"c_til",text:"Til on roti/sabzi",note:"Calcium",cal:18,emoji:"🌿"},
-    {id:"c_tea",text:"1 cup tea (mild sugar)",note:"Max 1 sugared tea",cal:50,emoji:"☕"},
+    {id:"c_rotis",text:"2 whole wheat rotis",note:"Complex carbs",cal:150,emoji:"🫓",p:4,c:28,fa:2,fi:3},
+    {id:"c_eggs",text:"2 eggs — bhurji or boiled",note:"Vitamin D + protein",cal:140,emoji:"🥚",p:12,c:0,fa:10,fi:0,diet:["egg","nonveg"]},
+    {id:"c_bfast_protein",text:"1 bowl sprouts OR paneer bhurji",note:"Protein for veg",cal:160,emoji:"🌱",p:10,c:14,fa:5,fi:3,diet:["veg"]},
+    {id:"c_til",text:"Til on roti/sabzi",note:"Calcium",cal:18,emoji:"🌿",p:1,c:1,fa:1,fi:0},
+    {id:"c_tea",text:"1 cup tea (mild sugar)",note:"Max 1 sugared tea",cal:50,emoji:"☕",p:1,c:8,fa:1,fi:0},
   ]},
   {id:"snack1",label:"🥜 Mid-Morning Snack",time:"11:30 AM",bg:"#e8f4fd",ac:"#1565c0",
     officeOnly:true,
@@ -995,12 +1035,12 @@ const SECTIONS = [
     ]},
   {id:"lunch",label:"🍱 Lunch",time:"2:00–2:30 PM (office) / 1:00–1:30 PM (home)",bg:"#f3e5f5",ac:"#6a1b9a",
     items:[
-      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally",cal:30,emoji:"🥗"},
-      {id:"c_dal",text:"1 katori dal",note:"Protein + iron",cal:140,emoji:"🫘"},
-      {id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs",cal:80,emoji:"🥬"},
-      {id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control",cal:245,emoji:"🍚"},
-      {id:"c_lunch_egg",text:"1 boiled egg with lunch",note:"Extra protein",cal:70,emoji:"🥚",diet:["egg"]},
-      {id:"c_lunch_chicken",text:"Chicken/fish curry instead of dal",note:"High protein non-veg",cal:180,emoji:"🍗",diet:["nonveg"]},
+      {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion naturally",cal:30,emoji:"🥗",p:1,c:5,fa:0,fi:2},
+      {id:"c_dal",text:"1 katori dal",note:"Protein + iron",cal:140,emoji:"🫘",p:9,c:20,fa:1,fi:4},
+      {id:"c_sabzi",text:"Sabzi without potato",note:"No starchy carbs",cal:80,emoji:"🥬",p:2,c:10,fa:3,fi:3},
+      {id:"c_portion",text:"Max 1.5 bowl rice OR 2 rotis",note:"Portion control",cal:245,emoji:"🍚",p:5,c:50,fa:1,fi:2},
+      {id:"c_lunch_egg",text:"1 boiled egg with lunch",note:"Extra protein",cal:70,emoji:"🥚",p:6,c:0,fa:5,fi:0,diet:["egg"]},
+      {id:"c_lunch_chicken",text:"Chicken/fish curry instead of dal",note:"High protein non-veg",cal:180,emoji:"🍗",p:22,c:4,fa:8,fi:0,diet:["nonveg"]},
     ],
     sundayItems:[
       {id:"c_saladFirst",text:"Ate salad FIRST",note:"Reduces portion",cal:30,emoji:"🥗"},
@@ -1010,18 +1050,18 @@ const SECTIONS = [
       {id:"c_fishSabzi",text:"1 light sabzi — turai/lauki only",note:"Keep it light",cal:60,emoji:"🥬"},
     ]},
   {id:"snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
-    {id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite",cal:185,emoji:"🥜"},
-    {id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat",cal:5,emoji:"🍵"},
+    {id:"c_eve",text:"Roasted chana 30g + peanuts 20g",note:"Controls dinner appetite",cal:185,emoji:"🥜",p:9,c:18,fa:9,fi:5},
+    {id:"c_gtea",text:"Green tea (no sugar)",note:"Burns belly fat",cal:5,emoji:"🍵",p:0,c:1,fa:0,fi:0},
     {id:"c_noFried",text:"Avoided canteen fried snacks",note:"Zero maida"},
   ]},
   {id:"dinner",label:"🥣 Dinner",time:"9:00–9:30 PM",bg:"#e8eaf6",ac:"#283593",items:[
     {id:"c_noRice",text:"NO rice at dinner ✅",note:"Most critical rule"},
-    {id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar",cal:150,emoji:"🫓"},
-    {id:"c_dDal",text:"1 katori dal",note:"Overnight protein",cal:140,emoji:"🫘"},
-    {id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night",cal:70,emoji:"🥬"},
-    {id:"c_curd",text:"1 bowl curd",note:"Calcium + probiotics",cal:100,emoji:"🥛"},
-    {id:"c_isabgol",text:"Isabgol 1 tsp (30 min before dinner)",note:"Fibre + bloat",cal:15,emoji:"🌿"},
-    {id:"c_dinner_fish",text:"Fish curry 2×/week at dinner",note:"Omega-3 weekly dose",cal:180,emoji:"🐟",diet:["nonveg","egg"]},
+    {id:"c_dRotis",text:"2 rotis only",note:"Lower blood sugar",cal:150,emoji:"🫓",p:4,c:28,fa:2,fi:3},
+    {id:"c_dDal",text:"1 katori dal",note:"Overnight protein",cal:140,emoji:"🫘",p:9,c:20,fa:1,fi:4},
+    {id:"c_dSabzi",text:"Palak/lauki/turai sabzi",note:"Iron at night",cal:70,emoji:"🥬",p:3,c:8,fa:2,fi:3},
+    {id:"c_curd",text:"1 bowl curd",note:"Calcium + probiotics",cal:100,emoji:"🥛",p:5,c:8,fa:4,fi:0},
+    {id:"c_isabgol",text:"Isabgol 1 tsp (30 min before dinner)",note:"Fibre + bloat",cal:15,emoji:"🌿",p:0,c:3,fa:0,fi:2},
+    {id:"c_dinner_fish",text:"Fish curry 2×/week at dinner",note:"Omega-3 weekly dose",cal:180,emoji:"🐟",p:22,c:4,fa:7,fi:0,diet:["nonveg","egg"]},
   ]},
   {id:"postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
     {id:"c_walk",text:"15–20 min walk after dinner",note:"Blood sugar -20%"},
@@ -1048,7 +1088,6 @@ const PRESETS = [
   {name:"Plain sabzi 1 katori",cal:90,emoji:"🥬",cat:"Sabzi"},{name:"Palak sabzi 1 katori",cal:95,emoji:"🥬",cat:"Sabzi"},{name:"Turai/lauki 1 katori",cal:80,emoji:"🥒",cat:"Sabzi"},{name:"Kaddu sabzi 1 katori",cal:110,emoji:"🎃",cat:"Sabzi"},{name:"Hari saag ½ katori",cal:45,emoji:"🌿",cat:"Sabzi"},{name:"Dal wadi+brinjal 1 katori",cal:180,emoji:"🍆",cat:"Sabzi"},{name:"Aloo chokha",cal:120,emoji:"🥔",cat:"Sabzi"},{name:"Aloo+gobi 1 katori",cal:150,emoji:"🥔",cat:"Sabzi"},{name:"Aloo matar 1 katori",cal:180,emoji:"🥔",cat:"Sabzi"},{name:"Bhindi masala 1 katori",cal:120,emoji:"🥬",cat:"Sabzi"},{name:"Baingan bharta 1 katori",cal:130,emoji:"🍆",cat:"Sabzi"},{name:"Karela sabzi 1 katori",cal:85,emoji:"🥬",cat:"Sabzi"},{name:"Methi sabzi 1 katori",cal:80,emoji:"🌿",cat:"Sabzi"},{name:"Palak paneer 1 katori",cal:280,emoji:"🥬",cat:"Sabzi"},{name:"Matar paneer 1 katori",cal:310,emoji:"🧀",cat:"Sabzi"},{name:"Mix veg sabzi 1 katori",cal:140,emoji:"🥗",cat:"Sabzi"},{name:"Mushroom masala 1 katori",cal:145,emoji:"🍄",cat:"Sabzi"},{name:"Sarson da saag 1 katori",cal:130,emoji:"🌿",cat:"Sabzi"},
   {name:"Curd 1 bowl 150ml",cal:90,emoji:"🥛",cat:"Dairy"},{name:"Curd ½ bowl 75ml",cal:45,emoji:"🥛",cat:"Dairy"},{name:"Cucumber+tomato salad",cal:35,emoji:"🥗",cat:"Dairy"},{name:"Salad with onion+beetroot",cal:55,emoji:"🥗",cat:"Dairy"},{name:"Isabgol 1 tsp",cal:15,emoji:"🌿",cat:"Dairy"},{name:"Paneer 50g raw",cal:140,emoji:"🧀",cat:"Dairy"},{name:"Butter 1 tsp",cal:35,emoji:"🧈",cat:"Dairy"},{name:"Ghee 1 tsp",cal:45,emoji:"🧈",cat:"Dairy"},{name:"Ice cream 1 scoop",cal:140,emoji:"🍦",cat:"Dairy"},{name:"Kheer 1 bowl",cal:280,emoji:"🍚",cat:"Dairy"},{name:"Raita 1 katori",cal:75,emoji:"🥛",cat:"Dairy"},{name:"Shrikhand 1 katori",cal:250,emoji:"🥛",cat:"Dairy"},{name:"Dahi vada 2 pieces",cal:220,emoji:"🥛",cat:"Dairy"},
   {name:"Chicken curry 2 pieces",cal:160,emoji:"🍗",cat:"Meat",p:20,c:3,fa:7,fi:0},{name:"Chicken curry 3 pieces",cal:240,emoji:"🍗",cat:"Meat",p:30,c:4,fa:10,fi:0},{name:"Chicken tandoori 2 pieces",cal:200,emoji:"🍗",cat:"Meat",p:25,c:2,fa:8,fi:0},{name:"Chicken tikka 6 pieces",cal:230,emoji:"🍗",cat:"Meat",p:28,c:4,fa:9,fi:0},{name:"Chicken biryani 1 plate",cal:450,emoji:"🍗",cat:"Meat",p:22,c:55,fa:12,fi:2},{name:"Butter chicken 1 katori",cal:380,emoji:"🍗",cat:"Meat",p:22,c:10,fa:26,fi:1},{name:"Fish curry rohu 1 katori",cal:180,emoji:"🐟",cat:"Meat",p:22,c:4,fa:7,fi:0},{name:"Fish fry 1 piece",cal:200,emoji:"🐟",cat:"Meat",p:18,c:8,fa:10,fi:0},{name:"Hilsa fish 1 piece",cal:195,emoji:"🐟",cat:"Meat",p:20,c:2,fa:11,fi:0},{name:"Katla fish 1 katori",cal:170,emoji:"🐟",cat:"Meat",p:21,c:3,fa:7,fi:0},{name:"Prawn curry 1 katori",cal:165,emoji:"🦐",cat:"Meat",p:18,c:5,fa:7,fi:0},{name:"Mutton curry 2 pieces",cal:280,emoji:"🥩",cat:"Meat",p:22,c:4,fa:18,fi:0},{name:"Mutton curry 3 pieces",cal:420,emoji:"🥩",cat:"Meat",p:33,c:6,fa:27,fi:0},{name:"Mutton biryani 1 plate",cal:520,emoji:"🥩",cat:"Meat",p:28,c:58,fa:18,fi:2},{name:"Egg curry 2 eggs",cal:220,emoji:"🥚",cat:"Meat",p:13,c:5,fa:15,fi:1},
-  {name:"Bihari chana chaat 1 bowl",cal:180,emoji:"🫘",cat:"Snacks"},{name:"Thekua 2 pieces",cal:220,emoji:"🍪",cat:"Snacks"},{name:"Bihari ghugni chaat 1 bowl",cal:190,emoji:"🫘",cat:"Snacks"},{name:"Banana + peanut butter",cal:220,emoji:"🍌",cat:"Snacks"},{name:"Curd rice 1 small bowl",cal:160,emoji:"🍚",cat:"Grains"},{name:"Ragi roti 2 + sabzi",cal:290,emoji:"🫓",cat:"Grains"},
   {name:"Samosa 1 piece",cal:130,emoji:"🫔",cat:"Junk"},{name:"Samosa 2 pieces",cal:260,emoji:"🫔",cat:"Junk"},{name:"Kachori 1 piece",cal:180,emoji:"🫔",cat:"Junk"},{name:"Pakoda 4 pieces",cal:200,emoji:"🍟",cat:"Junk"},{name:"Pani puri 6 pieces",cal:200,emoji:"🫙",cat:"Junk"},{name:"Vada pav 1",cal:290,emoji:"🍔",cat:"Junk"},{name:"Burger veg 1",cal:350,emoji:"🍔",cat:"Junk"},{name:"Burger chicken 1",cal:450,emoji:"🍔",cat:"Junk"},{name:"Pizza veg 2 slices",cal:400,emoji:"🍕",cat:"Junk"},{name:"Pizza chicken 2 slices",cal:480,emoji:"🍕",cat:"Junk"},{name:"French fries medium",cal:360,emoji:"🍟",cat:"Junk"},{name:"Chips packet 26g",cal:135,emoji:"🥔",cat:"Junk"},{name:"Maggi 1 packet",cal:350,emoji:"🍜",cat:"Junk"},{name:"Chowmein 1 plate",cal:380,emoji:"🍜",cat:"Junk"},{name:"Momos veg 6 pieces",cal:200,emoji:"🥟",cat:"Junk"},{name:"Momos chicken 6 pieces",cal:260,emoji:"🥟",cat:"Junk"},{name:"Chole bhature 1 plate",cal:580,emoji:"🍽️",cat:"Junk"},{name:"Pav bhaji 1 plate",cal:450,emoji:"🍽️",cat:"Junk"},{name:"Cold drink 300ml",cal:130,emoji:"🥤",cat:"Junk"},{name:"Gulab jamun 2 pieces",cal:200,emoji:"🍮",cat:"Junk"},{name:"Ladoo besan 1",cal:180,emoji:"🟡",cat:"Junk"},{name:"Jalebi 2 pieces",cal:160,emoji:"🟠",cat:"Junk"},{name:"Chocolate bar 40g",cal:210,emoji:"🍫",cat:"Junk"},
 ];
 const CATS = ["⭐ Favs","All","Drinks","Grains","Protein","Snacks","Fruits","Sabzi","Dairy","Meat","Junk"];
@@ -1386,7 +1425,7 @@ function renderMealLog(){
   log.innerHTML="";
   meals.forEach(m=>{
     const el=document.createElement("div");el.className="meal-row";
-    el.innerHTML=`<span class="meal-emoji">${m.emoji}</span><div style="flex:1"><div class="meal-name">${m.name}</div><div class="meal-time">${m.time}</div></div><span class="meal-cal">${m.cal}</span><button class="meal-rm" onclick="removeMeal('${m.id}')">×</button>`;
+    el.innerHTML=`<span class="meal-emoji">${m.emoji}</span><div style="flex:1"><div class="meal-name">${m.name}</div><div class="meal-time">${m.time}</div></div><span class="meal-cal">${m.cal}</span><button class="meal-rm" onclick="removeMeal(${m.id})">×</button>`;
     log.appendChild(el);
   });
 }
@@ -1714,7 +1753,158 @@ function setCalPreset(val){document.getElementById("set-cal-slider").value=val;u
 function selectDiet(d){["veg","egg","nonveg"].forEach(x=>document.getElementById("diet-"+x).classList.toggle("on",x===d));}
 function copyLink(){const url="https://santosh6785.github.io/diet-tracker";navigator.clipboard?navigator.clipboard.writeText(url).then(()=>showToast("Link copied ✓")).catch(()=>{}):showToast("Copy: "+url);}
 
-// ═══════════════ ONBOARDING ═══════════════
+// ═══════════════ BARCODE SCANNER ═══════════════
+let barcodeStream = null;
+let barcodeInterval = null;
+
+async function openBarcodeScanner(){
+  const modal = document.getElementById("barcode-modal");
+  modal.style.display = "flex";
+  document.getElementById("barcode-status").textContent = "Starting camera...";
+
+  try{
+    // Request camera
+    barcodeStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"environment", width:{ideal:1280}, height:{ideal:720}}
+    });
+    const video = document.getElementById("barcode-video");
+    video.srcObject = barcodeStream;
+    await video.play();
+    document.getElementById("barcode-status").textContent = "Scanning... hold steady over barcode";
+
+    // Use BarcodeDetector API if available (Chrome 83+)
+    if("BarcodeDetector" in window){
+      const detector = new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128","code_39"]});
+      barcodeInterval = setInterval(async()=>{
+        try{
+          const codes = await detector.detect(video);
+          if(codes.length > 0){
+            const barcode = codes[0].rawValue;
+            document.getElementById("barcode-status").textContent = "Barcode detected: "+barcode;
+            clearInterval(barcodeInterval);
+            await lookupBarcode(barcode);
+          }
+        }catch(e){}
+      }, 500);
+    } else {
+      document.getElementById("barcode-status").textContent = "Auto-scan not supported on this browser. Type barcode manually below.";
+    }
+  }catch(err){
+    document.getElementById("barcode-status").textContent = "Camera access denied. Please type barcode manually.";
+    console.error("Camera error:", err);
+  }
+}
+
+function closeBarcodeScanner(){
+  if(barcodeStream){
+    barcodeStream.getTracks().forEach(t=>t.stop());
+    barcodeStream = null;
+  }
+  if(barcodeInterval){ clearInterval(barcodeInterval); barcodeInterval=null; }
+  document.getElementById("barcode-modal").style.display = "none";
+  document.getElementById("barcode-input").value = "";
+}
+
+async function lookupBarcode(barcode){
+  if(!barcode||barcode.length < 4){ showToast("Enter a valid barcode"); return; }
+  document.getElementById("barcode-status").textContent = "🔍 Looking up product...";
+
+  try{
+    // Open Food Facts API — free, no key needed
+    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+    const data = await res.json();
+
+    if(data.status === 1 && data.product){
+      const p = data.product;
+      const name = p.product_name_en || p.product_name || "Unknown Product";
+      const brand = p.brands || "";
+      const n = p.nutriments || {};
+      const cal = Math.round(n["energy-kcal_100g"] || n["energy-kcal"] || (n["energy_100g"]/4.184) || 0);
+      const protein = Math.round(n.proteins_100g || 0);
+      const carbs = Math.round(n.carbohydrates_100g || 0);
+      const fat = Math.round(n.fat_100g || 0);
+      const fibre = Math.round(n.fiber_100g || 0);
+      const servingSize = p.serving_size || "100g";
+
+      // Show result
+      closeBarcodeScanner();
+      const resultDiv = document.getElementById("barcode-result");
+      const infoDiv = document.getElementById("barcode-product-info");
+      resultDiv.style.display = "block";
+
+      infoDiv.innerHTML = `
+        <div style="font-size:14px;font-weight:bold;color:#1b4332;margin-bottom:4px">${name}${brand?" · <span style='font-weight:normal;color:#888'>${brand}</span>":""}</div>
+        <div style="font-size:12px;color:#555;margin-bottom:10px">Per 100g: ${cal} kcal · ${protein}g protein · ${carbs}g carbs · ${fat}g fat${fibre?` · ${fibre}g fibre`:""}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:10px">Serving size: ${servingSize}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${cal},${protein},${carbs},${fat},${fibre},'per 100g')"
+            style="padding:8px 16px;background:#1b4332;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">
+            + Add 100g (${cal} kcal)
+          </button>
+          ${p.serving_size ? `<button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${Math.round(cal*parseFloat(p.serving_size)/100)},${Math.round(protein*parseFloat(p.serving_size)/100)},${Math.round(carbs*parseFloat(p.serving_size)/100)},${Math.round(fat*parseFloat(p.serving_size)/100)},${Math.round(fibre*parseFloat(p.serving_size)/100)},'${servingSize}')"
+            style="padding:8px 16px;background:#2d6a4f;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">
+            + Add 1 serving (${servingSize})
+          </button>` : ""}
+        </div>`;
+      showToast("Product found: "+name.split(" ").slice(0,3).join(" "));
+    } else {
+      document.getElementById("barcode-status").textContent = "❌ Product not found. Try another barcode or add manually.";
+      showToast("Product not found in database");
+    }
+  }catch(err){
+    document.getElementById("barcode-status").textContent = "Network error. Check internet connection.";
+    console.error("Barcode lookup error:", err);
+  }
+}
+
+function addBarcodeItem(name, cal, p, c, fa, fi, serving){
+  addMealEntry({name:`${name} (${serving})`, cal, emoji:"📦", p, c, fa, fi});
+  document.getElementById("barcode-result").style.display = "none";
+  showToast(name.split(" ").slice(0,3).join(" ")+" added ✓");
+}
+
+
+const FOOD_FACTS = [
+  "🌾 Whole wheat roti has 3x more fibre than white bread — it keeps you full longer and prevents blood sugar spikes.",
+  "🥚 Eggs are one of the few foods containing Vitamin D naturally. 2 eggs give you 20% of your daily Vitamin D needs.",
+  "🫘 Dal is a complete protein when eaten with roti or rice. This combination has kept Indians healthy for centuries.",
+  "🐟 Rohu fish from Bihar rivers is rich in Omega-3 fatty acids, which directly reduce belly fat inflammation.",
+  "🥛 Curd at dinner aids digestion and improves sleep quality. The probiotics repair your gut overnight.",
+  "🌿 Isabgol absorbs 40x its weight in water, creating a gel that slows glucose absorption and reduces cholesterol.",
+  "🥜 Walnuts are the only nut with significant Omega-3s. Just 2 walnuts daily improve heart health measurably.",
+  "☕ Green tea boosts metabolism by 4% and fat oxidation by 17% — best drunk 30 min before exercise.",
+  "🌅 15 minutes of morning sunlight triggers serotonin production, which converts to melatonin for better sleep at night.",
+  "🥗 Eating salad first reduces overall meal calorie intake by 11-12% according to nutrition studies.",
+  "🧅 Raw onion in salad contains quercetin that directly targets belly fat cells and reduces inflammation.",
+  "🍋 Warm lemon water in morning alkalises your body, aids liver detox and boosts Vitamin C absorption.",
+  "🥦 Palak (spinach) has more iron per calorie than meat. Cooking with lemon juice doubles iron absorption.",
+  "🫘 Rajma has the highest protein among all dals at 24g per 100g — higher than most non-veg options.",
+  "🌾 Bajra roti is better than wheat roti for belly fat — it has more fibre, protein and keeps you full 40% longer.",
+  "🍵 Having tea with milk reduces the antioxidant absorption by 90%. Drink tea plain for maximum benefit.",
+  "🚶 A 20-minute walk after dinner reduces blood sugar by 20% and prevents fat storage from that meal.",
+  "🥚 The cholesterol in eggs does NOT raise blood cholesterol in most people — this myth was debunked in 2015.",
+  "🌰 Almonds eaten in morning reduce hunger hormones (ghrelin) for up to 4 hours — perfect for office days.",
+  "🥛 Chaas (buttermilk) has more probiotics than curd because fermentation continues longer. Best digestion drink.",
+  "🍚 Brown rice has 3x more fibre than white rice and releases energy slowly — better for belly fat goals.",
+  "🧄 Raw garlic in empty stomach kills bad gut bacteria and boosts good bacteria — powerful natural antibiotic.",
+  "🫚 Mustard oil used in Bihar cooking contains erucic acid that has strong anti-inflammatory properties.",
+  "🌾 Sattu (roasted chana flour) is Bihar's superfood — 25g protein per 100g, more than most protein powders.",
+  "🍈 Amla has 20x more Vitamin C than oranges and keeps cortisol (stress hormone) low — key for belly fat loss.",
+];
+
+let currentFactIdx = Math.floor(Math.random() * FOOD_FACTS.length);
+
+function renderFoodFact(){
+  const el = document.getElementById("food-fact-text");
+  if(el) el.textContent = FOOD_FACTS[currentFactIdx];
+}
+function nextFoodFact(){
+  currentFactIdx = (currentFactIdx + 1) % FOOD_FACTS.length;
+  renderFoodFact();
+  haptic("light");
+}
+
+
 let obCalTarget = 1550;
 let obDiet = "egg";
 
@@ -2036,12 +2226,16 @@ function showLoginError(msg){
 }
 
 function setSyncStatus(state){
-  // state: "synced" | "syncing" | "error"
   const dot=document.getElementById("sync-dot");
   const lbl=document.getElementById("sync-lbl");
   if(!dot||!lbl)return;
   dot.className="sync-dot"+(state==="syncing"?" syncing":state==="error"?" err":"");
-  lbl.textContent=state==="syncing"?"Syncing...":state==="error"?"Sync error":"Synced ✓";
+  if(state==="synced"){
+    const t=new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+    lbl.textContent="Synced "+t;
+  } else {
+    lbl.textContent=state==="syncing"?"Syncing...":"Sync error";
+  }
 }
 
 // Load data from Firestore for a user
@@ -2160,7 +2354,7 @@ function init(){
   renderRotating();
   renderPriority();
   renderSections();
-  // Set user name from Google profile if not set
+  renderFoodFact();
   if(window._fbUser && !userSettings.name){
     userSettings.name = window._fbUser.displayName || "";
     updateHeader();
