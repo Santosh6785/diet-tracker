@@ -6,8 +6,36 @@
 <meta name="theme-color" content="#1b4332"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Diet Tracker"/>
+<meta name="app-version" content="BUILD_VERSION_20260507"/>
 <title>Diet Tracker — Belly Fat Plan</title>
 <link rel="manifest" href="manifest.json"/>
+
+<!-- Version check — runs BEFORE anything else -->
+<script>
+(function(){
+  var VERSION = document.querySelector('meta[name="app-version"]').content;
+  var stored = localStorage.getItem('dt_app_version');
+  if(stored && stored !== VERSION){
+    // New version detected — clear SW cache and reload once
+    localStorage.setItem('dt_app_version', VERSION);
+    if('caches' in window){
+      caches.keys().then(function(keys){
+        keys.forEach(function(k){ caches.delete(k); });
+      });
+    }
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(r){ r.unregister(); });
+        window.location.reload(true);
+      });
+    } else {
+      window.location.reload(true);
+    }
+  } else {
+    localStorage.setItem('dt_app_version', VERSION);
+  }
+})();
+</script>
 <!-- Firebase SDK -->
 <script type="module">
   import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
