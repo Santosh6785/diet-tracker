@@ -330,6 +330,28 @@ body.dark .macro-bar-wrap{background:#333;}
 .sync-dot.syncing{background:#ffd166;animation:blink .8s infinite;}
 .sync-dot.err{background:#ef5350;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+/* ── Health Tab ── */
+.condition-btn{padding:8px 14px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;color:#555;}
+.condition-btn.on{border-color:#1b4332;background:#1b4332;color:#fff;font-weight:bold;}
+body.dark .condition-btn{background:var(--input-bg);border-color:#444;color:#bbb;}
+body.dark .condition-btn.on{background:#1b4332;border-color:#1b4332;color:#fff;}
+.health-card{background:#fff;border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+body.dark .health-card{background:var(--card);}
+.health-card-hdr{padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.health-card-icon{font-size:28px;}
+.health-card-title{font-weight:bold;font-size:15px;color:#fff;}
+.health-card-sub{font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;}
+.health-section{padding:12px 14px;border-top:1px solid rgba(0,0,0,.06);}
+body.dark .health-section{border-top-color:#2a2a2a;}
+.health-section-title{font-size:12px;font-weight:bold;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+.health-food-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.health-food-tag{padding:5px 10px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:4px;}
+.health-food-tag.eat{background:#e8f5e9;color:#2e7d32;}
+.health-food-tag.avoid{background:#fce4ec;color:#c62828;}
+body.dark .health-food-tag.eat{background:#1b3a20;color:#97bc62;}
+body.dark .health-food-tag.avoid{background:#3a1520;color:#ef9a9a;}
+.health-tip{background:#fffde7;border-radius:8px;padding:8px 10px;font-size:12px;color:#f57f17;margin-top:8px;line-height:1.6;}
+body.dark .health-tip{background:#2a2500;color:#ffd54f;}
 /* ── Onboarding ── */
 .onboard-overlay{position:fixed;inset:0;background:#1b4332;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;}
 .onboard-overlay.hide{opacity:0;pointer-events:none;}
@@ -521,7 +543,8 @@ canvas.chart{width:100%;height:140px;display:block;}
   <button class="tab-btn" onclick="switchTab(1)">🔥 Calories</button>
   <button class="tab-btn" onclick="switchTab(2)">💧 Activity</button>
   <button class="tab-btn" onclick="switchTab(3)">📅 History</button>
-  <button class="tab-btn" onclick="switchTab(4)">⚙️ Settings</button>
+  <button class="tab-btn" onclick="switchTab(4)">🏥 Health</button>
+  <button class="tab-btn" onclick="switchTab(5)">⚙️ Settings</button>
 </div>
 
 <!-- TAB 0: CHECKLIST -->
@@ -816,8 +839,23 @@ canvas.chart{width:100%;height:140px;display:block;}
   </div>
 </div>
 
-<!-- TAB 4: SETTINGS -->
+<!-- TAB 4: HEALTH -->
 <div class="content" id="tab-4">
+  <div style="padding:4px 0 10px">
+    <div style="font-size:13px;color:#888;margin-bottom:12px;line-height:1.6">
+      Select your health condition to see personalised food recommendations and foods to avoid. Always consult your doctor for medical advice.
+    </div>
+
+    <!-- Condition selector -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="condition-selector"></div>
+  </div>
+
+  <!-- Disease cards -->
+  <div id="health-cards"></div>
+</div>
+
+<!-- TAB 5: SETTINGS -->
+<div class="content" id="tab-5">
   <div class="set-hero">
     <div class="set-avatar" id="set-avatar">🥚</div>
     <div class="set-name" id="set-disp-name">Set your name</div>
@@ -1361,7 +1399,7 @@ function resetChecklist(){if(!confirm("Reset checklist?"))return;checked={};save
 function triggerPhotoScan(){
   if(!userSettings.apiKey){
     showToast("Add Gemini API key in ⚙️ Settings first");
-    switchTab(4);
+    switchTab(5);
     return;
   }
   document.getElementById("photo-input").click();
@@ -1874,7 +1912,124 @@ function addBarcodeItem(name, cal, p, c, fa, fi, serving){
 }
 
 
-const FOOD_FACTS = [
+// ═══════════════ HEALTH TAB ═══════════════
+const HEALTH_CONDITIONS = [
+  {
+    id:"diabetes", label:"🩸 Diabetes", bg:"linear-gradient(135deg,#c62828,#e53935)",
+    subtitle:"Type 2 · Blood Sugar Management",
+    overview:"Focus on low glycaemic index foods that release sugar slowly. Avoid refined carbs, sugary foods and large portions of rice.",
+    eat:[{e:"🥒",n:"Karela"},{e:"🌿",n:"Methi"},{e:"🫘",n:"Moong dal"},{e:"🥬",n:"Palak"},{e:"🌾",n:"Bajra roti"},{e:"🥚",n:"Boiled eggs"},{e:"🐟",n:"Fish"},{e:"🥜",n:"Peanuts"},{e:"🍈",n:"Amla"},{e:"🥛",n:"Plain curd"},{e:"🌾",n:"Oats"},{e:"🌰",n:"Almonds & walnuts"},{e:"🥗",n:"Salad before meals"}],
+    avoid:[{e:"🍚",n:"White rice (large)"},{e:"🍞",n:"Maida puri/paratha"},{e:"🧁",n:"Sweets/mithai"},{e:"🥤",n:"Fruit juice"},{e:"🍌",n:"Banana/mango"},{e:"🥔",n:"Potato (excess)"},{e:"🍯",n:"Sugar & jaggery"}],
+    tips:"💡 Eat small meals every 3-4 hours. Walk 20 min after every meal. Never skip breakfast.",
+    target:"Ideal: 1400-1600 kcal/day. Monitor blood sugar 2 hours after eating."
+  },
+  {
+    id:"bp", label:"💓 High BP", bg:"linear-gradient(135deg,#1565c0,#1976d2)",
+    subtitle:"Hypertension · Blood Pressure Control",
+    overview:"DASH diet — reduce sodium, increase potassium and magnesium. Avoid salty and processed foods.",
+    eat:[{e:"🍌",n:"Banana (potassium)"},{e:"🥬",n:"Palak (magnesium)"},{e:"🥛",n:"Low-fat curd"},{e:"🐟",n:"Fish (omega-3)"},{e:"🌰",n:"Walnuts"},{e:"🧄",n:"Raw garlic daily"},{e:"🍅",n:"Tomato"},{e:"🥒",n:"Cucumber"},{e:"🫘",n:"Dal/lentils"},{e:"🍈",n:"Amla"}],
+    avoid:[{e:"🧂",n:"Salt (max 1 tsp/day)"},{e:"🥒",n:"Achaar/pickle"},{e:"🍟",n:"Fried snacks"},{e:"☕",n:"Excess tea/coffee"},{e:"🥫",n:"Packaged foods"},{e:"🥩",n:"Red meat"}],
+    tips:"💡 Reduce salt gradually — taste buds adjust in 2-3 weeks. Monitor BP morning and evening.",
+    target:"Target BP: 120/80. Losing 5kg can reduce BP by 5 points."
+  },
+  {
+    id:"cholesterol", label:"🫀 Cholesterol", bg:"linear-gradient(135deg,#6a1b9a,#8e24aa)",
+    subtitle:"High LDL · Heart Health",
+    overview:"Reduce saturated fats, increase soluble fibre and omega-3. Focus on plant-based proteins.",
+    eat:[{e:"🌾",n:"Oats (soluble fibre)"},{e:"🫘",n:"Rajma, chana"},{e:"🐟",n:"Rohu/katla fish"},{e:"🌰",n:"Walnuts"},{e:"🧄",n:"Garlic (lowers LDL)"},{e:"🍅",n:"Tomato"},{e:"🥬",n:"Palak, methi"},{e:"🌿",n:"Flaxseeds (alsi)"},{e:"🍈",n:"Amla & guava"}],
+    avoid:[{e:"🧈",n:"Ghee/butter (excess)"},{e:"🥩",n:"Red meat"},{e:"🥚",n:"Egg yolk daily"},{e:"🍟",n:"Deep fried foods"},{e:"🥥",n:"Coconut oil"},{e:"🥛",n:"Full cream milk"}],
+    tips:"💡 Oats every morning can reduce LDL by 5-10% in 6 weeks. Fish twice a week improves heart health.",
+    target:"Target: LDL below 100, HDL above 40. Lipid profile every 6 months."
+  },
+  {
+    id:"thyroid", label:"🦋 Thyroid", bg:"linear-gradient(135deg,#00695c,#00897b)",
+    subtitle:"Hypothyroidism · Metabolism Support",
+    overview:"Thyroid needs iodine, selenium and zinc. Avoid raw goitrogens. Eat small frequent meals.",
+    eat:[{e:"🐟",n:"Fish (selenium)"},{e:"🥚",n:"Eggs (iodine)"},{e:"🫘",n:"Dal & legumes"},{e:"🌰",n:"Walnuts"},{e:"🥕",n:"Cooked carrots"},{e:"🥛",n:"Milk & curd"},{e:"🌾",n:"Millet/quinoa"},{e:"🐓",n:"Lean chicken"}],
+    avoid:[{e:"🥦",n:"Raw broccoli/cabbage"},{e:"🥬",n:"Raw palak (cook it)"},{e:"🌱",n:"Soy (excess)"},{e:"🍬",n:"Sugar (causes fatigue)"},{e:"☕",n:"Coffee with medication"}],
+    tips:"💡 Take thyroid medicine on empty stomach, wait 45 min before eating. Cook cruciferous vegetables.",
+    target:"TSH: 0.5-2.5 for optimal energy. Check every 3-6 months."
+  },
+  {
+    id:"pcod", label:"🌸 PCOD/PCOS", bg:"linear-gradient(135deg,#ad1457,#c2185b)",
+    subtitle:"Hormonal Balance · Insulin Resistance",
+    overview:"PCOD is driven by insulin resistance. Low glycaemic, anti-inflammatory, high protein diet is most effective.",
+    eat:[{e:"🌾",n:"Bajra/jowar/ragi roti"},{e:"🫘",n:"Dal, rajma, chana"},{e:"🥬",n:"Palak, methi"},{e:"🐟",n:"Fish (omega-3)"},{e:"🌰",n:"Walnuts & flaxseeds"},{e:"🥚",n:"Eggs"},{e:"🍈",n:"Amla"},{e:"🥛",n:"Chaas/curd"},{e:"🌿",n:"Spearmint tea"}],
+    avoid:[{e:"🍚",n:"White rice & maida"},{e:"🧁",n:"Sugar & sweets"},{e:"🥛",n:"Full cream dairy"},{e:"🍟",n:"Fried food"},{e:"🥤",n:"Cold drinks"},{e:"☕",n:"Excess caffeine"}],
+    tips:"💡 Walk 30 min daily — reduces PCOD symptoms significantly. 5-10% weight loss can restore periods.",
+    target:"Intermittent fasting (12-14 hr gap) helps insulin sensitivity in PCOD."
+  },
+  {
+    id:"acidity", label:"🔥 Acidity/GERD", bg:"linear-gradient(135deg,#e65100,#f4511e)",
+    subtitle:"Acid Reflux · Digestive Health",
+    overview:"Avoid late meals, spicy food and large portions. Small frequent meals and not lying down after eating are key.",
+    eat:[{e:"🍌",n:"Banana (antacid)"},{e:"🥛",n:"Cold milk"},{e:"🥒",n:"Cucumber"},{e:"🌿",n:"Pudina/mint"},{e:"🌾",n:"Oats"},{e:"🥬",n:"Lauki/turai"},{e:"🍚",n:"Plain khichdi"},{e:"🫘",n:"Moong dal"},{e:"🍈",n:"Papaya"},{e:"🌿",n:"Saunf after meals"},{e:"🫙",n:"Chaas/buttermilk"}],
+    avoid:[{e:"🌶️",n:"Spicy food"},{e:"☕",n:"Tea on empty stomach"},{e:"🍋",n:"Citrus empty stomach"},{e:"🧅",n:"Raw onion"},{e:"🍫",n:"Chocolate"},{e:"🍟",n:"Fried food"},{e:"🥩",n:"Heavy non-veg at night"}],
+    tips:"💡 Eat dinner by 7-8 PM. Don't lie down for 2 hours after eating. Chew slowly and eat small portions.",
+    target:"Losing belly fat reduces acidity by 40% — belly fat presses directly on the stomach."
+  }
+];
+
+let selectedConditions = new Set();
+
+function renderHealthTab(){
+  try{
+    const saved=localStorage.getItem("dt_conditions");
+    if(saved) selectedConditions=new Set(JSON.parse(saved));
+  }catch(e){}
+  const selector=document.getElementById("condition-selector");
+  if(selector){
+    selector.innerHTML="";
+    HEALTH_CONDITIONS.forEach(c=>{
+      const btn=document.createElement("button");
+      btn.className="condition-btn"+(selectedConditions.has(c.id)?" on":"");
+      btn.textContent=c.label;
+      btn.onclick=()=>{
+        if(selectedConditions.has(c.id)) selectedConditions.delete(c.id);
+        else selectedConditions.add(c.id);
+        try{localStorage.setItem("dt_conditions",JSON.stringify([...selectedConditions]));}catch(e){}
+        haptic("light");
+        renderHealthCards();
+        // Re-render selector
+        selector.querySelectorAll(".condition-btn").forEach((b,i)=>{
+          b.classList.toggle("on",selectedConditions.has(HEALTH_CONDITIONS[i].id));
+        });
+      };
+      selector.appendChild(btn);
+    });
+  }
+  renderHealthCards();
+}
+
+function renderHealthCards(){
+  const container=document.getElementById("health-cards");
+  if(!container) return;
+  container.innerHTML="";
+  const toShow=selectedConditions.size>0
+    ? HEALTH_CONDITIONS.filter(c=>selectedConditions.has(c.id))
+    : HEALTH_CONDITIONS;
+  toShow.forEach(c=>{
+    const card=document.createElement("div");
+    card.className="health-card";
+    card.innerHTML=`
+      <div class="health-card-hdr" style="background:${c.bg}">
+        <div class="health-card-icon">${c.label.split(" ")[0]}</div>
+        <div><div class="health-card-title">${c.label.substring(2)}</div><div class="health-card-sub">${c.subtitle}</div></div>
+      </div>
+      <div class="health-section">
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">${c.overview}</div>
+        <div class="health-section-title" style="color:#2e7d32">✅ Eat More</div>
+        <div class="health-food-grid">${c.eat.map(f=>`<div class="health-food-tag eat">${f.e} ${f.n}</div>`).join("")}</div>
+        <div class="health-section-title" style="color:#c62828;margin-top:12px">❌ Avoid</div>
+        <div class="health-food-grid">${c.avoid.map(f=>`<div class="health-food-tag avoid">${f.e} ${f.n}</div>`).join("")}</div>
+        <div class="health-tip">${c.tips}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;font-style:italic">${c.target}</div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════ FOOD FACTS ═══════════════
   "🌾 Whole wheat roti has 3x more fibre than white bread — it keeps you full longer and prevents blood sugar spikes.",
   "🥚 Eggs are one of the few foods containing Vitamin D naturally. 2 eggs give you 20% of your daily Vitamin D needs.",
   "🫘 Dal is a complete protein when eaten with roti or rice. This combination has kept Indians healthy for centuries.",
@@ -2151,7 +2306,8 @@ function switchTab(i){
   if(i===1){renderCalTab();}
   if(i===2){renderWater();renderExLog();renderSteps();}
   if(i===3){renderHistory();renderWeightLog();setTimeout(renderCharts,100);}
-  if(i===4){renderSettings();}
+  if(i===4){renderHealthTab();}
+  if(i===5){renderSettings();}
 }
 
 // ═══════════════ PWA INSTALL ═══════════════
