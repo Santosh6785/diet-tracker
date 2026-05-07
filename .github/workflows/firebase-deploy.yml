@@ -11,11 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Bump service worker cache version
+      - name: Bump version numbers
         run: |
-          TIMESTAMP=$(date +%s)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          # Bump SW cache version
           sed -i "s/const CACHE = \"diet-tracker-v[^\"]*\"/const CACHE = \"diet-tracker-v$TIMESTAMP\"/" sw.js
-          echo "Cache version bumped to diet-tracker-v$TIMESTAMP"
+          # Bump app version in HTML meta tag
+          sed -i "s/content=\"BUILD_VERSION_[^\"]*\"/content=\"BUILD_VERSION_$TIMESTAMP\"/" index.html
+          echo "Version bumped to $TIMESTAMP"
 
       - name: Copy files to public folder
         run: |
