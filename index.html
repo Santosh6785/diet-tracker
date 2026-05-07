@@ -3394,18 +3394,34 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js')
     .then(reg=>{
       console.log('SW registered ✓',reg.scope);
-      // Check for updates every time app loads
+      // Check for updates every 30 seconds
+      setInterval(()=>reg.update(), 30000);
       reg.addEventListener('updatefound',()=>{
         const newWorker=reg.installing;
         newWorker.addEventListener('statechange',()=>{
           if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
-            // New version available — show update toast
-            showToast("App updated! Close and reopen for latest version 🔄");
+            showUpdateBanner();
           }
         });
       });
     })
     .catch(err=>console.error('SW registration failed:',err));
+
+  // When new SW takes control — reload automatically
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    window.location.reload();
+  });
+}
+
+function showUpdateBanner(){
+  if(document.getElementById('update-banner')) return;
+  const b=document.createElement('div');
+  b.id='update-banner';
+  b.style.cssText='position:fixed;top:0;left:0;right:0;background:#1565c0;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:99999;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3);';
+  b.innerHTML='<span>🆕 New version available!</span>'
+    +'<button onclick="window.location.reload()" '
+    +'style="background:#fff;color:#1565c0;border:none;padding:6px 14px;border-radius:8px;font-weight:bold;font-family:inherit;cursor:pointer;font-size:13px">Update Now ↻</button>';
+  document.body.prepend(b);
 }
 </script>
 </body>
