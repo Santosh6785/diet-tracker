@@ -154,9 +154,26 @@ input,select,textarea{font-family:inherit;outline:none;}
 .net-lbl{color:rgba(255,255,255,.5);font-size:9px;}
 .net-val{color:#fff;font-size:13px;font-weight:bold;}
 /* Tabs */
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border-bottom:2px solid #e0e8e0;position:sticky;top:0;z-index:100;}
-.tab-btn{padding:10px 4px;border:none;background:transparent;border-bottom:3px solid transparent;color:#888;font-size:12px;font-family:inherit;white-space:nowrap;text-align:center;}
-.tab-btn.active{border-bottom:3px solid #1b4332;color:#1b4332;font-weight:bold;background:#f0f7f0;}
+/* ── Sidebar Navigation ── */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800;opacity:0;pointer-events:none;transition:opacity .3s;}
+.sidebar-overlay.open{opacity:1;pointer-events:all;}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:240px;background:#1b4332;z-index:900;transform:translateX(-100%);transition:transform .3s ease;display:flex;flex-direction:column;box-shadow:4px 0 20px rgba(0,0,0,.3);}
+.sidebar.open{transform:translateX(0);}
+body.dark .sidebar{background:#0f2a1e;}
+.sidebar-header{padding:24px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sidebar-logo{font-size:32px;}
+.sidebar-title{color:#fff;font-weight:bold;font-size:16px;margin-top:6px;}
+.sidebar-sub{color:rgba(255,255,255,.5);font-size:11px;margin-top:2px;}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+.sidebar-btn{width:100%;padding:14px 20px;border:none;background:transparent;color:rgba(255,255,255,.7);font-size:14px;font-family:inherit;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
+.sidebar-btn:active{background:rgba(255,255,255,.1);}
+.sidebar-btn.active{background:rgba(151,188,98,.15);color:#97bc62;font-weight:bold;border-left-color:#97bc62;}
+.sidebar-btn .s-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0;}
+.sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,.1);}
+.hamburger-btn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;line-height:1;}
+/* ── Tabs (kept for compatibility, hidden visually) ── */
+.tabs{display:none;}
+.tab-btn{display:none;}
 /* Content */
 .content{padding:12px;display:none;}
 .content.active{display:block;}
@@ -541,6 +558,7 @@ canvas.chart{width:100%;height:140px;display:block;}
 <div class="hdr">
   <div class="hdr-circle"></div>
   <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">🌙</button>
+  <button class="hamburger-btn" onclick="toggleSidebar()" style="position:absolute;left:10px;top:10px">☰</button>
   <!-- User bar -->
   <div class="user-bar" id="user-bar" style="display:none">
     <div style="display:flex;align-items:center">
@@ -597,6 +615,44 @@ canvas.chart{width:100%;height:140px;display:block;}
       <div id="hdr-burned" style="font-size:13px;font-weight:bold;color:#fff">0 kcal</div>
       <div style="font-size:10px;color:rgba(255,255,255,.6)">Burned</div>
     </div>
+  </div>
+</div>
+
+<!-- Sidebar overlay -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar navigation -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🥗</div>
+    <div class="sidebar-title">Diet Tracker</div>
+    <div class="sidebar-sub">Indian Belly Fat Plan</div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="sidebar-btn active" id="sb-0" onclick="switchTab(0);closeSidebar()">
+      <span class="s-icon">✅</span><span>Checklist</span>
+    </button>
+    <button class="sidebar-btn" id="sb-1" onclick="switchTab(1);closeSidebar()">
+      <span class="s-icon">🔥</span><span>Calories</span>
+    </button>
+    <button class="sidebar-btn" id="sb-2" onclick="switchTab(2);closeSidebar()">
+      <span class="s-icon">💧</span><span>Activity</span>
+    </button>
+    <button class="sidebar-btn" id="sb-3" onclick="switchTab(3);closeSidebar()">
+      <span class="s-icon">📅</span><span>History</span>
+    </button>
+    <button class="sidebar-btn" id="sb-4" onclick="switchTab(4);closeSidebar()">
+      <span class="s-icon">🏥</span><span>Health</span>
+    </button>
+    <button class="sidebar-btn" id="sb-5" onclick="switchTab(5);closeSidebar()">
+      <span class="s-icon">⚙️</span><span>Settings</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="sidebar-btn" onclick="doSignOut()" style="color:#ef9a9a;border-left-color:transparent">
+      <span class="s-icon">🚪</span><span>Sign Out</span>
+    </button>
+    <div style="color:rgba(255,255,255,.3);font-size:10px;margin-top:8px;padding-left:8px">Made with ❤️ in Patna · v2.0</div>
   </div>
 </div>
 
@@ -702,7 +758,24 @@ canvas.chart{width:100%;height:140px;display:block;}
     <div id="meal-log"></div>
   </div>
 
-  <div class="cat-bar" id="cat-bar"></div>
+  <!-- Category filter dropdown -->
+  <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
+    <select id="cat-dropdown" onchange="currentCat=this.value;renderPresets()"
+      style="flex:1;padding:10px 12px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:14px;font-family:inherit;background:var(--input-bg);color:var(--text);appearance:auto">
+      <option value="All">🍽️ All Foods</option>
+      <option value="Drinks">☕ Drinks</option>
+      <option value="Grains">🌾 Grains & Rice</option>
+      <option value="Protein">🥚 Protein</option>
+      <option value="Snacks">🥜 Snacks</option>
+      <option value="Fruits">🍎 Fruits</option>
+      <option value="Sabzi">🥬 Sabzi & Salad</option>
+      <option value="Dairy">🥛 Dairy</option>
+      <option value="Meat">🍗 Meat & Fish</option>
+      <option value="Junk">🍟 Junk Food</option>
+      <option value="Favourites">❤️ Favourites</option>
+    </select>
+  </div>
+  <div id="cat-bar" style="display:none"></div>
 
   <!-- Search bar -->
   <div class="search-wrap">
@@ -1123,8 +1196,11 @@ canvas.chart{width:100%;height:140px;display:block;}
       style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0e0e0;
       font-size:13px;font-family:inherit;resize:none;height:90px;margin-bottom:10px;background:var(--input-bg);color:var(--text)"
       placeholder="e.g. Please add poha to the food list, or the step counter is not working on my phone..."></textarea>
-    <button class="save-btn" onclick="sendFeedback()" style="background:#2d6a4f;margin-bottom:10px">
-      📧 Send Feedback via WhatsApp
+    <button class="save-btn" onclick="sendFeedback('whatsapp')" style="background:#2d6a4f;margin-bottom:8px">
+      📱 Send via WhatsApp
+    </button>
+    <button class="save-btn" onclick="sendFeedback('email')" style="background:#1565c0;margin-bottom:10px">
+      📧 Send via Email
     </button>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="openLink('https://github.com/Santosh6785/diet-tracker/issues')"
@@ -1760,7 +1836,7 @@ async function analysePhoto(input){
     const mediaType="image/jpeg";
 
     // Using Gemini Flash — free, no credit needed
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userSettings.apiKey}`,{
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${userSettings.apiKey}`,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
@@ -2048,15 +2124,32 @@ function applyBMRTarget(t){
 }
 
 // ═══════════════ FEEDBACK ═══════════════
-function sendFeedback(){
+function sendFeedback(channel){
   const text=document.getElementById("feedback-text").value.trim();
   if(!text){showToast("Please write your feedback first");return;}
-  const msg=encodeURIComponent("🥗 Diet Tracker Feedback:\n\n"+text+"\n\nApp link: diet-tracker-app-c22f4.web.app");
-  window.open("https://wa.me/?text="+msg,"_blank");
+  if(channel==="email"){
+    const subject=encodeURIComponent("Diet Tracker Feedback");
+    const body=encodeURIComponent("Hi,\n\nFeedback for Diet Tracker app:\n\n"+text+"\n\nApp: diet-tracker-app-c22f4.web.app");
+    window.open("mailto:santosh6785@gmail.com?subject="+subject+"&body="+body,"_blank");
+    showToast("Opening email ✓");
+  } else {
+    const msg=encodeURIComponent("🥗 Diet Tracker Feedback:\n\n"+text+"\n\nApp link: diet-tracker-app-c22f4.web.app");
+    window.open("https://wa.me/?text="+msg,"_blank");
+    showToast("Opening WhatsApp ✓");
+  }
   document.getElementById("feedback-text").value="";
-  showToast("Opening WhatsApp ✓");
 }
 function openLink(url){window.open(url,"_blank");}
+
+// ═══════════════ SIDEBAR ═══════════════
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("sidebar-overlay").classList.toggle("open");
+}
+function closeSidebar(){
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sidebar-overlay").classList.remove("open");
+}
 
 // ═══════════════ WATER ═══════════════
 function renderWater(){
@@ -3200,7 +3293,8 @@ function exportCSV(type){
 function switchTab(i){
   document.querySelectorAll(".content").forEach((el,j)=>el.classList.toggle("active",i===j));
   document.querySelectorAll(".tab-btn").forEach((el,j)=>el.classList.toggle("active",i===j));
-  // Show FAB only on checklist tab (tab 0), hide on others
+  // Update sidebar active button
+  for(let j=0;j<6;j++){const sb=document.getElementById("sb-"+j);if(sb)sb.classList.toggle("active",i===j);}
   const fab=document.getElementById("fab-log");
   if(fab) fab.style.display=(i===0||i===1)?"flex":"none";
   if(i===1){renderCalTab();}
