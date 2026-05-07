@@ -3450,27 +3450,20 @@ if(document.readyState==="loading"){
 }
 
 // ═══════════════ SERVICE WORKER REGISTRATION ═══════════════
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js')
-    .then(reg=>{
-      console.log('SW registered ✓',reg.scope);
-      // Check for updates every 30 seconds
-      setInterval(()=>reg.update(), 30000);
-      reg.addEventListener('updatefound',()=>{
-        const newWorker=reg.installing;
-        newWorker.addEventListener('statechange',()=>{
-          if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
-            showUpdateBanner();
-          }
-        });
-      });
-    })
-    .catch(err=>console.error('SW registration failed:',err));
+// ═══════════════ APP VERSION & UPDATE MECHANISM ═══════════════
+const APP_VERSION = document.querySelector('meta[name="app-version"]').content;
 
-  // When new SW takes control — reload automatically
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    window.location.reload();
-  });
+function checkForUpdates(){
+  // Fetch version.json with cache-busting timestamp
+  fetch('/version.json?t='+Date.now())
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.version && data.version !== APP_VERSION){
+        console.log("New version detected:", data.version, "vs", APP_VERSION);
+        showUpdateBanner();
+      }
+    })
+    .catch(()=>{}); // Silent fail — offline is fine
 }
 
 function showUpdateBanner(){
@@ -3479,10 +3472,67 @@ function showUpdateBanner(){
   b.id='update-banner';
   b.style.cssText='position:fixed;top:0;left:0;right:0;background:#1565c0;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:99999;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3);';
   b.innerHTML='<span>🆕 New version available!</span>'
-    +'<button onclick="window.location.reload()" '
+    +'<button onclick="forceUpdate()" '
     +'style="background:#fff;color:#1565c0;border:none;padding:6px 14px;border-radius:8px;font-weight:bold;font-family:inherit;cursor:pointer;font-size:13px">Update Now ↻</button>';
   document.body.prepend(b);
 }
+
+function forceUpdate(){
+  // Clear all caches then reload
+  if('caches' in window){
+    caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).then(()=>{
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(regs=>{
+          Promise.all(regs.map(r=>r.unregister())).then(()=>window.location.reload(true));
+        });
+      } else {
+        window.location.reload(true);
+      }
+    });
+  } else {
+    window.location.reload(true);
+  }
+}
+
+// Service Worker Registration
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    console.log('SW registered ✓');
+
+    // Check for SW updates every 30 seconds
+    setInterval(()=>reg.update(), 30000);
+
+    // Also check version.json every 60 seconds
+    setInterval(checkForUpdates, 60000);
+
+    reg.addEventListener('updatefound',()=>{
+      const newWorker=reg.installing;
+      newWorker.addEventListener('statechange',()=>{
+        if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+          showUpdateBanner();
+        }
+      });
+    });
+  }).catch(err=>console.error('SW failed:',err));
+
+  // Force SW update check when user returns to app
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){
+      navigator.serviceWorker.ready.then(reg=>{
+        reg.update();
+        checkForUpdates();
+      });
+    }
+  });
+
+  // Reload when new SW takes control
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    window.location.reload();
+  });
+}
+
+// Check for updates on app start
+checkForUpdates();
 </script>
 </body>
 </html>
