@@ -329,7 +329,9 @@ body.dark .macro-bar-wrap{background:#333;}
 .sync-dot.syncing{background:#ffd166;animation:blink .8s infinite;}
 .sync-dot.err{background:#ef5350;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-/* ── Health Tab ── */
+/* ── Button tap feedback ── */
+.tab-btn:active,.chk-item:active{background:rgba(0,0,0,.05);}
+button:active:not(.onboard-back):not(.onboard-skip):not(.onboard-diet-btn):not(.onboard-cal-btn):not(.tab-btn){transform:scale(.97);}
 .condition-btn{padding:8px 14px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;color:#555;}
 .condition-btn.on{border-color:#1b4332;background:#1b4332;color:#fff;font-weight:bold;}
 body.dark .condition-btn{background:var(--input-bg);border-color:#444;color:#bbb;}
@@ -368,9 +370,12 @@ body.dark .health-tip{background:#2a2500;color:#ffd54f;}
 .onboard-cal-presets{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-bottom:20px;justify-content:center;}
 .onboard-cal-btn{padding:8px 14px;border-radius:20px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;font-family:inherit;transition:all .2s;}
 .onboard-cal-btn.on{border-color:#97bc62;background:rgba(151,188,98,.2);color:#97bc62;font-weight:bold;}
-.onboard-next{width:100%;padding:16px;background:#97bc62;color:#1b4332;border:none;border-radius:14px;font-size:16px;font-weight:bold;font-family:inherit;margin-top:4px;}
+.onboard-next{width:100%;padding:16px;background:#97bc62;color:#1b4332;border:none;border-radius:14px;font-size:17px;font-weight:bold;font-family:inherit;margin-top:4px;box-shadow:0 4px 15px rgba(151,188,98,.4);transition:transform .15s,box-shadow .15s;}
+.onboard-next:active{transform:scale(.97);box-shadow:0 2px 8px rgba(151,188,98,.3);}
 .onboard-skip{background:none;border:none;color:rgba(255,255,255,.4);font-size:12px;font-family:inherit;margin-top:12px;padding:8px;}
-.onboard-dots{display:flex;gap:8px;margin-bottom:24px;}
+.onboard-back{background:none;border:none;color:rgba(255,255,255,.5);font-size:13px;font-family:inherit;padding:8px 0;margin-top:6px;display:flex;align-items:center;gap:4px;}
+.onboard-step-lbl{color:rgba(255,255,255,.5);font-size:12px;letter-spacing:1px;margin-bottom:16px;text-transform:uppercase;}
+.onboard-dots{display:flex;gap:8px;margin-bottom:8px;}
 .onboard-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);transition:all .3s;}
 .onboard-dot.on{background:#97bc62;width:24px;border-radius:4px;}
 /* ── Charts ── */
@@ -416,6 +421,7 @@ canvas.chart{width:100%;height:140px;display:block;}
     <div class="onboard-dot" id="dot-2"></div>
     <div class="onboard-dot" id="dot-3"></div>
   </div>
+  <div class="onboard-step-lbl" id="ob-step-lbl">Welcome</div>
 
   <!-- Step 0: Welcome -->
   <div class="onboard-step active" id="ob-step-0">
@@ -433,6 +439,7 @@ canvas.chart{width:100%;height:140px;display:block;}
     <div class="onboard-desc">We'll personalise your daily greeting and tracking.</div>
     <input class="onboard-input" id="ob-name" placeholder="Enter your name" maxlength="20"/>
     <button class="onboard-next" onclick="obNext(2)">Continue →</button>
+    <button class="onboard-back" onclick="obNext(0)">← Back</button>
   </div>
 
   <!-- Step 2: Diet type -->
@@ -446,6 +453,7 @@ canvas.chart{width:100%;height:140px;display:block;}
       <button class="onboard-diet-btn" id="ob-nonveg" onclick="obSelectDiet('nonveg')">🍗<br/><strong>Non-Veg</strong></button>
     </div>
     <button class="onboard-next" onclick="obNext(3)">Continue →</button>
+    <button class="onboard-back" onclick="obNext(1)">← Back</button>
   </div>
 
   <!-- Step 3: Calorie target -->
@@ -460,7 +468,8 @@ canvas.chart{width:100%;height:140px;display:block;}
       <button class="onboard-cal-btn" data-val="1800" onclick="obSelectCal(this,1800)">1800<br/><small>Maintain</small></button>
       <button class="onboard-cal-btn" data-val="2000" onclick="obSelectCal(this,2000)">2000<br/><small>Active</small></button>
     </div>
-    <button class="onboard-next" onclick="obFinish()">✅ Start Tracking!</button>
+    <button class="onboard-next" onclick="obFinish()" style="font-size:18px;padding:18px;">🚀 Start Tracking!</button>
+    <button class="onboard-back" onclick="obNext(2)">← Back</button>
   </div>
 </div>
 
@@ -1030,7 +1039,7 @@ canvas.chart{width:100%;height:140px;display:block;}
   </div>
 </div>
 
-<div class="footer-note">Data saves on your phone · Calories are approximate</div>
+<div class="footer-note">Made with ❤️ in Patna, Bihar &nbsp;·&nbsp; v2.0 &nbsp;·&nbsp; Data saves on your phone</div>
 <div class="toast" id="toast"></div>
 
 </div><!-- end app-root -->
@@ -2147,9 +2156,12 @@ function nextFoodFact(){
 let obCalTarget = 1550;
 let obDiet = "egg";
 
+const OB_LABELS=["Welcome","Step 1 of 3 · Name","Step 2 of 3 · Diet","Step 3 of 3 · Target"];
 function obNext(step){
   document.querySelectorAll(".onboard-step").forEach((el,i)=>el.classList.toggle("active",i===step));
   document.querySelectorAll(".onboard-dot").forEach((el,i)=>{el.classList.toggle("on",i<=step);});
+  const lbl=document.getElementById("ob-step-lbl");
+  if(lbl) lbl.textContent=OB_LABELS[step]||"";
 }
 function obSkip(){
   document.getElementById("onboard").classList.add("hide");
@@ -2173,13 +2185,12 @@ function obFinish(){
     userSettings.diet = obDiet || "egg";
     persistSettings();
   }catch(e){ console.log("obFinish error:",e); }
-  // Mark onboarded regardless
   try{ localStorage.setItem("dt_onboarded","1"); }catch(e){}
-  // Hide overlay
   const overlay = document.getElementById("onboard");
   if(overlay){ overlay.classList.add("hide"); setTimeout(()=>overlay.style.display="none",400); }
   updateHeader();
-  showToast("Profile saved ✓ Let's start tracking!");
+  const name = userSettings.name ? userSettings.name.split(" ")[0] : "there";
+  showToast("Welcome "+name+"! 🎉 Let's beat that belly fat!");
 }
 function checkOnboarding(){
   try{
