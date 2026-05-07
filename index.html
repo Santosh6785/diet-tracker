@@ -1383,9 +1383,18 @@ function renderRotating(){
 }
 function getActivePriority(){
   if(selectedConditions && selectedConditions.size>0){
-    const condId=[...selectedConditions][0];
-    const cond=CONDITION_CHECKLISTS[condId];
-    if(cond && cond.priority) return cond.priority;
+    // Merge priority rules from ALL selected conditions
+    const merged=[];
+    const seen=new Set();
+    for(const condId of selectedConditions){
+      const cond=CONDITION_CHECKLISTS[condId];
+      if(cond && cond.priority){
+        cond.priority.forEach(p=>{
+          if(!seen.has(p.id)){ merged.push(p); seen.add(p.id); }
+        });
+      }
+    }
+    if(merged.length>0) return merged;
   }
   return PRIORITY;
 }
@@ -1420,21 +1429,29 @@ function renderTodaySpecial(){
   const rotCard=document.getElementById("rot-card");
   if(!rotCard) return;
   if(selectedConditions && selectedConditions.size>0){
-    const condId=[...selectedConditions][0];
-    const cond=CONDITION_CHECKLISTS[condId];
-    if(cond && cond.todaySpecial){
-      const ts=cond.todaySpecial;
+    const activeConds=[...selectedConditions]
+      .map(id=>CONDITION_CHECKLISTS[id])
+      .filter(c=>c && c.todaySpecial);
+    if(activeConds.length>0){
+      const first=activeConds[0];
+      const ts=first.todaySpecial;
       const hdr=rotCard.querySelector(".rot-hdr");
-      if(hdr){ hdr.style.background=ts.bg; }
+      if(hdr) hdr.style.background=ts.bg;
       const title=document.getElementById("rot-title");
-      if(title){ title.style.color=ts.ac; title.textContent=ts.label; }
-      const done=ts.items.filter(i=>checked[i.id]).length;
+      if(title){
+        title.style.color=ts.ac;
+        title.textContent=activeConds.length>1
+          ? "⭐ Today's Focus ("+activeConds.length+" conditions)"
+          : ts.label;
+      }
+      const allItems=activeConds.flatMap(c=>c.todaySpecial.items);
+      const done=allItems.filter(i=>checked[i.id]).length;
       const badge=document.getElementById("rot-badge");
-      if(badge){ badge.textContent=done+"/"+ts.items.length; badge.style.background=ts.ac; }
+      if(badge){ badge.textContent=done+"/"+allItems.length; badge.style.background=ts.ac; }
       const itemsDiv=document.getElementById("rot-items");
       if(itemsDiv){
         itemsDiv.innerHTML="";
-        ts.items.forEach(item=>{
+        allItems.forEach(item=>{
           const el=document.createElement("div");
           el.className="chk-item"+(checked[item.id]?" done":"");
           el.innerHTML='<div class="chkbox '+(checked[item.id]?"on":"")+'"><svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
@@ -1447,7 +1464,6 @@ function renderTodaySpecial(){
       return;
     }
   }
-  // Default rotating section
   renderRotating();
 }
 function renderSections(){
@@ -1616,6 +1632,17 @@ function getChecklistItemMap(){
     items.filter(i=>!i.diet||i.diet.includes(diet)).forEach(i=>{ map[i.id]=i; });
   });
   ROTATING[DOW].items.forEach(i=>{ map[i.id]=i; });
+  // Fix: Also include condition-specific items so calories auto-add when ticked
+  if(selectedConditions && selectedConditions.size>0){
+    for(const condId of selectedConditions){
+      const cond=CONDITION_CHECKLISTS[condId];
+      if(cond){
+        cond.sections.forEach(sec=>sec.items.forEach(i=>{ map[i.id]=i; }));
+        if(cond.todaySpecial) cond.todaySpecial.items.forEach(i=>{ map[i.id]=i; });
+        if(cond.priority) cond.priority.forEach(i=>{ map[i.id]=i; });
+      }
+    }
+  }
   return map;
 }
 
@@ -3361,6 +3388,11 @@ function init(){
   loadAll();
   loadDarkMode();
   checkOnboarding();
+  // Fix: Load saved health conditions from localStorage on app start
+  try{
+    const saved=localStorage.getItem("dt_conditions");
+    if(saved) selectedConditions=new Set(JSON.parse(saved));
+  }catch(e){}
   updateHeader();
   renderRotating();
   renderPriority();
