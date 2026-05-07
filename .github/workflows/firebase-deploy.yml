@@ -11,6 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Bump service worker cache version
+        run: |
+          TIMESTAMP=$(date +%s)
+          sed -i "s/const CACHE = \"diet-tracker-v[^\"]*\"/const CACHE = \"diet-tracker-v$TIMESTAMP\"/" sw.js
+          echo "Cache version bumped to diet-tracker-v$TIMESTAMP"
+
       - name: Copy files to public folder
         run: |
           mkdir -p public
