@@ -15,10 +15,12 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           # Bump SW cache version
-          sed -i "s/const CACHE = \"diet-tracker-v[^\"]*\"/const CACHE = \"diet-tracker-v$TIMESTAMP\"/" sw.js
-          # Bump app version in HTML meta tag
-          sed -i "s/content=\"BUILD_VERSION_[^\"]*\"/content=\"BUILD_VERSION_$TIMESTAMP\"/" index.html
-          echo "Version bumped to $TIMESTAMP"
+          sed -i "s/BUILD_VERSION_[0-9]*/BUILD_VERSION_$TIMESTAMP/g" sw.js
+          # Bump app version meta tag in HTML
+          sed -i "s/BUILD_VERSION_[0-9]*/BUILD_VERSION_$TIMESTAMP/g" index.html
+          # Bump version.json
+          echo "{\"version\":\"BUILD_VERSION_$TIMESTAMP\"}" > version.json
+          echo "All versions bumped to BUILD_VERSION_$TIMESTAMP"
 
       - name: Copy files to public folder
         run: |
@@ -28,6 +30,8 @@ jobs:
           cp manifest.json public/manifest.json
           cp icon-192.png public/icon-192.png
           cp icon-512.png public/icon-512.png
+          cp version.json public/version.json
+          cp firebase.json public/../firebase.json
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
