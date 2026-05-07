@@ -142,8 +142,8 @@ input,select,textarea{font-family:inherit;outline:none;}
 .chk-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f5f5f5;transition:background .15s;}
 .chk-item:last-child{border-bottom:none;}
 .chk-item.done{background:#fafff8;}
-.chkbox{width:23px;height:23px;border-radius:6px;flex-shrink:0;border:2px solid #d0d0d0;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.chkbox.on{background:var(--ac);border-color:var(--ac);}
+.chkbox{width:24px;height:24px;border-radius:7px;flex-shrink:0;border:2px solid #d0d0d0;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.chkbox.on{background:#2e7d32;border-color:#2e7d32;box-shadow:0 2px 8px rgba(46,125,50,.3);}
 .chkbox svg{display:none;}
 .chkbox.on svg{display:block;}
 .it-text{font-size:14px;color:#222;}
@@ -332,6 +332,10 @@ body.dark .macro-bar-wrap{background:#333;}
 /* ── Button tap feedback ── */
 .tab-btn:active,.chk-item:active{background:rgba(0,0,0,.05);}
 button:active:not(.onboard-back):not(.onboard-skip):not(.onboard-diet-btn):not(.onboard-cal-btn):not(.tab-btn){transform:scale(.97);}
+/* Mini card tap effect */
+#hdr-water,#hdr-steps,#hdr-burned{pointer-events:none;}
+.hdr-mini-card{transition:transform .15s;}
+.hdr-mini-card:active{transform:scale(.95);}
 .condition-btn{padding:8px 14px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;color:#555;}
 .condition-btn.on{border-color:#1b4332;background:#1b4332;color:#fff;font-weight:bold;}
 body.dark .condition-btn{background:var(--input-bg);border-color:#444;color:#bbb;}
@@ -546,17 +550,17 @@ canvas.chart{width:100%;height:140px;display:block;}
   </div>
   <!-- Quick Water + Steps summary row -->
   <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
-    <div onclick="switchTab(2)" style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer">
+    <div onclick="switchTab(2)" class="hdr-mini-card" style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer">
       <div style="font-size:16px">💧</div>
       <div id="hdr-water" style="font-size:13px;font-weight:bold;color:#fff">0 glasses</div>
       <div style="font-size:10px;color:rgba(255,255,255,.6)">Water</div>
     </div>
-    <div onclick="switchTab(2)" style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer">
+    <div onclick="switchTab(2)" class="hdr-mini-card" style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer">
       <div style="font-size:16px">🚶</div>
       <div id="hdr-steps" style="font-size:13px;font-weight:bold;color:#fff">0 steps</div>
       <div style="font-size:10px;color:rgba(255,255,255,.6)">Steps</div>
     </div>
-    <div onclick="switchTab(1)" style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer">
+    <div onclick="switchTab(1)" class="hdr-mini-card" style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer">
       <div style="font-size:16px">🔥</div>
       <div id="hdr-burned" style="font-size:13px;font-weight:bold;color:#fff">0 kcal</div>
       <div style="font-size:10px;color:rgba(255,255,255,.6)">Burned</div>
@@ -1233,7 +1237,7 @@ function totalCal(){return meals.reduce((s,m)=>s+m.cal,0);}
 function totalBurned(){return exercises.reduce((s,e)=>s+e.burn,0)+(Math.round(stepCount*0.04));}
 function checkPct(){const a=allItems();return Math.round((a.filter(i=>checked[i.id]).length/a.length)*100);}
 function scoreColor(p){return p>=80?"#2e7d32":p>=60?"#f57f17":"#c62828";}
-function scoreLabel(p){return p===100?"Perfect 🏆":p>=80?"Excellent 💪":p>=60?"Good 👍":p>=40?"Average ⚠️":"Needs work ❌";}
+function scoreLabel(p){return p===100?"Perfect day 🏆":p>=80?"Excellent 💪":p>=60?"Good going 👍":p>=40?"Keep going 🔥":p>=20?"Just started ⚡":"Tap to begin 👆";}
 function nowTime(){return new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});}
 function fmtDate(s){return new Date(s+"T12:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"});}
 function showToast(msg,dur=2200){
@@ -1258,7 +1262,7 @@ function updateHeader(){
     setEl("check-pct", pct+"%");
     setStyle("check-pct","color",pct>=80?"#97bc62":pct>=60?"#ffd166":"#ef476f");
     setEl("check-count", allItems().filter(i=>checked[i.id]).length+"/"+allItems().length);
-    setEl("check-lbl", pct===100?"Perfect 🏆":pct>=80?"Excellent 💪":pct>=60?"Good 👍":pct>=40?"Average ⚠️":"Needs work ❌");
+    setEl("check-lbl", scoreLabel(pct));
     setEl("cal-in", cal);
     setStyle("cal-in","color",cal>T()?"#ef476f":cal>(T()*.85)?"#97bc62":"#ffd166");
     setEl("cal-target-lbl","of "+T()+" kcal");
@@ -1268,7 +1272,8 @@ function updateHeader(){
     setStyle("cal-net","color",net>T()?"#ef476f":net>0?"#ffd166":"#97bc62");
     setEl("burned-lbl",burned+" burned 🔥");
     setStyle("cal-bar","width",calPct+"%");
-    setStyle("cal-bar","background",cal>T()?"#ef476f":"#97bc62");
+    const barColor = cal>T()?"#ef476f":calPct>85?"#97bc62":"#ffd166";
+    setStyle("cal-bar","background",barColor);
     setEl("bar-mid","Target: "+T());
     // Update mini summary row
     setEl("hdr-water",(waterCount||0)+" glasses");
