@@ -835,6 +835,12 @@ canvas.chart{width:100%;height:140px;display:block;}
     </p>
   </div>
 
+  <!-- Condition-specific activity suggestions -->
+  <div id="condition-activities" style="display:none" class="card card-pad">
+    <div class="card-title" id="cond-act-title">Recommended Activities</div>
+    <div id="cond-act-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+  </div>
+
   <!-- Exercise Log -->
   <div class="ex-card">
     <div class="card-title">🏃 Log Exercise</div>
@@ -1375,16 +1381,74 @@ function renderRotating(){
     c.appendChild(el);
   });
 }
+function getActivePriority(){
+  if(selectedConditions && selectedConditions.size>0){
+    const condId=[...selectedConditions][0];
+    const cond=CONDITION_CHECKLISTS[condId];
+    if(cond && cond.priority) return cond.priority;
+  }
+  return PRIORITY;
+}
+
 function renderPriority(){
-  document.getElementById("pri-count").textContent=PRIORITY.filter(p=>checked[p.id]).length;
+  const activePriority=getActivePriority();
+  document.getElementById("pri-count").textContent=activePriority.filter(p=>checked[p.id]).length;
+  const priTitle=document.querySelector(".pri-title");
+  if(priTitle){
+    if(selectedConditions && selectedConditions.size>0){
+      const condId=[...selectedConditions][0];
+      const cond=CONDITION_CHECKLISTS[condId];
+      priTitle.innerHTML="🔑 "+cond.label.split(" ").slice(0,2).join(" ")+" Rules · <span id='pri-count'>"+activePriority.filter(p=>checked[p.id]).length+"</span>/"+activePriority.length;
+    } else {
+      priTitle.innerHTML="🔑 Priority Rules · <span id='pri-count'>"+activePriority.filter(p=>checked[p.id]).length+"</span>/5";
+    }
+  }
   const c=document.getElementById("pri-pills");c.innerHTML="";
-  PRIORITY.forEach(p=>{
+  activePriority.forEach(p=>{
     const el=document.createElement("button");
     el.className="pri-pill"+(checked[p.id]?" on":"");
-    el.innerHTML=`<span>${checked[p.id]?"✅":p.icon}</span><span class="lbl">${p.label}</span>`;
+    el.innerHTML='<span>'+(checked[p.id]?"✅":p.icon)+'</span><span class="lbl">'+p.label+'</span>';
     el.addEventListener("click",()=>{toggleItem(p.id);renderPriority();renderSections();});
     c.appendChild(el);
   });
+
+  // Render today's special for condition
+  renderTodaySpecial();
+}
+
+function renderTodaySpecial(){
+  const rotCard=document.getElementById("rot-card");
+  if(!rotCard) return;
+  if(selectedConditions && selectedConditions.size>0){
+    const condId=[...selectedConditions][0];
+    const cond=CONDITION_CHECKLISTS[condId];
+    if(cond && cond.todaySpecial){
+      const ts=cond.todaySpecial;
+      const hdr=rotCard.querySelector(".rot-hdr");
+      if(hdr){ hdr.style.background=ts.bg; }
+      const title=document.getElementById("rot-title");
+      if(title){ title.style.color=ts.ac; title.textContent=ts.label; }
+      const done=ts.items.filter(i=>checked[i.id]).length;
+      const badge=document.getElementById("rot-badge");
+      if(badge){ badge.textContent=done+"/"+ts.items.length; badge.style.background=ts.ac; }
+      const itemsDiv=document.getElementById("rot-items");
+      if(itemsDiv){
+        itemsDiv.innerHTML="";
+        ts.items.forEach(item=>{
+          const el=document.createElement("div");
+          el.className="chk-item"+(checked[item.id]?" done":"");
+          el.innerHTML='<div class="chkbox '+(checked[item.id]?"on":"")+'"><svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+            +'<div style="flex:1"><div class="it-text '+(checked[item.id]?"done":"")+'">'+item.text+'</div>'
+            +'<div class="it-note">'+item.note+'</div></div>';
+          el.addEventListener("click",()=>{toggleItem(item.id);renderPriority();});
+          itemsDiv.appendChild(el);
+        });
+      }
+      return;
+    }
+  }
+  // Default rotating section
+  renderRotating();
 }
 function renderSections(){
   try{
@@ -1990,6 +2054,43 @@ function handleMotion(e){
 function resetSteps(){if(!confirm("Reset step count?"))return;stepCount=0;saveAll();renderSteps();showToast("Steps reset ✓");}
 
 // ═══════════════ EXERCISE ═══════════════
+function renderConditionActivities(){
+  const div=document.getElementById("condition-activities");
+  const grid=document.getElementById("cond-act-grid");
+  const title=document.getElementById("cond-act-title");
+  if(!div||!grid) return;
+  if(selectedConditions && selectedConditions.size>0){
+    const condId=[...selectedConditions][0];
+    const cond=CONDITION_CHECKLISTS[condId];
+    if(cond && cond.activities){
+      div.style.display="block";
+      title.textContent="⚡ Recommended for "+cond.label.substring(3);
+      grid.innerHTML="";
+      cond.activities.forEach(act=>{
+        const btn=document.createElement("button");
+        btn.className="quick-add-btn";
+        btn.style.cssText="padding:8px 12px;border-radius:20px;";
+        btn.innerHTML=act.emoji+" "+act.name+"<br><small style='color:#97bc62'>~"+act.burn+" kcal</small>";
+        btn.onclick=()=>{
+          // Pre-fill exercise form
+          const sel=document.getElementById("ex-select");
+          const dur=document.getElementById("ex-dur");
+          const mins=parseInt(act.name.match(/(\d+)\s*min/)?.[1]||30);
+          if(dur) dur.value=mins;
+          // Log directly with pre-calculated burn
+          exercises.push({id:Date.now(),name:act.name,burn:act.burn,emoji:act.emoji,time:nowTime()});
+          saveAll();renderExLog();renderMealLog();updateHeader();
+          showToast(act.name+" — "+act.burn+" kcal burned 🔥");
+          haptic("success");
+        };
+        grid.appendChild(btn);
+      });
+      return;
+    }
+  }
+  div.style.display="none";
+}
+
 function updateExPreview(){
   const met=parseFloat(document.getElementById("ex-select").value);
   const dur=parseInt(document.getElementById("ex-dur").value);
@@ -2350,187 +2451,413 @@ const CONDITION_CHECKLISTS = {
   diabetes:{
     label:"🩸 Diabetes Daily Checklist",
     color:"#c62828",
+    priority:[
+      {id:"dm_p1",label:"No rice at dinner",icon:"🚫"},
+      {id:"dm_p2",label:"Blood sugar checked",icon:"📊"},
+      {id:"dm_p3",label:"Walk after every meal",icon:"🚶"},
+      {id:"dm_p4",label:"No sugar/sweets today",icon:"🍬"},
+      {id:"dm_p5",label:"Isabgol taken",icon:"🌿"},
+    ],
+    todaySpecial:{
+      label:"🩸 Diabetes Focus Today",
+      bg:"#fce4ec", ac:"#c62828",
+      items:[
+        {id:"dm_ts1",text:"Ate karela or methi in any meal",note:"Best natural blood sugar reducers",emoji:"🥒"},
+        {id:"dm_ts2",text:"No fruit juice — ate whole fruit only",note:"Juice spikes glucose fast",emoji:"🍎"},
+        {id:"dm_ts3",text:"Checked blood sugar 2 hrs after lunch",note:"Know your post-meal response",emoji:"📊"},
+      ]
+    },
+    activities:[
+      {name:"Morning walk (30 min)",burn:120,emoji:"🚶"},{name:"Post-meal walk (15 min)",burn:60,emoji:"🚶"},
+      {name:"Yoga/stretching (20 min)",burn:70,emoji:"🧘"},{name:"Cycling (30 min)",burn:200,emoji:"🚴"},
+      {name:"Swimming (30 min)",burn:240,emoji:"🏊"},{name:"Light jogging (20 min)",burn:160,emoji:"🏃"},
+    ],
     sections:[
-      {id:"dm_morning",label:"🌅 Morning",time:"6:30 AM",bg:"#fce4ec",ac:"#c62828",items:[
-        {id:"dm_m1",text:"Warm lemon water on empty stomach",note:"Regulates blood sugar naturally",cal:10,emoji:"🍋"},
+      {id:"dm_morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#fce4ec",ac:"#c62828",items:[
+        {id:"dm_m1",text:"Warm water (no lemon — too acidic empty stomach)",note:"Hydrate on waking",emoji:"💧"},
         {id:"dm_m2",text:"6 soaked methi seeds with water",note:"Reduces glucose absorption",emoji:"🌿"},
-        {id:"dm_m3",text:"15 min morning walk before breakfast",note:"Lowers fasting blood sugar",emoji:"🚶"},
-        {id:"dm_m4",text:"Check blood sugar if prescribed",note:"Know your numbers"},
+        {id:"dm_m3",text:"15 min walk BEFORE breakfast",note:"Lowers fasting blood sugar",emoji:"🚶"},
+        {id:"dm_m4",text:"Checked blood sugar if prescribed",note:"Know your fasting numbers",emoji:"📊"},
+        {id:"dm_m5",text:"Morning sunlight 10 min",note:"Vitamin D supports insulin",emoji:"☀️"},
       ]},
       {id:"dm_bfast",label:"🍳 Breakfast",time:"8:00 AM",bg:"#fff8e1",ac:"#f57f17",items:[
         {id:"dm_b1",text:"High protein breakfast — eggs or sprouts",note:"Protein first slows sugar rise",cal:140,emoji:"🥚"},
-        {id:"dm_b2",text:"Bajra or oats roti — NOT white bread",note:"Low GI grains only",cal:120,emoji:"🌾"},
-        {id:"dm_b3",text:"Avoided tea with sugar",note:"Use stevia or no sugar",emoji:"🍵"},
+        {id:"dm_b2",text:"Bajra/jowar roti — NOT white bread",note:"Low GI grains only",cal:120,emoji:"🌾"},
+        {id:"dm_b3",text:"NO sugar in tea — use stevia or plain",note:"Every gram of sugar counts",emoji:"🍵"},
+        {id:"dm_b4",text:"Soaked almonds + walnuts",note:"Good fats slow glucose",cal:80,emoji:"🌰"},
+      ]},
+      {id:"dm_snack1",label:"🥜 Mid-Morning Snack",time:"11:00–11:30 AM",bg:"#e8f4fd",ac:"#1565c0",items:[
+        {id:"dm_s1a",text:"Roasted chana 40g",note:"Low GI, high protein snack",cal:140,emoji:"🫘"},
+        {id:"dm_s1b",text:"1 whole fruit — guava/pear/apple",note:"Low GI fruits only",cal:60,emoji:"🍎"},
       ]},
       {id:"dm_lunch",label:"🍱 Lunch",time:"1:00–2:00 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
-        {id:"dm_l1",text:"Ate salad FIRST before rice/roti",note:"Fibre slows glucose spike",cal:30,emoji:"🥗"},
-        {id:"dm_l2",text:"Max 1 bowl rice OR 2 rotis only",note:"Strict portion control",cal:165,emoji:"🍚"},
-        {id:"dm_l3",text:"Ate karela sabzi or bitter gourd",note:"Natural blood sugar reducer",cal:30,emoji:"🥒"},
-        {id:"dm_l4",text:"Dal or legumes with lunch",note:"Protein + fibre combo",cal:140,emoji:"🫘"},
+        {id:"dm_l1",text:"Ate salad FIRST",note:"Fibre slows glucose spike",cal:30,emoji:"🥗"},
+        {id:"dm_l2",text:"1 katori dal",note:"Protein + slow release energy",cal:140,emoji:"🫘"},
+        {id:"dm_l3",text:"Karela or palak sabzi",note:"Direct blood sugar reducers",cal:80,emoji:"🥒"},
+        {id:"dm_l4",text:"Max 1 bowl rice OR 2 rotis — not both",note:"Strict portion control",cal:165,emoji:"🍚"},
+        {id:"dm_l5",text:"Walked 10 min after lunch",note:"Post-meal walk cuts glucose",emoji:"🚶"},
       ]},
-      {id:"dm_snack",label:"⚡ Snack",time:"5:00 PM",bg:"#e8f5e9",ac:"#2e7d32",items:[
-        {id:"dm_s1",text:"Roasted chana or peanuts — NOT biscuits",note:"Low GI snack",cal:140,emoji:"🥜"},
-        {id:"dm_s2",text:"Avoided fruit juice — ate whole fruit instead",note:"Juice spikes sugar fast",emoji:"🍎"},
+      {id:"dm_snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+        {id:"dm_e1",text:"Peanuts 20g + chana 30g",note:"Protein snack reduces dinner appetite",cal:185,emoji:"🥜"},
+        {id:"dm_e2",text:"Green tea or methi tea — no sugar",note:"Improves insulin sensitivity",cal:5,emoji:"🍵"},
+        {id:"dm_e3",text:"Avoided biscuits and namkeen",note:"Hidden sugar and starch",emoji:"🚫"},
       ]},
       {id:"dm_dinner",label:"🥣 Dinner",time:"7:30–8:30 PM",bg:"#e8eaf6",ac:"#283593",items:[
-        {id:"dm_d1",text:"NO rice at dinner — rotis only",note:"Most critical diabetic rule",emoji:"🚫"},
-        {id:"dm_d2",text:"2 rotis + dal + palak sabzi",note:"High fibre dinner",cal:360,emoji:"🫓"},
-        {id:"dm_d3",text:"Ate dinner before 8:30 PM",note:"Late eating worsens insulin",emoji:"⏰"},
-        {id:"dm_d4",text:"20 min walk after dinner",note:"Reduces post-meal glucose by 20%",emoji:"🚶"},
+        {id:"dm_d1",text:"NO rice at dinner — most critical rule",note:"Rice at night = overnight sugar spike",emoji:"🚫"},
+        {id:"dm_d2",text:"2 rotis + dal + palak sabzi",note:"High fibre balanced dinner",cal:360,emoji:"🫓"},
+        {id:"dm_d3",text:"1 bowl curd",note:"Probiotics + lowers glycaemic load",cal:100,emoji:"🥛"},
+        {id:"dm_d4",text:"Isabgol 30 min before dinner",note:"Fibre slows glucose absorption",cal:15,emoji:"🌿"},
+        {id:"dm_d5",text:"Ate dinner before 8:30 PM",note:"Late eating worsens insulin resistance",emoji:"⏰"},
       ]},
-      {id:"dm_night",label:"🌙 Night Checks",time:"Before sleep",bg:"#e0f2f1",ac:"#00695c",items:[
-        {id:"dm_n1",text:"Isabgol before dinner",note:"Slows glucose absorption",cal:15,emoji:"🌿"},
-        {id:"dm_n2",text:"Nothing after 9 PM",note:"Night eating worsens diabetes",emoji:"⛔"},
-        {id:"dm_n3",text:"Sleep by 10:30–11 PM",note:"Poor sleep raises blood sugar",emoji:"😴"},
+      {id:"dm_postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+        {id:"dm_pd1",text:"20 min walk after dinner",note:"Reduces post-meal glucose by 20%",emoji:"🚶"},
+        {id:"dm_pd2",text:"Nothing after 9 PM",note:"Night eating worsens diabetes",emoji:"⛔"},
+        {id:"dm_pd3",text:"Drank 8+ glasses water today",note:"Dehydration raises blood sugar",emoji:"💧"},
+        {id:"dm_pd4",text:"Sleep by 10:30–11 PM",note:"Poor sleep = higher fasting glucose",emoji:"😴"},
       ]},
     ]
   },
+
   bp:{
     label:"💓 High BP Daily Checklist",
     color:"#1565c0",
+    priority:[
+      {id:"bp_p1",label:"BP checked morning",icon:"📊"},
+      {id:"bp_p2",label:"No extra salt today",icon:"🧂"},
+      {id:"bp_p3",label:"No pickle/achaar",icon:"🚫"},
+      {id:"bp_p4",label:"30 min walk done",icon:"🚶"},
+      {id:"bp_p5",label:"Garlic taken today",icon:"🧄"},
+    ],
+    todaySpecial:{
+      label:"💓 BP Focus Today",
+      bg:"#e3f2fd", ac:"#1565c0",
+      items:[
+        {id:"bp_ts1",text:"Ate banana or sweet potato",note:"Potassium naturally lowers BP",cal:90,emoji:"🍌"},
+        {id:"bp_ts2",text:"BP reading: morning and evening",note:"Track your numbers daily",emoji:"📊"},
+        {id:"bp_ts3",text:"10 min deep breathing or meditation",note:"Stress is BP trigger #1",emoji:"🧘"},
+      ]
+    },
+    activities:[
+      {name:"Brisk walk (30 min)",burn:150,emoji:"🚶"},{name:"Swimming (30 min)",burn:240,emoji:"🏊"},
+      {name:"Cycling (30 min)",burn:200,emoji:"🚴"},{name:"Yoga/pranayama (20 min)",burn:70,emoji:"🧘"},
+      {name:"Light jogging (20 min)",burn:160,emoji:"🏃"},{name:"Deep breathing (10 min)",burn:20,emoji:"😮‍💨"},
+    ],
     sections:[
-      {id:"bp_morning",label:"🌅 Morning",time:"6:30 AM",bg:"#e3f2fd",ac:"#1565c0",items:[
-        {id:"bp_m1",text:"Check BP reading — morning",note:"Best time for accurate reading",emoji:"📊"},
-        {id:"bp_m2",text:"1 raw garlic clove on empty stomach",note:"Proven to lower BP naturally",emoji:"🧄"},
-        {id:"bp_m3",text:"Warm water with lemon",note:"Flushes sodium",cal:10,emoji:"🍋"},
-        {id:"bp_m4",text:"15 min brisk walk",note:"Cardio reduces BP significantly",emoji:"🚶"},
+      {id:"bp_morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#e3f2fd",ac:"#1565c0",items:[
+        {id:"bp_m1",text:"Check BP — morning reading",note:"Best time for accurate reading",emoji:"📊"},
+        {id:"bp_m2",text:"1 raw garlic clove with water",note:"Proven to lower BP by 5-8 mmHg",emoji:"🧄"},
+        {id:"bp_m3",text:"Warm water — 2 glasses",note:"Flushes sodium, hydrates",cal:0,emoji:"💧"},
+        {id:"bp_m4",text:"15 min brisk walk",note:"Cardio reduces systolic BP",emoji:"🚶"},
+        {id:"bp_m5",text:"Morning sunlight 10 min",note:"Vitamin D supports heart health",emoji:"☀️"},
       ]},
-      {id:"bp_food",label:"🍽️ All Meals",time:"Throughout day",bg:"#fff8e1",ac:"#f57f17",items:[
-        {id:"bp_f1",text:"Cooked with minimal salt today",note:"Max 1 tsp total per day",emoji:"🧂"},
-        {id:"bp_f2",text:"No pickle/achaar/papad today",note:"High sodium hidden sources",emoji:"🚫"},
-        {id:"bp_f3",text:"Ate banana or sweet potato",note:"Potassium lowers BP",cal:90,emoji:"🍌"},
-        {id:"bp_f4",text:"Had palak or leafy greens",note:"Magnesium relaxes blood vessels",cal:70,emoji:"🥬"},
-        {id:"bp_f5",text:"Drank 8+ glasses water",note:"Dehydration raises BP",emoji:"💧"},
+      {id:"bp_bfast",label:"🍳 Breakfast",time:"8:00 AM",bg:"#fff8e1",ac:"#f57f17",items:[
+        {id:"bp_b1",text:"Oats or high-fibre breakfast",note:"Soluble fibre reduces BP",cal:150,emoji:"🌾"},
+        {id:"bp_b2",text:"Banana with breakfast",note:"Potassium counteracts sodium",cal:90,emoji:"🍌"},
+        {id:"bp_b3",text:"Low fat milk or curd",note:"Calcium relaxes blood vessels",cal:90,emoji:"🥛"},
+        {id:"bp_b4",text:"NO salt in breakfast",note:"Reduce sodium from morning",emoji:"🧂"},
       ]},
-      {id:"bp_avoid",label:"🚫 Avoid Today",time:"All day",bg:"#fce4ec",ac:"#c62828",items:[
-        {id:"bp_a1",text:"Avoided fried snacks and namkeen",note:"Salt + fat combination dangerous",emoji:"🍟"},
-        {id:"bp_a2",text:"Avoided excess tea/coffee",note:"Max 2 cups only",emoji:"☕"},
-        {id:"bp_a3",text:"No processed/packaged food",note:"Hidden sodium",emoji:"🥫"},
+      {id:"bp_snack1",label:"🥜 Mid-Morning Snack",time:"11:00 AM",bg:"#e8f4fd",ac:"#1565c0",items:[
+        {id:"bp_s1a",text:"Unsalted peanuts or walnuts",note:"Good fats + no sodium",cal:150,emoji:"🥜"},
+        {id:"bp_s1b",text:"Coconut water or plain water",note:"Potassium + magnesium rich",cal:45,emoji:"🥥"},
       ]},
-      {id:"bp_evening",label:"🌆 Evening",time:"5:00–8:00 PM",bg:"#e8f5e9",ac:"#2e7d32",items:[
-        {id:"bp_e1",text:"30 min relaxation — deep breathing",note:"Stress is BP trigger #1",emoji:"🧘"},
-        {id:"bp_e2",text:"Check BP reading — evening",note:"Compare with morning",emoji:"📊"},
-        {id:"bp_e3",text:"Light dinner — no heavy non-veg",note:"Heavy meals spike BP",emoji:"🥗"},
-        {id:"bp_e4",text:"Sleep by 10:30 PM",note:"Sleep debt raises BP",emoji:"😴"},
+      {id:"bp_lunch",label:"🍱 Lunch",time:"1:00–2:00 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+        {id:"bp_l1",text:"Cooked with minimal salt",note:"Taste food before adding salt",emoji:"🧂"},
+        {id:"bp_l2",text:"Palak or leafy green sabzi",note:"Magnesium relaxes blood vessels",cal:70,emoji:"🥬"},
+        {id:"bp_l3",text:"Dal with lunch",note:"Potassium + protein",cal:140,emoji:"🫘"},
+        {id:"bp_l4",text:"No pickle or papad",note:"High sodium — avoid completely",emoji:"🚫"},
+        {id:"bp_l5",text:"Plenty of salad with lunch",note:"Raw vegetables rich in minerals",cal:35,emoji:"🥗"},
+      ]},
+      {id:"bp_snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+        {id:"bp_e1",text:"Fresh fruit — apple or pear",note:"Potassium rich",cal:80,emoji:"🍎"},
+        {id:"bp_e2",text:"Green tea without sugar",note:"Antioxidants support heart",cal:5,emoji:"🍵"},
+        {id:"bp_e3",text:"Avoided namkeen and chips",note:"Salt hidden in all packaged snacks",emoji:"🚫"},
+      ]},
+      {id:"bp_dinner",label:"🥣 Dinner",time:"7:30–8:30 PM",bg:"#e8eaf6",ac:"#283593",items:[
+        {id:"bp_d1",text:"Light dinner — no heavy non-veg",note:"Heavy meals spike BP at night",emoji:"🥗"},
+        {id:"bp_d2",text:"2 rotis + dal + light sabzi",note:"Low sodium balanced dinner",cal:360,emoji:"🫓"},
+        {id:"bp_d3",text:"NO extra salt on table",note:"Don't add salt after cooking",emoji:"🧂"},
+        {id:"bp_d4",text:"Ate before 8:30 PM",note:"Late eating raises night BP",emoji:"⏰"},
+      ]},
+      {id:"bp_postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+        {id:"bp_pd1",text:"30 min relaxation — no screens",note:"Screen time raises cortisol and BP",emoji:"📵"},
+        {id:"bp_pd2",text:"Check BP — evening reading",note:"Compare with morning",emoji:"📊"},
+        {id:"bp_pd3",text:"10 min deep breathing before sleep",note:"Lowers BP by 5-10 mmHg",emoji:"😮‍💨"},
+        {id:"bp_pd4",text:"Sleep by 10:30 PM — 7 hrs minimum",note:"Sleep debt raises BP significantly",emoji:"😴"},
       ]},
     ]
   },
+
   cholesterol:{
     label:"🫀 Cholesterol Daily Checklist",
     color:"#6a1b9a",
+    priority:[
+      {id:"ch_p1",label:"Oats for breakfast",icon:"🌾"},
+      {id:"ch_p2",label:"No fried food today",icon:"🚫"},
+      {id:"ch_p3",label:"Fish or walnuts eaten",icon:"🐟"},
+      {id:"ch_p4",label:"30 min cardio done",icon:"🏃"},
+      {id:"ch_p5",label:"Garlic taken today",icon:"🧄"},
+    ],
+    todaySpecial:{
+      label:"🫀 Cholesterol Focus Today",
+      bg:"#f3e5f5", ac:"#6a1b9a",
+      items:[
+        {id:"ch_ts1",text:"Ate rajma or chana dal today",note:"Soluble fibre binds and removes cholesterol",cal:200,emoji:"🫘"},
+        {id:"ch_ts2",text:"Used mustard oil for cooking — not dalda",note:"Good fat profile for heart",emoji:"🫚"},
+        {id:"ch_ts3",text:"Had flaxseeds/alsi in any meal",note:"Plant omega-3 reduces LDL",emoji:"🌿"},
+      ]
+    },
+    activities:[
+      {name:"Brisk walk (30 min)",burn:150,emoji:"🚶"},{name:"Jogging (20 min)",burn:160,emoji:"🏃"},
+      {name:"Cycling (30 min)",burn:200,emoji:"🚴"},{name:"Swimming (30 min)",burn:240,emoji:"🏊"},
+      {name:"Cardio workout (20 min)",burn:180,emoji:"💪"},{name:"Yoga (20 min)",burn:70,emoji:"🧘"},
+    ],
     sections:[
-      {id:"ch_morning",label:"🌅 Morning",time:"6:30 AM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
-        {id:"ch_m1",text:"Oats for breakfast — plain or with milk",note:"Soluble fibre reduces LDL daily",cal:150,emoji:"🌾"},
-        {id:"ch_m2",text:"2 walnuts soaked overnight",note:"Omega-3 raises HDL",cal:52,emoji:"🌰"},
-        {id:"ch_m3",text:"Raw garlic with water",note:"Allicin directly lowers LDL",emoji:"🧄"},
+      {id:"ch_morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+        {id:"ch_m1",text:"Warm lemon water",note:"Liver flush + metabolism boost",cal:10,emoji:"🍋"},
+        {id:"ch_m2",text:"1 raw garlic clove",note:"Allicin directly lowers LDL",emoji:"🧄"},
+        {id:"ch_m3",text:"2 walnuts soaked overnight",note:"Omega-3 raises HDL significantly",cal:52,emoji:"🌰"},
+        {id:"ch_m4",text:"15 min brisk walk",note:"Raises HDL every day you do this",emoji:"🚶"},
       ]},
-      {id:"ch_food",label:"🍽️ Food Choices",time:"All meals",bg:"#e8f5e9",ac:"#2e7d32",items:[
-        {id:"ch_f1",text:"Cooked in mustard oil — NOT dalda/vanaspati",note:"Good fat profile",emoji:"🫚"},
-        {id:"ch_f2",text:"Had flaxseeds/alsi in food",note:"Plant omega-3 reduces LDL",emoji:"🌿"},
-        {id:"ch_f3",text:"Fish for lunch or dinner",note:"EPA/DHA raise HDL",cal:180,emoji:"🐟"},
-        {id:"ch_f4",text:"Avoided fried food completely",note:"Fried = trans fats = LDL spike",emoji:"🚫"},
-        {id:"ch_f5",text:"Ate rajma or chana dal",note:"Soluble fibre binds cholesterol",cal:200,emoji:"🫘"},
+      {id:"ch_bfast",label:"🍳 Breakfast",time:"8:00 AM",bg:"#fff8e1",ac:"#f57f17",items:[
+        {id:"ch_b1",text:"Oats with low-fat milk — daily",note:"Beta-glucan in oats binds LDL",cal:200,emoji:"🌾"},
+        {id:"ch_b2",text:"Egg whites only — not yolk",note:"Yolk has high cholesterol",cal:35,emoji:"🥚"},
+        {id:"ch_b3",text:"Flaxseeds/alsi sprinkled on food",note:"ALA omega-3 reduces LDL",emoji:"🌿"},
+        {id:"ch_b4",text:"NO butter or full cream milk",note:"Saturated fat raises LDL",emoji:"🚫"},
       ]},
-      {id:"ch_avoid",label:"🚫 Avoid Today",time:"All day",bg:"#fce4ec",ac:"#c62828",items:[
-        {id:"ch_a1",text:"No ghee/butter in excess",note:"Max 1 tsp total",emoji:"🧈"},
-        {id:"ch_a2",text:"No egg yolk today",note:"Whites only if eating eggs",emoji:"🥚"},
-        {id:"ch_a3",text:"No full cream milk/paneer",note:"Saturated fat raises LDL",emoji:"🥛"},
-        {id:"ch_a4",text:"No bakery items/biscuits",note:"Trans fats in all baked goods",emoji:"🍪"},
+      {id:"ch_snack1",label:"🥜 Mid-Morning Snack",time:"11:00 AM",bg:"#e8f4fd",ac:"#1565c0",items:[
+        {id:"ch_s1a",text:"Roasted chana or unsalted peanuts",note:"Plant protein + fibre",cal:140,emoji:"🫘"},
+        {id:"ch_s1b",text:"Green tea",note:"Catechins reduce LDL",cal:5,emoji:"🍵"},
       ]},
-      {id:"ch_exercise",label:"🏃 Exercise",time:"Evening",bg:"#e3f2fd",ac:"#1565c0",items:[
-        {id:"ch_e1",text:"30 min cardio — walk, cycle or swim",note:"Raises HDL by 5% per week",emoji:"🚶"},
-        {id:"ch_e2",text:"Stretch or yoga 15 min",note:"Reduces stress hormones",emoji:"🧘"},
+      {id:"ch_lunch",label:"🍱 Lunch",time:"1:00–2:00 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+        {id:"ch_l1",text:"Rajma or chana dal",note:"Highest fibre dal — binds cholesterol",cal:200,emoji:"🫘"},
+        {id:"ch_l2",text:"Palak or methi sabzi",note:"Plant sterols block cholesterol absorption",cal:80,emoji:"🥬"},
+        {id:"ch_l3",text:"Fish for lunch 2-3x/week",note:"EPA/DHA raise HDL",cal:180,emoji:"🐟"},
+        {id:"ch_l4",text:"NO fried items with lunch",note:"Trans fats directly raise LDL",emoji:"🚫"},
+        {id:"ch_l5",text:"Salad with raw tomato",note:"Lycopene lowers LDL",cal:35,emoji:"🍅"},
+      ]},
+      {id:"ch_snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+        {id:"ch_e1",text:"Handful of mixed nuts (unsalted)",note:"Good fats raise HDL",cal:180,emoji:"🌰"},
+        {id:"ch_e2",text:"Fruit — apple or pear",note:"Pectin binds cholesterol in gut",cal:80,emoji:"🍎"},
+        {id:"ch_e3",text:"Avoided biscuits and bakery items",note:"Trans fats in all baked goods",emoji:"🚫"},
+      ]},
+      {id:"ch_dinner",label:"🥣 Dinner",time:"7:30–8:30 PM",bg:"#e8eaf6",ac:"#283593",items:[
+        {id:"ch_d1",text:"Dal + sabzi + rotis — no heavy non-veg",note:"Plant-based dinners lower LDL",cal:360,emoji:"🫓"},
+        {id:"ch_d2",text:"NO ghee on rotis today",note:"Limit saturated fat",emoji:"🚫"},
+        {id:"ch_d3",text:"Light curd — low fat",note:"Probiotics help cholesterol",cal:60,emoji:"🥛"},
+        {id:"ch_d4",text:"Ate before 8:30 PM",note:"Late meals increase lipid storage",emoji:"⏰"},
+      ]},
+      {id:"ch_postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+        {id:"ch_pd1",text:"30 min walk or light exercise",note:"Raises HDL with each session",emoji:"🚶"},
+        {id:"ch_pd2",text:"No late night snacking",note:"Night eating increases triglycerides",emoji:"⛔"},
+        {id:"ch_pd3",text:"Sleep 7-8 hours",note:"Sleep deprivation raises bad cholesterol",emoji:"😴"},
       ]},
     ]
   },
+
   thyroid:{
     label:"🦋 Thyroid Daily Checklist",
     color:"#00695c",
+    priority:[
+      {id:"th_p1",label:"Medicine on empty stomach",icon:"💊"},
+      {id:"th_p2",label:"45 min wait before eating",icon:"⏰"},
+      {id:"th_p3",label:"No raw cruciferous today",icon:"🥦"},
+      {id:"th_p4",label:"Selenium food eaten",icon:"🐟"},
+      {id:"th_p5",label:"Sleep by 10:30 PM",icon:"😴"},
+    ],
+    todaySpecial:{
+      label:"🦋 Thyroid Focus Today",
+      bg:"#e0f2f1", ac:"#00695c",
+      items:[
+        {id:"th_ts1",text:"Thyroid medicine taken correctly",note:"Empty stomach + 45 min wait",emoji:"💊"},
+        {id:"th_ts2",text:"Ate selenium-rich food (fish/eggs)",note:"Selenium converts T4 to active T3",cal:140,emoji:"🐟"},
+        {id:"th_ts3",text:"Small meal every 3 hours — no long gaps",note:"Boosts slow thyroid metabolism",emoji:"🍽️"},
+      ]
+    },
+    activities:[
+      {name:"Yoga — thyroid poses (20 min)",burn:70,emoji:"🧘"},{name:"Brisk walk (30 min)",burn:150,emoji:"🚶"},
+      {name:"Light jogging (15 min)",burn:120,emoji:"🏃"},{name:"Neck stretches (10 min)",burn:20,emoji:"🙆"},
+      {name:"Swimming (20 min)",burn:160,emoji:"🏊"},{name:"Cycling (20 min)",burn:130,emoji:"🚴"},
+    ],
     sections:[
-      {id:"th_morning",label:"🌅 Morning Medication",time:"6:30 AM",bg:"#e0f2f1",ac:"#00695c",items:[
-        {id:"th_m1",text:"Thyroid medicine on empty stomach",note:"Must be taken before food",emoji:"💊"},
-        {id:"th_m2",text:"Waited 45 min before eating",note:"Critical for absorption",emoji:"⏰"},
-        {id:"th_m3",text:"NO coffee within 1 hour of medicine",note:"Coffee blocks absorption",emoji:"🚫"},
-        {id:"th_m4",text:"Morning sunlight 15 min",note:"Vitamin D supports thyroid",emoji:"☀️"},
+      {id:"th_morning",label:"🌅 Morning — Medication",time:"6:30 AM (BEFORE food)",bg:"#e0f2f1",ac:"#00695c",items:[
+        {id:"th_m1",text:"Thyroid medicine on EMPTY stomach",note:"Must be first thing on waking",emoji:"💊"},
+        {id:"th_m2",text:"Waited 45 min before eating or drinking anything",note:"Critical for medicine absorption",emoji:"⏰"},
+        {id:"th_m3",text:"NO coffee or tea with medicine",note:"Caffeine blocks absorption completely",emoji:"🚫"},
+        {id:"th_m4",text:"Morning sunlight 15 min",note:"Vitamin D is essential for thyroid",emoji:"☀️"},
       ]},
-      {id:"th_food",label:"🍽️ Food Choices",time:"All meals",bg:"#fff8e1",ac:"#f57f17",items:[
-        {id:"th_f1",text:"Ate selenium-rich food — fish or eggs",note:"Selenium activates thyroid hormone",cal:140,emoji:"🐟"},
-        {id:"th_f2",text:"Iodised salt used in cooking",note:"Iodine deficiency causes hypothyroid",emoji:"🧂"},
-        {id:"th_f3",text:"Cooked broccoli/cabbage — not raw",note:"Raw cruciferous suppress thyroid",emoji:"🥦"},
-        {id:"th_f4",text:"Small frequent meals every 3 hours",note:"Boosts slow metabolism",emoji:"🍽️"},
+      {id:"th_bfast",label:"🍳 Breakfast",time:"After 45 min wait",bg:"#fff8e1",ac:"#f57f17",items:[
+        {id:"th_b1",text:"Eggs — boiled or bhurji",note:"Iodine + selenium — both thyroid nutrients",cal:140,emoji:"🥚"},
+        {id:"th_b2",text:"Whole grain roti or oats",note:"Easy to digest for slow metabolism",cal:150,emoji:"🌾"},
+        {id:"th_b3",text:"Low fat milk or curd",note:"Calcium and iodine",cal:90,emoji:"🥛"},
+        {id:"th_b4",text:"NO soy milk or tofu",note:"Soy blocks thyroid hormone",emoji:"🚫"},
       ]},
-      {id:"th_avoid",label:"🚫 Avoid Today",time:"All day",bg:"#fce4ec",ac:"#c62828",items:[
-        {id:"th_a1",text:"No soy milk or soy products",note:"Soy blocks thyroid hormone",emoji:"🌱"},
-        {id:"th_a2",text:"Limited processed sugar",note:"Worsens thyroid fatigue",emoji:"🍬"},
-        {id:"th_a3",text:"No calcium supplement near medicine",note:"Blocks absorption",emoji:"💊"},
+      {id:"th_snack1",label:"🥜 Mid-Morning Snack",time:"10:30–11:00 AM",bg:"#e8f4fd",ac:"#1565c0",items:[
+        {id:"th_s1a",text:"Brazil nuts (2) or pumpkin seeds",note:"Highest selenium source",cal:60,emoji:"🌰"},
+        {id:"th_s1b",text:"1 fruit — apple or pear",note:"Antioxidants support thyroid",cal:80,emoji:"🍎"},
       ]},
-      {id:"th_wellness",label:"💆 Wellness",time:"Evening",bg:"#f3e5f5",ac:"#6a1b9a",items:[
-        {id:"th_w1",text:"Light exercise — yoga or walk 20 min",note:"Hypothyroid slows metabolism",emoji:"🧘"},
-        {id:"th_w2",text:"Stress management — deep breathing",note:"Stress worsens thyroid",emoji:"😮‍💨"},
-        {id:"th_w3",text:"Sleep by 10:30 PM — 7-8 hours",note:"Sleep restores thyroid function",emoji:"😴"},
+      {id:"th_lunch",label:"🍱 Lunch",time:"12:30–1:30 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+        {id:"th_l1",text:"Fish or lean chicken",note:"Selenium and iodine for thyroid",cal:180,emoji:"🐟"},
+        {id:"th_l2",text:"Cooked broccoli/cabbage (NOT raw)",note:"Cooking reduces goitrogens by 30%",cal:60,emoji:"🥦"},
+        {id:"th_l3",text:"Dal + rice or roti",note:"Balanced carbs for energy",cal:300,emoji:"🫘"},
+        {id:"th_l4",text:"Iodised salt used in cooking",note:"Iodine deficiency causes hypothyroid",emoji:"🧂"},
+      ]},
+      {id:"th_snack2",label:"⚡ Evening Snack",time:"4:30–5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+        {id:"th_e1",text:"Roasted chana or peanuts",note:"Zinc supports thyroid hormone",cal:140,emoji:"🫘"},
+        {id:"th_e2",text:"Herbal tea — ginger or tulsi",note:"Anti-inflammatory, supports thyroid",cal:5,emoji:"🍵"},
+        {id:"th_e3",text:"Avoided processed sugar",note:"Sugar worsens thyroid fatigue badly",emoji:"🚫"},
+      ]},
+      {id:"th_dinner",label:"🥣 Dinner",time:"7:30–8:00 PM",bg:"#e8eaf6",ac:"#283593",items:[
+        {id:"th_d1",text:"Small frequent dinner — not heavy",note:"Hypothyroid slows digestion",emoji:"🍽️"},
+        {id:"th_d2",text:"Dal + sabzi + 2 rotis",note:"Protein helps convert thyroid hormones",cal:360,emoji:"🫓"},
+        {id:"th_d3",text:"NO calcium supplement near medicine timing",note:"Calcium blocks absorption",emoji:"🚫"},
+        {id:"th_d4",text:"Ate by 8 PM",note:"Slow metabolism can't handle late meals",emoji:"⏰"},
+      ]},
+      {id:"th_postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+        {id:"th_pd1",text:"Light yoga or neck stretches 15 min",note:"Specific poses stimulate thyroid gland",emoji:"🧘"},
+        {id:"th_pd2",text:"Stress management — 10 min meditation",note:"Stress worsens thyroid function",emoji:"😮‍💨"},
+        {id:"th_pd3",text:"Sleep by 10:30 PM — 8 hours",note:"Sleep restores thyroid hormone levels",emoji:"😴"},
       ]},
     ]
   },
+
   pcod:{
     label:"🌸 PCOD/PCOS Daily Checklist",
     color:"#ad1457",
+    priority:[
+      {id:"pc_p1",label:"30 min exercise done",icon:"🏃"},
+      {id:"pc_p2",label:"No sugar today",icon:"🍬"},
+      {id:"pc_p3",label:"Spearmint tea taken",icon:"🍵"},
+      {id:"pc_p4",label:"Slept 7+ hours last night",icon:"😴"},
+      {id:"pc_p5",label:"Stress management done",icon:"🧘"},
+    ],
+    todaySpecial:{
+      label:"🌸 PCOD Focus Today",
+      bg:"#fce4ec", ac:"#ad1457",
+      items:[
+        {id:"pc_ts1",text:"Spearmint tea on empty stomach",note:"Reduces androgens (male hormones)",cal:5,emoji:"🍵"},
+        {id:"pc_ts2",text:"30 min exercise completed",note:"Most effective PCOD treatment known",emoji:"🏃"},
+        {id:"pc_ts3",text:"Tracked mood/symptoms today",note:"Helps identify your PCOD triggers",emoji:"📅"},
+      ]
+    },
+    activities:[
+      {name:"Cardio — brisk walk/jog (30 min)",burn:160,emoji:"🏃"},{name:"Yoga — PCOD sequence (30 min)",burn:100,emoji:"🧘"},
+      {name:"Cycling (30 min)",burn:200,emoji:"🚴"},{name:"Dance/zumba (30 min)",burn:220,emoji:"💃"},
+      {name:"Swimming (30 min)",burn:240,emoji:"🏊"},{name:"Strength training (20 min)",burn:150,emoji:"💪"},
+    ],
     sections:[
-      {id:"pc_morning",label:"🌅 Morning",time:"6:30 AM",bg:"#fce4ec",ac:"#ad1457",items:[
-        {id:"pc_m1",text:"Spearmint tea on empty stomach",note:"Reduces male hormones (androgens)",cal:5,emoji:"🍵"},
-        {id:"pc_m2",text:"Soaked flaxseeds with water",note:"Balances estrogen",emoji:"🌿"},
-        {id:"pc_m3",text:"30 min exercise — cardio or yoga",note:"Most effective PCOD treatment",emoji:"🏃"},
-        {id:"pc_m4",text:"Morning sunlight for Vitamin D",note:"PCOD women often deficient",emoji:"☀️"},
+      {id:"pc_morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#fce4ec",ac:"#ad1457",items:[
+        {id:"pc_m1",text:"Spearmint tea on empty stomach",note:"Proven to reduce androgens in PCOD",cal:5,emoji:"🍵"},
+        {id:"pc_m2",text:"1 tsp soaked flaxseeds",note:"Balances estrogen naturally",emoji:"🌿"},
+        {id:"pc_m3",text:"30 min exercise — cardio or yoga",note:"Single most effective PCOD treatment",emoji:"🏃"},
+        {id:"pc_m4",text:"Morning sunlight 15 min",note:"Vitamin D deficiency common in PCOD",emoji:"☀️"},
       ]},
-      {id:"pc_food",label:"🍽️ Food Choices",time:"All meals",bg:"#e8f5e9",ac:"#2e7d32",items:[
-        {id:"pc_f1",text:"Low GI grains — bajra/jowar roti",note:"Controls insulin resistance",cal:120,emoji:"🌾"},
-        {id:"pc_f2",text:"High protein breakfast — eggs or dal",note:"Protein reduces androgen levels",cal:140,emoji:"🥚"},
-        {id:"pc_f3",text:"Anti-inflammatory food — turmeric in dal",note:"Reduces PCOD inflammation",emoji:"🟡"},
-        {id:"pc_f4",text:"Ate walnuts or pumpkin seeds",note:"Zinc for hormone balance",cal:52,emoji:"🌰"},
+      {id:"pc_bfast",label:"🍳 Breakfast",time:"8:00 AM",bg:"#fff8e1",ac:"#f57f17",items:[
+        {id:"pc_b1",text:"High protein breakfast — eggs or dal chilla",note:"Protein reduces androgen levels",cal:200,emoji:"🥚"},
+        {id:"pc_b2",text:"Bajra/jowar roti — NOT white bread",note:"Low GI controls insulin resistance",cal:120,emoji:"🌾"},
+        {id:"pc_b3",text:"NO sugar in tea or food",note:"Sugar is PCOD's worst trigger",emoji:"🚫"},
+        {id:"pc_b4",text:"Pumpkin seeds or walnuts",note:"Zinc for hormone balance",cal:80,emoji:"🌰"},
       ]},
-      {id:"pc_avoid",label:"🚫 Avoid Today",time:"All day",bg:"#fce4ec",ac:"#c62828",items:[
-        {id:"pc_a1",text:"No sugar or sweets today",note:"Sugar worsens insulin resistance",emoji:"🍬"},
-        {id:"pc_a2",text:"No maida items — puri, bread, biscuits",note:"Refined carbs spike insulin",emoji:"🍞"},
-        {id:"pc_a3",text:"No full cream dairy in excess",note:"May increase androgens",emoji:"🥛"},
-        {id:"pc_a4",text:"Limited caffeine — max 1 tea",note:"Caffeine disrupts hormones",emoji:"☕"},
+      {id:"pc_snack1",label:"🥜 Mid-Morning Snack",time:"11:00 AM",bg:"#e8f4fd",ac:"#1565c0",items:[
+        {id:"pc_s1a",text:"Roasted chana or sprouts",note:"Low GI protein snack",cal:130,emoji:"🫘"},
+        {id:"pc_s1b",text:"1 whole fruit — NOT juice",note:"Juice spikes insulin fast",cal:60,emoji:"🍎"},
       ]},
-      {id:"pc_wellness",label:"💆 Wellness",time:"Evening",bg:"#e8eaf6",ac:"#283593",items:[
-        {id:"pc_w1",text:"Stress management — 10 min meditation",note:"Stress is PCOD trigger #1",emoji:"🧘"},
-        {id:"pc_w2",text:"Sleep 7-8 hours — by 10:30 PM",note:"Sleep deprivation worsens PCOD",emoji:"😴"},
-        {id:"pc_w3",text:"Tracked period / symptoms today",note:"Monitor your cycle",emoji:"📅"},
+      {id:"pc_lunch",label:"🍱 Lunch",time:"1:00–2:00 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+        {id:"pc_l1",text:"Salad first",note:"Fibre slows insulin spike",cal:30,emoji:"🥗"},
+        {id:"pc_l2",text:"High protein dal or chicken/fish",note:"Protein reduces PCOD symptoms",cal:180,emoji:"🫘"},
+        {id:"pc_l3",text:"Anti-inflammatory sabzi — palak/methi",note:"Reduces PCOD inflammation",cal:80,emoji:"🥬"},
+        {id:"pc_l4",text:"Max 1 bowl rice or 2 rotis",note:"Strict portion control",cal:165,emoji:"🍚"},
+        {id:"pc_l5",text:"Turmeric in dal or sabzi",note:"Curcumin reduces insulin resistance",emoji:"🟡"},
+      ]},
+      {id:"pc_snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+        {id:"pc_e1",text:"Mixed nuts — walnuts, almonds, pumpkin seeds",note:"Zinc, selenium, magnesium combo",cal:180,emoji:"🌰"},
+        {id:"pc_e2",text:"Spearmint or cinnamon tea",note:"Both reduce androgens and insulin",cal:5,emoji:"🍵"},
+        {id:"pc_e3",text:"Avoided maida snacks completely",note:"Refined carbs worsen insulin resistance",emoji:"🚫"},
+      ]},
+      {id:"pc_dinner",label:"🥣 Dinner",time:"7:00–8:00 PM",bg:"#e8eaf6",ac:"#283593",items:[
+        {id:"pc_d1",text:"Light dinner — protein + vegetables",note:"Heavy dinner worsens hormones",cal:300,emoji:"🥗"},
+        {id:"pc_d2",text:"NO rice at dinner",note:"Low carb evening essential for PCOD",emoji:"🚫"},
+        {id:"pc_d3",text:"Limited dairy — 1 bowl curd maximum",note:"Excess dairy increases androgens",cal:60,emoji:"🥛"},
+        {id:"pc_d4",text:"Ate before 8 PM",note:"Intermittent fasting helps PCOD",emoji:"⏰"},
+      ]},
+      {id:"pc_postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+        {id:"pc_pd1",text:"15 min walk after dinner",note:"Improves insulin sensitivity",emoji:"🚶"},
+        {id:"pc_pd2",text:"10 min meditation or journaling",note:"Stress is PCOD trigger — manage daily",emoji:"🧘"},
+        {id:"pc_pd3",text:"Tracked period/symptoms",note:"Monitor your cycle patterns",emoji:"📅"},
+        {id:"pc_pd4",text:"Sleep by 10:30 PM — 7-8 hours",note:"Sleep deprivation worsens PCOD significantly",emoji:"😴"},
       ]},
     ]
   },
+
   acidity:{
     label:"🔥 Acidity/GERD Daily Checklist",
     color:"#e65100",
+    priority:[
+      {id:"ac_p1",label:"No tea on empty stomach",icon:"☕"},
+      {id:"ac_p2",label:"Dinner before 8 PM",icon:"⏰"},
+      {id:"ac_p3",label:"No spicy food today",icon:"🌶️"},
+      {id:"ac_p4",label:"Saunf after every meal",icon:"🌿"},
+      {id:"ac_p5",label:"2 hrs upright after dinner",icon:"🚶"},
+    ],
+    todaySpecial:{
+      label:"🔥 Acidity Focus Today",
+      bg:"#fff8e1", ac:"#e65100",
+      items:[
+        {id:"ac_ts1",text:"Saunf (fennel) water first thing",note:"Most effective natural antacid",emoji:"🌿"},
+        {id:"ac_ts2",text:"Ate 4-5 small meals instead of 3 large",note:"Small meals prevent acid overflow",emoji:"🍽️"},
+        {id:"ac_ts3",text:"Stayed upright 2 hours after every meal",note:"Gravity keeps acid in stomach",emoji:"🚶"},
+      ]
+    },
+    activities:[
+      {name:"Post-meal walk (20 min)",burn:80,emoji:"🚶"},{name:"Yoga — acid reflux poses (20 min)",burn:60,emoji:"🧘"},
+      {name:"Light walk (30 min)",burn:120,emoji:"🚶"},{name:"Swimming (20 min)",burn:160,emoji:"🏊"},
+      {name:"Cycling — flat road (20 min)",burn:130,emoji:"🚴"},{name:"Deep breathing (10 min)",burn:20,emoji:"😮‍💨"},
+    ],
     sections:[
-      {id:"ac_morning",label:"🌅 Morning",time:"6:30 AM",bg:"#fff8e1",ac:"#e65100",items:[
-        {id:"ac_m1",text:"Warm water — NOT lemon or tea first",note:"Lemon worsens empty stomach acidity",cal:0,emoji:"💧"},
-        {id:"ac_m2",text:"Saunf (fennel) soaked in water — drink it",note:"Natural antacid",emoji:"🌿"},
-        {id:"ac_m3",text:"Breakfast within 30 min of waking",note:"Empty stomach worsens acidity",emoji:"⏰"},
+      {id:"ac_morning",label:"🌅 Morning Ritual",time:"6:30 AM",bg:"#fff8e1",ac:"#e65100",items:[
+        {id:"ac_m1",text:"Saunf soaked water — drink first",note:"Natural antacid before anything else",emoji:"🌿"},
+        {id:"ac_m2",text:"Warm plain water 2 glasses",note:"NOT lemon — citrus worsens acidity",cal:0,emoji:"💧"},
+        {id:"ac_m3",text:"Breakfast within 30 min of waking",note:"Empty stomach produces more acid",emoji:"⏰"},
+        {id:"ac_m4",text:"NO tea or coffee for 30 min",note:"Coffee on empty stomach is major trigger",emoji:"🚫"},
       ]},
-      {id:"ac_meals",label:"🍽️ Eating Habits",time:"All meals",bg:"#e8f5e9",ac:"#2e7d32",items:[
-        {id:"ac_f1",text:"Ate small portions — not overfull",note:"Overeating triggers reflux",emoji:"🍽️"},
-        {id:"ac_f2",text:"Ate slowly — chewed thoroughly",note:"Fast eating causes acidity",emoji:"🐢"},
-        {id:"ac_f3",text:"Had curd or chaas with lunch",note:"Probiotics heal stomach lining",cal:100,emoji:"🥛"},
-        {id:"ac_f4",text:"Ate banana or papaya as snack",note:"Natural antacid foods",cal:90,emoji:"🍌"},
-        {id:"ac_f5",text:"Drank water between meals — not during",note:"Water during meals dilutes acid",emoji:"💧"},
+      {id:"ac_bfast",label:"🍳 Breakfast",time:"7:00–7:30 AM",bg:"#fff8e1",ac:"#f57f17",items:[
+        {id:"ac_b1",text:"Oats with milk — no citrus",note:"Oats absorbs excess stomach acid",cal:200,emoji:"🌾"},
+        {id:"ac_b2",text:"Banana or papaya",note:"Natural antacid + digestive enzymes",cal:90,emoji:"🍌"},
+        {id:"ac_b3",text:"Plain curd or lassi (no spice)",note:"Probiotics heal stomach lining",cal:90,emoji:"🥛"},
+        {id:"ac_b4",text:"Mild tea with milk — NOT black tea",note:"Milk neutralises acid",cal:65,emoji:"☕"},
       ]},
-      {id:"ac_avoid",label:"🚫 Avoid Today",time:"All day",bg:"#fce4ec",ac:"#c62828",items:[
-        {id:"ac_a1",text:"No tea/coffee on empty stomach",note:"Acid production trigger",emoji:"☕"},
-        {id:"ac_a2",text:"No spicy or fried food today",note:"Direct acid triggers",emoji:"🌶️"},
-        {id:"ac_a3",text:"No raw onion or tomato",note:"Aggravate GERD",emoji:"🧅"},
-        {id:"ac_a4",text:"No cold drinks or packaged juice",note:"Carbonation causes reflux",emoji:"🥤"},
+      {id:"ac_snack1",label:"🥜 Mid-Morning Snack",time:"10:30–11:00 AM",bg:"#e8f4fd",ac:"#1565c0",items:[
+        {id:"ac_s1a",text:"Coconut water or plain buttermilk",note:"Alkaline drinks neutralise acid",cal:45,emoji:"🥥"},
+        {id:"ac_s1b",text:"Banana or pear (avoid citrus fruits)",note:"Low acid fruits only",cal:80,emoji:"🍌"},
       ]},
-      {id:"ac_night",label:"🌙 Night Routine",time:"Evening/Night",bg:"#e0f2f1",ac:"#00695c",items:[
-        {id:"ac_n1",text:"Dinner by 7:30–8:00 PM",note:"2 hr gap before lying down",emoji:"⏰"},
-        {id:"ac_n2",text:"Saunf after dinner",note:"Reduces post-meal acidity",emoji:"🌿"},
-        {id:"ac_n3",text:"Did NOT lie down for 2 hours after eating",note:"Gravity helps keep acid down",emoji:"🚶"},
-        {id:"ac_n4",text:"Slept with head slightly elevated",note:"Prevents nighttime reflux",emoji:"🛏️"},
+      {id:"ac_lunch",label:"🍱 Lunch",time:"12:30–1:30 PM",bg:"#f3e5f5",ac:"#6a1b9a",items:[
+        {id:"ac_l1",text:"Ate slowly — chewed thoroughly",note:"Fast eating causes acidity",emoji:"🐢"},
+        {id:"ac_l2",text:"Ate 80% full — not stuffed",note:"Overeating triggers reflux",emoji:"🍽️"},
+        {id:"ac_l3",text:"Lauki, turai or palak sabzi",note:"Alkaline vegetables reduce acid",cal:70,emoji:"🥬"},
+        {id:"ac_l4",text:"Curd/raita with lunch",note:"Probiotics heal acid damage",cal:75,emoji:"🥛"},
+        {id:"ac_l5",text:"NO raw onion or tomato",note:"Both highly acidic in raw form",emoji:"🚫"},
+      ]},
+      {id:"ac_snack2",label:"⚡ Evening Snack",time:"5:00 PM",bg:"#fde8e8",ac:"#c62828",items:[
+        {id:"ac_e1",text:"Saunf and mishri (fennel + sugar crystal)",note:"Traditional most effective antacid",emoji:"🌿"},
+        {id:"ac_e2",text:"Plain biscuits or makhana — not fried",note:"Light non-spicy snack",cal:110,emoji:"🌰"},
+        {id:"ac_e3",text:"Avoided spicy, fried or sour snacks",note:"Direct acidity triggers",emoji:"🚫"},
+      ]},
+      {id:"ac_dinner",label:"🥣 Dinner",time:"7:00–8:00 PM",bg:"#e8eaf6",ac:"#283593",items:[
+        {id:"ac_d1",text:"Dinner by 7:30–8:00 PM maximum",note:"Need 2-3 hrs before lying down",emoji:"⏰"},
+        {id:"ac_d2",text:"Light dinner — khichdi or dal roti",note:"Heavy dinner overflows acid",cal:300,emoji:"🍚"},
+        {id:"ac_d3",text:"NO spicy curry or mirchi sabzi",note:"Spice directly triggers acid",emoji:"🌶️"},
+        {id:"ac_d4",text:"Small portion — not too full",note:"Acidity worsens with overeating",emoji:"🍽️"},
+        {id:"ac_d5",text:"Saunf after dinner",note:"Reduces post-meal acidity",emoji:"🌿"},
+      ]},
+      {id:"ac_postdinner",label:"🚶 Post-Dinner",time:"After dinner",bg:"#e0f2f1",ac:"#00695c",items:[
+        {id:"ac_pd1",text:"Walked 15 min after dinner",note:"Movement helps digestion",emoji:"🚶"},
+        {id:"ac_pd2",text:"Did NOT lie down for 2 hours after eating",note:"Gravity keeps acid in stomach",emoji:"⏰"},
+        {id:"ac_pd3",text:"Slept with head slightly elevated",note:"Prevents night reflux",emoji:"🛏️"},
+        {id:"ac_pd4",text:"Sleep by 10:30 PM",note:"Adequate sleep heals stomach lining",emoji:"😴"},
       ]},
     ]
   }
 };
+
 
 
 const FOOD_FACTS = [
@@ -2822,7 +3149,7 @@ function switchTab(i){
   const fab=document.getElementById("fab-log");
   if(fab) fab.style.display=(i===0||i===1)?"flex":"none";
   if(i===1){renderCalTab();}
-  if(i===2){renderWater();renderExLog();renderSteps();}
+  if(i===2){renderWater();renderExLog();renderSteps();renderConditionActivities();}
   if(i===3){renderHistory();renderWeightLog();setTimeout(renderCharts,100);}
   if(i===4){renderHealthTab();}
   if(i===5){renderSettings();}
