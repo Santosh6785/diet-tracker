@@ -644,9 +644,9 @@ canvas.chart{width:100%;height:140px;display:block;}
   <!-- Net calories -->
   <div class="net-cal-card" id="net-cal-card">
     <div class="net-row-inner">
-      <span>🍽️ Consumed: <strong id="nc-consumed">0</strong> kcal</span>
-      <span>🏃 Burned: <strong id="nc-burned">0</strong> kcal</span>
-      <span>Net: <strong id="nc-net">0</strong> kcal</span>
+      <span>🍽️ Eaten: <strong id="nc-consumed">0</strong> kcal</span>
+      <span>🔥 Burned: <strong id="nc-burned">0</strong> kcal</span>
+      <span>📊 Net: <strong id="nc-net">0</strong> kcal</span>
     </div>
   </div>
 
@@ -659,7 +659,7 @@ canvas.chart{width:100%;height:140px;display:block;}
   <!-- Meal log -->
   <div class="card card-pad">
     <div class="log-hdr">
-      <span style="font-weight:bold;color:#1b4332;font-size:14px">Today's Food Log</span>
+      <span style="font-weight:bold;color:#1b4332;font-size:15px">🍽️ Today's Food Log</span>
       <span class="log-total-val" id="log-total">0 kcal</span>
     </div>
     <div class="prog-wrap"><div class="prog-fill" id="log-bar" style="width:0%;background:#2e7d32"></div></div>
@@ -667,7 +667,7 @@ canvas.chart{width:100%;height:140px;display:block;}
       <span style="color:#888">Target: <span id="log-target-lbl">1550</span> kcal</span>
       <span id="log-rem-lbl" style="font-weight:bold;color:#2e7d32">1550 remaining</span>
     </div>
-    <div id="meal-log"><div class="empty">No meals logged — tap any food below</div></div>
+    <div id="meal-log"></div>
   </div>
 
   <div class="cat-bar" id="cat-bar"></div>
@@ -682,7 +682,7 @@ canvas.chart{width:100%;height:140px;display:block;}
 
   <!-- Macros summary -->
   <div class="macro-card" id="macro-card">
-    <div class="macro-title">📊 Today's Macros</div>
+    <div class="macro-title">💪 Today's Macros</div>
     <div class="macro-row">
       <div class="macro-item">
         <div class="macro-val" id="m-protein">0g</div>
@@ -2188,6 +2188,8 @@ function nextFoodFact(){
   renderFoodFact();
   haptic("light");
 }
+// Auto-rotate every 35 seconds
+setInterval(()=>{ currentFactIdx=(currentFactIdx+1)%FOOD_FACTS.length; renderFoodFact(); }, 35000);
 
 
 let obCalTarget = 1550;
@@ -2434,7 +2436,7 @@ function switchTab(i){
   document.querySelectorAll(".tab-btn").forEach((el,j)=>el.classList.toggle("active",i===j));
   // Show FAB only on checklist tab (tab 0), hide on others
   const fab=document.getElementById("fab-log");
-  if(fab) fab.style.display=(i===0)?"flex":"none";
+  if(fab) fab.style.display=(i===0||i===1)?"flex":"none";
   if(i===1){renderCalTab();}
   if(i===2){renderWater();renderExLog();renderSteps();}
   if(i===3){renderHistory();renderWeightLog();setTimeout(renderCharts,100);}
