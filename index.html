@@ -909,16 +909,16 @@ canvas.chart{width:100%;height:140px;display:block;}
   <div class="card card-pad">
     <div class="card-title">📷 Photo Scan (AI)</div>
     <div class="api-info">
-      Photo scanning uses the Claude AI to identify food and estimate calories.<br/><br/>
-      <strong>How to get API key (free):</strong><br/>
-      1. Go to <strong>console.anthropic.com</strong><br/>
-      2. Sign up (free account)<br/>
-      3. Go to API Keys → Create Key<br/>
+      Photo scanning uses <strong>Google Gemini Flash</strong> — completely free, no credit card needed.<br/><br/>
+      <strong>How to get free API key:</strong><br/>
+      1. Go to <strong>aistudio.google.com</strong><br/>
+      2. Sign in with Gmail<br/>
+      3. Click "Get API key" → "Create API key"<br/>
       4. Paste it below — stored only on your phone
     </div>
-    <label class="set-lbl">Anthropic API Key</label>
-    <input class="set-input" id="set-api-key" type="password" placeholder="sk-ant-..."/>
-    <div style="font-size:11px;color:#bbb">Your key is stored locally on this device only. Never shared.</div>
+    <label class="set-lbl">Gemini API Key (Free)</label>
+    <input class="set-input" id="set-api-key" type="password" placeholder="AIza..."/>
+    <div style="font-size:11px;color:#bbb">Free tier: 15 scans/min, 1500 scans/day. Key stored locally only.</div>
   </div>
 
   <div class="card card-pad">
@@ -1359,7 +1359,11 @@ function resetChecklist(){if(!confirm("Reset checklist?"))return;checked={};save
 
 // ═══════════════ PHOTO SCAN ═══════════════
 function triggerPhotoScan(){
-  if(!userSettings.apiKey){showToast("Add API key in Settings ⚙️ first");return;}
+  if(!userSettings.apiKey){
+    showToast("Add Gemini API key in ⚙️ Settings first");
+    switchTab(4);
+    return;
+  }
   document.getElementById("photo-input").click();
 }
 async function analysePhoto(input){
@@ -1369,29 +1373,35 @@ async function analysePhoto(input){
   const resultEl=document.getElementById("scan-result");
   resultEl.classList.remove("show");
   loading.style.display="block";
+  loading.textContent="🔍 Analysing your food photo...";
   try{
     const base64=await fileToBase64(file);
     const mediaType=file.type||"image/jpeg";
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+
+    // Using Gemini Flash — free, no credit needed
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userSettings.apiKey}`,{
       method:"POST",
-      headers:{"Content-Type":"application/json","x-api-key":userSettings.apiKey,"anthropic-version":"2023-06-01"},
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        model:"claude-opus-4-5",max_tokens:500,
-        messages:[{role:"user",content:[
-          {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
-          {type:"text",text:'Identify all Indian food items visible in this image. Return ONLY valid JSON array: [{"name":"food name","cal":number,"emoji":"emoji"}]. Include realistic calorie estimates for typical Indian serving sizes. No explanation, just the JSON array.'}
-        ]}]
+        contents:[{parts:[
+          {inline_data:{mime_type:mediaType,data:base64}},
+          {text:"Identify all Indian food items visible in this image. Return ONLY a valid JSON array with no extra text: [{\"name\":\"food name\",\"cal\":number,\"emoji\":\"emoji\"}]. Include realistic calorie estimates for typical Indian serving sizes (katori, roti, bowl etc). No explanation, just the JSON array."}
+        ]}],
+        generationConfig:{maxOutputTokens:500,temperature:0.1}
       })
     });
     const data=await resp.json();
     loading.style.display="none";
-    if(data.error){showToast("API error: "+data.error.message);return;}
-    const text=data.content[0].text;
+
+    if(data.error){showToast("API error: "+data.error.message);console.error(data.error);return;}
+
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
     let items=[];
     try{
       const match=text.match(/\[[\s\S]*\]/);
       if(match)items=JSON.parse(match[0]);
-    }catch(e){showToast("Could not parse response");}
+    }catch(e){showToast("Could not read response");}
+
     if(items.length===0){showToast("No food detected — try clearer photo");return;}
     const container=document.getElementById("scan-items");container.innerHTML="";
     items.forEach(item=>{
@@ -1400,7 +1410,7 @@ async function analysePhoto(input){
       container.appendChild(row);
     });
     resultEl.classList.add("show");
-  }catch(e){loading.style.display="none";showToast("Scan failed — check internet");}
+  }catch(e){loading.style.display="none";showToast("Scan failed — check internet");console.error(e);}
   input.value="";
 }
 function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});}
