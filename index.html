@@ -206,8 +206,9 @@ body.dark .sidebar{background:#0f2a1e;}
 .sec-hdr{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:8px;}
 .sec-hdr>div:first-child{flex:1;min-width:0;overflow:hidden;}
 .sec-hdr span{white-space:nowrap;}
-.sec-items{display:none;}
+.sec-items{display:none;animation:fadeIn .2s ease;}
 .sec-items.open{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 /* Calorie tab */
 .photo-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:bold;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;}
 .scan-result{background:#e3f2fd;border-radius:12px;padding:12px;margin-bottom:12px;display:none;}
@@ -652,7 +653,7 @@ canvas.chart{width:100%;height:140px;display:block;}
   </div>
   <h1>🥗 Diet Tracker</h1>
   <p class="hdr-sub" id="hdr-date">Loading...</p>
-  <div id="streak-display" style="display:none;background:rgba(255,165,0,.25);border:1.5px solid rgba(255,165,0,.4);border-radius:20px;padding:5px 16px;margin:4px auto 8px;width:fit-content;color:#fff;font-size:14px;align-items:center;gap:6px"></div>
+  <div id="streak-display" style="display:none;background:linear-gradient(135deg,rgba(255,140,0,.3),rgba(255,69,0,.2));border:2px solid rgba(255,165,0,.5);border-radius:20px;padding:6px 18px;margin:6px auto 8px;width:fit-content;color:#fff;font-size:14px;align-items:center;gap:6px;box-shadow:0 2px 10px rgba(255,100,0,.2)"></div>
   <div class="score-row">
     <div class="sc">
       <div class="sc-lbl">CHECKLIST</div>
@@ -1531,7 +1532,7 @@ function updateHeader(){
     if(streakEl){
       if(streak>=2){
         streakEl.style.display="inline-flex";
-        streakEl.innerHTML='🔥 <strong style="font-size:20px;margin:0 3px">'+streak+'</strong> <span style="font-size:12px;opacity:.85">day streak</span>';
+        streakEl.innerHTML='🔥 <strong style="font-size:22px;margin:0 3px;text-shadow:0 1px 4px rgba(0,0,0,.3)">'+streak+'</strong> <span style="font-size:13px;opacity:.9">day streak</span>';
       } else {
         streakEl.style.display="none";
       }
@@ -1864,26 +1865,31 @@ function toggleItem(id){
   // Auto-add or remove calories if item has calorie value
   const itemMap = getChecklistItemMap();
   const item = itemMap[id];
-  if(item && item.cal){
+  const cal = item && (item.cal||0);
+  if(item && cal>0){
     const mealId = "chk_"+id;
     if(checked[id]){
+      // Remove any existing entry first to avoid duplicates
+      meals = meals.filter(m => m.id !== mealId);
       meals.push({
         id: mealId,
-        name: item.text,
-        cal: item.cal,
+        name: item.text||item.label||id,
+        cal: cal,
         emoji: item.emoji||"✅",
         time: nowTime(),
-        p: item.p||0,   // ← include macro data
+        p: item.p||0,
         c: item.c||0,
         fa: item.fa||0,
         fi: item.fi||0,
         fromChecklist: true
       });
-      showToast("+"+ item.cal +" kcal · "+item.text.split(" ").slice(0,3).join(" ")+" ✓");
+      showToast("+"+cal+" kcal · "+(item.text||item.label||"").split(" ").slice(0,3).join(" ")+" ✓");
     } else {
       meals = meals.filter(m => m.id !== mealId);
     }
     renderMealLog();
+    renderDailySummary();
+    renderRemainingSuggestions();
   }
 
   // Always update macros and header
@@ -2281,32 +2287,30 @@ function renderRemainingSuggestions(){
 }
 
 function expandAllCondSections(){
-  if(selectedConditions&&selectedConditions.size>0){
-    for(const condId of selectedConditions){
-      const cond=CONDITION_CHECKLISTS[condId];
-      if(!cond) continue;
-      cond.sections.forEach((_,si)=>{
-        const key="cond_"+condId+"_"+si;
-        openSections.add(key+"_open");
-        openSections.delete(key+"_closed");
-      });
-    }
-  }
+  if(!selectedConditions||selectedConditions.size===0) return;
+  [...selectedConditions].forEach((condId,ci)=>{
+    const cond=CONDITION_CHECKLISTS[condId];
+    if(!cond) return;
+    cond.sections.forEach((_,si)=>{
+      const key="cond_"+ci+"_"+si;
+      openSections.add(key+"_open");
+      openSections.delete(key+"_closed");
+    });
+  });
   renderSections();
 }
 
 function collapseAllCondSections(){
-  if(selectedConditions&&selectedConditions.size>0){
-    for(const condId of selectedConditions){
-      const cond=CONDITION_CHECKLISTS[condId];
-      if(!cond) continue;
-      cond.sections.forEach((_,si)=>{
-        const key="cond_"+condId+"_"+si;
-        openSections.add(key+"_closed");
-        openSections.delete(key+"_open");
-      });
-    }
-  }
+  if(!selectedConditions||selectedConditions.size===0) return;
+  [...selectedConditions].forEach((condId,ci)=>{
+    const cond=CONDITION_CHECKLISTS[condId];
+    if(!cond) return;
+    cond.sections.forEach((_,si)=>{
+      const key="cond_"+ci+"_"+si;
+      openSections.add(key+"_closed");
+      openSections.delete(key+"_open");
+    });
+  });
   renderSections();
 }
 
@@ -2729,8 +2733,9 @@ function renderHealthTab(){
         });
         // Auto-switch to checklist tab so user sees changes immediately
         const action=selectedConditions.has(c.id)?"activated":"removed";
-        showToast(c.label.substring(2)+" checklist "+action+" — switching ✓");
-        setTimeout(()=>switchTab(0), 800);
+        showToast(c.label.substring(2)+" checklist "+action+" ✓");
+        // Switch to checklist immediately — no delay
+        switchTab(0);
       };
       selector.appendChild(btn);
     });
