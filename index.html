@@ -1685,7 +1685,7 @@ function renderSections(){
           +'<span style="font-weight:bold;font-size:13px;flex:1">'+condNames+'</span>'
           +'<button onclick="expandAllCondSections()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer">▼ All</button>'
           +'<button onclick="collapseAllCondSections()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer">▲ All</button>'
-          +'<button onclick="selectedConditions.clear();try{localStorage.setItem(\'dt_conditions\',\'[]\');}catch(e){}renderSections();renderPriority();renderRotating();renderHealthTab();updateHeader();showToast(\'Switched to default checklist ✓\');" '
+          +'<button onclick="selectedConditions.clear();try{localStorage.setItem(\'dt_conditions\',\'[]\');}catch(e){}renderPriority();renderSections();renderHealthTab();updateHeader();showToast(\'Switched to default checklist ✓\');" '
           +'style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer">✕</button>'
           +'</div>'
           +'<div style="font-size:11px;opacity:.6;margin-top:3px">'+selectedConds.length+' condition'+(selectedConds.length>1?'s':'')+' · Tap ▼ All to expand all sections</div>';
@@ -2723,18 +2723,16 @@ function renderHealthTab(){
         try{localStorage.setItem("dt_conditions",JSON.stringify([...selectedConditions]));}catch(e){}
         haptic("light");
         renderHealthCards();
-        renderSections();
+        // Order matters: renderPriority calls renderTodaySpecial internally
         renderPriority();
-        renderRotating();
+        renderSections();
         updateHeader();
         // Re-render selector buttons
         selector.querySelectorAll(".condition-btn").forEach((b,i)=>{
           b.classList.toggle("on",selectedConditions.has(HEALTH_CONDITIONS[i].id));
         });
-        // Auto-switch to checklist tab so user sees changes immediately
-        const action=selectedConditions.has(c.id)?"activated":"removed";
-        showToast(c.label.substring(2)+" checklist "+action+" ✓");
-        // Switch to checklist immediately — no delay
+        const isAdded=selectedConditions.has(c.id);
+        showToast(c.label.substring(2)+" checklist "+(isAdded?"activated":"removed")+" ✓");
         switchTab(0);
       };
       selector.appendChild(btn);
@@ -3475,7 +3473,7 @@ function switchTab(i){
   for(let j=0;j<6;j++){const sb=document.getElementById("sb-"+j);if(sb)sb.classList.toggle("active",i===j);}
   const fab=document.getElementById("fab-log");
   if(fab) fab.style.display=(i===0||i===1)?"flex":"none";
-  if(i===0){renderSections();renderPriority();renderRotating();updateHeader();}
+  if(i===0){renderPriority();renderSections();updateHeader();}
   if(i===1){renderCalTab();}
   if(i===2){renderWater();renderExLog();renderSteps();renderConditionActivities();}
   if(i===3){renderHistory();renderWeightLog();setTimeout(renderCharts,100);}
