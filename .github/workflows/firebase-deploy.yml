@@ -31,8 +31,7 @@ jobs:
           cp icon-192.png public/icon-192.png
           cp icon-512.png public/icon-512.png
           cp version.json public/version.json
-          cp summary.html public/summary.html
-          cp firebase.json public/../firebase.json
+          cp summary.html public/summary.html 2>/dev/null || true
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
