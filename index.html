@@ -2395,54 +2395,65 @@ async function generateMealPlan(){
   const result=document.getElementById("meal-plan-result");
   const remaining=T()-totalCal();
   const target=remaining>0?remaining:T();
-  const diet=userSettings.diet==="veg"?"pure vegetarian (no eggs, no meat)":userSettings.diet==="egg"?"vegetarian with eggs":"non-vegetarian";
+  const diet=userSettings.diet==="veg"?"pure vegetarian":userSettings.diet==="egg"?"vegetarian with eggs":"non-vegetarian";
   btn.textContent="⏳ Generating...";btn.disabled=true;
   result.style.display="none";
   try{
-    // Try models in order until one works
     const models=[
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     ];
-    const body=JSON.stringify({contents:[{parts:[{text:`You are an Indian dietitian. Create a practical Indian meal plan for ${target} kcal for a ${diet} person from Patna, Bihar.
-Return ONLY valid JSON, no markdown, no explanation, no code blocks:
-{"meals":[
-  {"name":"Breakfast","items":[{"name":"food name","cal":100,"emoji":"🥚","p":6,"c":0,"fa":5}]},
-  {"name":"Lunch","items":[{"name":"food name","cal":200,"emoji":"🍚","p":5,"c":40,"fa":2}]},
-  {"name":"Snack","items":[{"name":"food name","cal":100,"emoji":"🥜","p":4,"c":10,"fa":3}]},
-  {"name":"Dinner","items":[{"name":"food name","cal":200,"emoji":"🫓","p":6,"c":30,"fa":4}]}
-],"totalCal":600,"note":"brief healthy tip"}
-Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits.`}]}],generationConfig:{temperature:0.7,maxOutputTokens:1000}});
+    // Simple prompt — more likely to get clean JSON back
+    const prompt=`Indian meal plan for ${target} kcal, ${diet}, Patna Bihar.
+Respond with ONLY this JSON (no markdown, no text before or after):
+{"meals":[{"name":"Breakfast","items":[{"name":"Poha","cal":250,"emoji":"🍛","p":4,"c":45,"fa":5}]},{"name":"Lunch","items":[{"name":"Dal roti","cal":400,"emoji":"🫓","p":12,"c":60,"fa":8}]},{"name":"Snack","items":[{"name":"Chana","cal":150,"emoji":"🫘","p":8,"c":20,"fa":3}]},{"name":"Dinner","items":[{"name":"Sabzi roti","cal":350,"emoji":"🥬","p":10,"c":50,"fa":7}]}],"totalCal":${target},"note":"Eat slowly and chew well"}
+Replace the example foods with real Indian foods totalling ${target} kcal.`;
 
-    let resp=null;
-    let lastErr="";
+    const body=JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{
+        temperature:0.3,
+        maxOutputTokens:2000,
+        thinkingConfig:{thinkingBudget:0} // disable thinking for clean JSON output
+      }
+    });
+
+    let resp=null, lastErr="", rawText="";
     for(const url of models){
       try{
         const r=await fetch(url+"?key="+userSettings.apiKey,{method:"POST",headers:{"Content-Type":"application/json"},body});
         if(r.ok){resp=r;break;}
         const e=await r.json().catch(()=>({}));
         lastErr=(e?.error?.message||"HTTP "+r.status);
+        console.warn("Model failed:",url,lastErr);
       }catch(fe){lastErr=fe.message;}
     }
     if(!resp){
       showToast("API error: "+lastErr.substring(0,80));
-      btn.textContent="✨ Generate Today's Meal Plan";
-      btn.disabled=false;
-      return;
+      btn.textContent="✨ Generate Today's Meal Plan";btn.disabled=false;return;
     }
+
     const data=await resp.json();
-    // Gemini 2.5 Flash includes "thinking" content - get the last text part
+    console.log("Gemini raw response:",JSON.stringify(data).substring(0,500));
+
+    // Extract text from all non-thought parts
     const parts=data.candidates?.[0]?.content?.parts||[];
-    const text=parts.filter(p=>p.text&&!p.thought).map(p=>p.text).join("")||parts.map(p=>p.text||"").join("");
-    // Extract JSON from response - find first { to last }
-    const start=text.indexOf("{");
-    const end=text.lastIndexOf("}");
-    if(start===-1||end===-1) throw new Error("No JSON in response");
-    const clean=text.slice(start,end+1);
-    let plan;
-    try{ plan=JSON.parse(clean); }
-    catch(pe){ throw new Error("Invalid JSON: "+clean.substring(0,100)); }
+    rawText=parts.filter(p=>!p.thought&&p.text).map(p=>p.text).join("").trim();
+    if(!rawText) rawText=parts.map(p=>p.text||"").join("").trim();
+
+    // Find JSON object in response
+    const start=rawText.indexOf("{");
+    const end=rawText.lastIndexOf("}");
+    if(start===-1||end===-1){
+      // Show what we got for debugging
+      result.innerHTML='<div style="color:#c62828;font-size:12px;padding:8px;background:#fce4ec;border-radius:8px">'
+        +'<strong>Debug — API returned:</strong><br><pre style="white-space:pre-wrap;font-size:11px">'+rawText.substring(0,300)+'</pre></div>';
+      result.style.display="block";
+      throw new Error("No JSON found in response");
+    }
+
+    const plan=JSON.parse(rawText.slice(start,end+1));
     let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap any meal to log it</div>';
     plan.meals.forEach(meal=>{
       const mealCal=meal.items.reduce((s,i)=>s+(i.cal||0),0);
@@ -2452,8 +2463,7 @@ Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits.`}]}],g
         +'<strong style="font-size:13px;color:#1b4332">'+meal.name+'</strong>'
         +'<span style="font-size:12px;color:#97bc62;font-weight:bold">+'+mealCal+' kcal</span></div>'
         +meal.items.map(i=>'<div style="font-size:12px;color:#555">'+(i.emoji||"🍽️")+' '+i.name+' ('+(i.cal||0)+' kcal)</div>').join("")
-        +'<div style="font-size:11px;color:#97bc62;margin-top:4px">Tap to log all →</div>'
-        +'</div>';
+        +'<div style="font-size:11px;color:#97bc62;margin-top:4px">Tap to log all →</div></div>';
     });
     if(plan.note) html+='<div style="font-size:12px;color:#888;font-style:italic;margin-top:4px">💡 '+plan.note+'</div>';
     result.innerHTML=html;
@@ -2461,7 +2471,7 @@ Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits.`}]}],g
     btn.textContent="✨ Regenerate Meal Plan";
   }catch(e){
     console.error("generateMealPlan error:",e);
-    showToast("Error: "+(e.message||"Check API key in Settings"));
+    showToast("Error: "+e.message);
     btn.textContent="✨ Generate Today's Meal Plan";
   }
   btn.disabled=false;
