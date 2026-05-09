@@ -2020,7 +2020,7 @@ async function analysePhoto(input){
     const scanBody=JSON.stringify({
       contents:[{parts:[
         {inline_data:{mime_type:"image/jpeg",data:base64}},
-        {text:"List all food items visible in this image. Reply ONLY with a JSON array, nothing else before or after: [{\"name\":\"Roti\",\"cal\":80,\"emoji\":\"🫓\"},{\"name\":\"Dal\",\"cal\":120,\"emoji\":\"🫘\"}]. Use realistic Indian portion calorie estimates."}
+        {text:"List all food items visible in this image. Reply ONLY with a JSON array: [{\"name\":\"Roti\",\"cal\":80,\"emoji\":\"🫓\",\"p\":3,\"c\":15,\"fa\":1,\"fi\":1},{\"name\":\"Dal\",\"cal\":120,\"emoji\":\"🫘\",\"p\":8,\"c\":18,\"fa\":2,\"fi\":4}]. Include protein(p), carbs(c), fat(fa), fibre(fi) grams. Use realistic Indian portion sizes. No text before or after the array."}
       ]}],
       generationConfig:{
         maxOutputTokens:500,
@@ -2076,8 +2076,10 @@ async function analysePhoto(input){
     items.forEach(item=>{
       const row=document.createElement("div");
       row.className="scan-item-row";
-      row.innerHTML='<div><span style="font-size:16px">'+(item.emoji||"🍽️")+'</span> <span style="font-size:13px;color:#222">'+item.name+'</span><br/><span style="font-size:11px;color:#2e7d32;font-weight:bold">'+(item.cal||0)+' kcal</span></div>'
-        +'<button class="scan-add-btn" onclick="addScannedMeal(\''+item.name.replace(/'/g,"\\'")+'\','+(item.cal||0)+',\''+(item.emoji||"🍽️")+'\')">+ Add</button>';
+      row.innerHTML='<div><span style="font-size:16px">'+(item.emoji||"🍽️")+'</span> <span style="font-size:13px;color:#222">'+item.name+'</span><br/><span style="font-size:11px;color:#2e7d32;font-weight:bold">'+(item.cal||0)+' kcal</span>'
+        +(item.p?'<span style="font-size:10px;color:#888"> · '+item.p+'g P · '+item.c+'g C · '+item.fa+'g F</span>':'')
+        +'</div>'
+        +'<button class="scan-add-btn" onclick="addScannedMeal(\''+item.name.replace(/'/g,"\\'")+'\','+(item.cal||0)+',\''+(item.emoji||"🍽️")+'\','+(item.p||0)+','+(item.c||0)+','+(item.fa||0)+','+(item.fi||0)+')">+ Add</button>';
       container.appendChild(row);
     });
     resultEl.classList.add("show");
@@ -2089,7 +2091,10 @@ async function analysePhoto(input){
   input.value="";
 }
 function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});}
-function addScannedMeal(name,cal,emoji){addMealEntry({name,cal,emoji});showToast(name+" added ✓");}
+function addScannedMeal(name,cal,emoji,p,c,fa,fi){
+  addMealEntry({name,cal,emoji,p:p||0,c:c||0,fa:fa||0,fi:fi||0});
+  showToast(name+" added ✓");
+}
 
 // ═══════════════ CALORIES ═══════════════
 function renderCalTab(){
@@ -2446,11 +2451,22 @@ async function generateMealPlan(){
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     ];
-    // Simple prompt — more likely to get clean JSON back
+    // Build time-aware meal list based on current hour
+    const currentHour=new Date().getHours();
+    let mealSlots=[];
+    if(currentHour<10) mealSlots=["Breakfast","Mid-Morning Snack","Lunch","Evening Snack","Dinner"];
+    else if(currentHour<12) mealSlots=["Mid-Morning Snack","Lunch","Evening Snack","Dinner"];
+    else if(currentHour<14) mealSlots=["Lunch","Evening Snack","Dinner"];
+    else if(currentHour<17) mealSlots=["Evening Snack","Dinner"];
+    else if(currentHour<20) mealSlots=["Dinner"];
+    else mealSlots=["Light Night Snack"];
+    const mealSlotsStr=mealSlots.join(", ");
+
     const prompt=`Indian meal plan for ${target} kcal, ${diet}, Patna Bihar.
+Current time: ${new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}. Only suggest these remaining meals for today: ${mealSlotsStr}.
 Respond with ONLY this JSON (no markdown, no text before or after):
-{"meals":[{"name":"Breakfast","items":[{"name":"Poha","cal":250,"emoji":"🍛","p":4,"c":45,"fa":5}]},{"name":"Lunch","items":[{"name":"Dal roti","cal":400,"emoji":"🫓","p":12,"c":60,"fa":8}]},{"name":"Snack","items":[{"name":"Chana","cal":150,"emoji":"🫘","p":8,"c":20,"fa":3}]},{"name":"Dinner","items":[{"name":"Sabzi roti","cal":350,"emoji":"🥬","p":10,"c":50,"fa":7}]}],"totalCal":${target},"note":"Eat slowly and chew well"}
-Replace the example foods with real Indian foods totalling ${target} kcal.`;
+{"meals":[{"name":"${mealSlots[0]}","items":[{"name":"Poha","cal":250,"emoji":"🍛","p":4,"c":45,"fa":5}]}],"totalCal":${target},"note":"Eat slowly and chew well"}
+Replace with real Indian foods. Split ${target} kcal equally across the ${mealSlots.length} meal(s): ${mealSlotsStr}.`;
 
     const body=JSON.stringify({
       contents:[{parts:[{text:prompt}]}],
