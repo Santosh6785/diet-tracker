@@ -2432,17 +2432,17 @@ Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits.`}]}],g
       return;
     }
     const data=await resp.json();
-    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
-    // Strip any markdown code fences
-    const clean=text.replace(/```json\s*/gi,"").replace(/```\s*/gi,"").trim();
+    // Gemini 2.5 Flash includes "thinking" content - get the last text part
+    const parts=data.candidates?.[0]?.content?.parts||[];
+    const text=parts.filter(p=>p.text&&!p.thought).map(p=>p.text).join("")||parts.map(p=>p.text||"").join("");
+    // Extract JSON from response - find first { to last }
+    const start=text.indexOf("{");
+    const end=text.lastIndexOf("}");
+    if(start===-1||end===-1) throw new Error("No JSON in response");
+    const clean=text.slice(start,end+1);
     let plan;
     try{ plan=JSON.parse(clean); }
-    catch(pe){
-      // Try extracting JSON from response
-      const match=clean.match(/\{[\s\S]*\}/);
-      if(match) plan=JSON.parse(match[0]);
-      else throw new Error("Could not parse AI response");
-    }
+    catch(pe){ throw new Error("Invalid JSON: "+clean.substring(0,100)); }
     let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap any meal to log it</div>';
     plan.meals.forEach(meal=>{
       const mealCal=meal.items.reduce((s,i)=>s+(i.cal||0),0);
