@@ -2399,31 +2399,49 @@ async function generateMealPlan(){
   btn.textContent="⏳ Generating...";btn.disabled=true;
   result.style.display="none";
   try{
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${userSettings.apiKey}`,{
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userSettings.apiKey}`,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{parts:[{text:`You are an Indian dietitian. Create a practical Indian meal plan for ${target} kcal for a ${diet} person from Patna, Bihar.
-Return ONLY valid JSON with this exact structure (no markdown, no explanation):
+Return ONLY valid JSON, no markdown, no explanation, no code blocks:
 {"meals":[
-  {"name":"Breakfast","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]},
-  {"name":"Lunch","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]},
-  {"name":"Snack","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]},
-  {"name":"Dinner","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]}
-],"totalCal":number,"note":"brief tip"}
-Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits. Keep it practical for daily cooking.`}]}],generationConfig:{temperature:0.7,maxOutputTokens:1000}})
+  {"name":"Breakfast","items":[{"name":"food name","cal":100,"emoji":"🥚","p":6,"c":0,"fa":5}]},
+  {"name":"Lunch","items":[{"name":"food name","cal":200,"emoji":"🍚","p":5,"c":40,"fa":2}]},
+  {"name":"Snack","items":[{"name":"food name","cal":100,"emoji":"🥜","p":4,"c":10,"fa":3}]},
+  {"name":"Dinner","items":[{"name":"food name","cal":200,"emoji":"🫓","p":6,"c":30,"fa":4}]}
+],"totalCal":600,"note":"brief healthy tip"}
+Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits. Keep practical for Patna cooking.`}]}],generationConfig:{temperature:0.7,maxOutputTokens:1000}})
     });
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      const msg=err?.error?.message||"API error "+resp.status;
+      showToast("API error: "+msg.substring(0,60));
+      console.error("Gemini error:",err);
+      btn.textContent="✨ Generate Today's Meal Plan";
+      btn.disabled=false;
+      return;
+    }
     const data=await resp.json();
     const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
-    const clean=text.replace(/```json|```/g,"").trim();
-    const plan=JSON.parse(clean);
-    let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap meal to log all items</div>';
+    // Strip any markdown code fences
+    const clean=text.replace(/```json\s*/gi,"").replace(/```\s*/gi,"").trim();
+    let plan;
+    try{ plan=JSON.parse(clean); }
+    catch(pe){
+      // Try extracting JSON from response
+      const match=clean.match(/\{[\s\S]*\}/);
+      if(match) plan=JSON.parse(match[0]);
+      else throw new Error("Could not parse AI response");
+    }
+    let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap any meal to log it</div>';
     plan.meals.forEach(meal=>{
-      const mealCal=meal.items.reduce((s,i)=>s+i.cal,0);
-      html+='<div style="background:#f8fdf8;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;border:1px solid #e0e8e0" onclick="logMealPlanSection('+JSON.stringify(meal.items).replace(/"/g,"'")+',\''+meal.name+'\')">'
+      const mealCal=meal.items.reduce((s,i)=>s+(i.cal||0),0);
+      const itemsJson=encodeURIComponent(JSON.stringify(meal.items));
+      html+='<div style="background:#f8fdf8;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;border:1px solid #e0e8e0" onclick="logMealPlanEncoded(\''+itemsJson+'\',\''+meal.name+'\')">'
         +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
         +'<strong style="font-size:13px;color:#1b4332">'+meal.name+'</strong>'
         +'<span style="font-size:12px;color:#97bc62;font-weight:bold">+'+mealCal+' kcal</span></div>'
-        +meal.items.map(i=>'<div style="font-size:12px;color:#555">'+i.emoji+' '+i.name+' ('+i.cal+' kcal)</div>').join("")
+        +meal.items.map(i=>'<div style="font-size:12px;color:#555">'+(i.emoji||"🍽️")+' '+i.name+' ('+(i.cal||0)+' kcal)</div>').join("")
         +'<div style="font-size:11px;color:#97bc62;margin-top:4px">Tap to log all →</div>'
         +'</div>';
     });
@@ -2432,10 +2450,18 @@ Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits. Keep i
     result.style.display="block";
     btn.textContent="✨ Regenerate Meal Plan";
   }catch(e){
-    showToast("Could not generate plan. Check API key.");
+    console.error("generateMealPlan error:",e);
+    showToast("Error: "+(e.message||"Check API key in Settings"));
     btn.textContent="✨ Generate Today's Meal Plan";
   }
   btn.disabled=false;
+}
+
+function logMealPlanEncoded(encoded,mealName){
+  try{
+    const items=JSON.parse(decodeURIComponent(encoded));
+    logMealPlanSection(items,mealName);
+  }catch(e){showToast("Could not log meal");}
 }
 
 function logMealPlanSection(items,mealName){
