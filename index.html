@@ -932,6 +932,19 @@ canvas.chart{width:100%;height:140px;display:block;}
     </div>
   </div>
 
+  <!-- Meal Plan Generator -->
+  <div class="card card-pad" style="margin-bottom:10px;border-left:3px solid #1565c0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="card-title" style="margin-bottom:0">🤖 AI Meal Plan</div>
+      <span style="font-size:11px;color:#888">Powered by Gemini</span>
+    </div>
+    <p style="font-size:12px;color:#888;margin-bottom:10px;line-height:1.5">Generate a complete Indian meal plan for your remaining calories. Tap to auto-log all meals.</p>
+    <button onclick="generateMealPlan()" id="meal-plan-btn" style="width:100%;padding:12px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;font-family:inherit;cursor:pointer">
+      ✨ Generate Today's Meal Plan
+    </button>
+    <div id="meal-plan-result" style="display:none;margin-top:10px"></div>
+  </div>
+
   <!-- Quick Add common Indian foods -->
   <div class="card card-pad" style="margin-bottom:10px">
     <div style="font-weight:bold;color:#1b4332;font-size:14px;margin-bottom:10px">⚡ Quick Add</div>
@@ -1064,13 +1077,31 @@ canvas.chart{width:100%;height:140px;display:block;}
 <!-- TAB 3: HISTORY -->
 <div class="content" id="tab-3">
 
-  <!-- Weight Log -->
-  <div class="card card-pad">
-    <div class="card-title">⚖️ Weight Log</div>
-    <div class="weight-input-row">
-      <input class="weight-input" id="weight-input" type="number" step="0.1" placeholder="Enter weight (kg)"/>
-      <button class="weight-save-btn" onclick="saveWeight()">Save</button>
+  <!-- Weekly Summary Card -->
+  <div class="card card-pad" id="weekly-summary-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="card-title" style="margin-bottom:0">📊 This Week's Summary</div>
+      <button onclick="shareWeeklySummary()" style="background:#1b4332;border:none;color:#fff;padding:5px 10px;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer">Share 📤</button>
     </div>
+    <div id="weekly-summary-content"></div>
+  </div>
+
+  <!-- Weight Log + Goal Tracker -->
+  <div class="card card-pad">
+    <div class="card-title">⚖️ Weight Log & Goal</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="flex:1">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:3px">Today's Weight</label>
+        <input class="weight-input" id="weight-input" type="number" step="0.1" placeholder="kg"/>
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:3px">Target Weight</label>
+        <input class="weight-input" id="target-weight-input" type="number" step="0.1" placeholder="kg"
+          onchange="saveWeightGoal()" style="border-color:#97bc62"/>
+      </div>
+    </div>
+    <button class="weight-save-btn" onclick="saveWeight()" style="width:100%;margin-bottom:10px">Save Today's Weight</button>
+    <div id="weight-goal-projection" style="display:none;background:linear-gradient(135deg,#1b4332,#2d6a4f);color:#fff;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;line-height:1.7"></div>
     <div id="weight-loss-badge"></div>
     <canvas id="weightChart"></canvas>
     <div id="weight-log-list" style="margin-top:10px"></div>
@@ -1132,6 +1163,15 @@ canvas.chart{width:100%;height:140px;display:block;}
       Select your health condition to see personalised food recommendations. Tap multiple for combined view.
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="condition-selector"></div>
+  </div>
+
+  <!-- Condition Progress Notes -->
+  <div class="card card-pad" style="margin-bottom:10px">
+    <div class="card-title">📝 Today's Health Note</div>
+    <textarea id="health-note-input" placeholder="e.g. Blood sugar 110 today. Felt good after evening walk..."
+      style="width:100%;padding:10px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:13px;font-family:inherit;resize:none;height:80px;background:var(--input-bg);color:var(--text);margin-bottom:8px"></textarea>
+    <button onclick="saveHealthNote()" style="width:100%;padding:10px;background:#1b4332;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;font-family:inherit;cursor:pointer">💾 Save Note</button>
+    <div id="health-notes-list" style="margin-top:12px"></div>
   </div>
 
   <!-- Disease cards -->
@@ -1288,9 +1328,9 @@ canvas.chart{width:100%;height:140px;display:block;}
       📧 Send via Email
     </button>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="openLink('https://github.com/Santosh6785/diet-tracker/issues')"
+      <button onclick="openLink('https://diet-tracker-app-c22f4.web.app/summary.html')"
         style="flex:1;padding:10px;background:#f0f0f0;border:none;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer;color:#444">
-        🐛 Report Bug on GitHub
+        📊 Today's Summary Page
       </button>
       <button onclick="copyLink()"
         style="flex:1;padding:10px;background:#f0f0f0;border:none;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer;color:#444">
@@ -2271,7 +2311,245 @@ function sendFeedback(channel){
 }
 function openLink(url){window.open(url,"_blank");}
 
-// ═══════════════ GUIDE ═══════════════
+// ═══════════════ FEATURE D: WEEKLY SUMMARY ═══════════════
+function renderWeeklySummary(){
+  const el=document.getElementById("weekly-summary-content");
+  if(!el) return;
+  const days=Array.from({length:7},(_,i)=>{
+    const dt=new Date(); dt.setDate(dt.getDate()-i);
+    return dt.toISOString().split("T")[0];
+  }).reverse();
+  const all=allItems();
+  let hit=0,best={day:"",pct:0},missed=[],total=0;
+  const dayNames=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  days.forEach(date=>{
+    const day=history[date];
+    if(!day) return;
+    const cal=day.meals?day.meals.reduce((s,m)=>s+m.cal,0):0;
+    const pct=all.length?Math.round((Object.keys(day.checked||{}).filter(k=>day.checked[k]).length/all.length)*100):0;
+    const target=userSettings.target||1550;
+    const onTarget=cal>=target*0.8&&cal<=target*1.1;
+    if(onTarget) hit++;
+    else missed.push(dayNames[new Date(date).getDay()]);
+    if(pct>best.pct){best.pct=pct;best.day=dayNames[new Date(date).getDay()];}
+    total++;
+  });
+  const streak=calcStreak();
+  el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div style="text-align:center;background:#e8f5e9;border-radius:8px;padding:8px">'
+    +'<div style="font-size:20px;font-weight:bold;color:#1b4332">'+hit+'/'+total+'</div>'
+    +'<div style="font-size:11px;color:#888">On target</div></div>'
+    +'<div style="text-align:center;background:#fff8e1;border-radius:8px;padding:8px">'
+    +'<div style="font-size:20px;font-weight:bold;color:#f57f17">'+streak+'🔥</div>'
+    +'<div style="font-size:11px;color:#888">Day streak</div></div>'
+    +'<div style="text-align:center;background:#e3f2fd;border-radius:8px;padding:8px">'
+    +'<div style="font-size:20px;font-weight:bold;color:#1565c0">'+(best.day||"—")+'</div>'
+    +'<div style="font-size:11px;color:#888">Best day</div></div></div>'
+    +(missed.length?'<div style="font-size:12px;color:#888">Missed target: '+missed.join(", ")+'</div>':'<div style="font-size:12px;color:#2e7d32">🎉 Hit target every day this week!</div>');
+}
+
+function shareWeeklySummary(){
+  const streak=calcStreak();
+  const days=Array.from({length:7},(_,i)=>{const dt=new Date();dt.setDate(dt.getDate()-i);return dt.toISOString().split("T")[0];}).reverse();
+  const all=allItems();
+  let hit=0,total=0;
+  days.forEach(date=>{
+    const day=history[date];if(!day)return;
+    const cal=day.meals?day.meals.reduce((s,m)=>s+m.cal,0):0;
+    const target=userSettings.target||1550;
+    if(cal>=target*0.8&&cal<=target*1.1)hit++;
+    total++;
+  });
+  const text="🥗 My Diet Tracker Weekly Report\n\n"
+    +"✅ Hit calorie target: "+hit+"/"+total+" days\n"
+    +"🔥 Current streak: "+streak+" days\n"
+    +"🎯 Daily target: "+(userSettings.target||1550)+" kcal\n\n"
+    +"Tracking with Diet Tracker — diet-tracker-app-c22f4.web.app";
+  if(navigator.share){navigator.share({title:"My Weekly Diet Summary",text});}
+  else{navigator.clipboard.writeText(text).then(()=>showToast("Summary copied to clipboard ✓"));}
+}
+
+// ═══════════════ FEATURE A: MEAL PLAN GENERATOR ═══════════════
+async function generateMealPlan(){
+  if(!userSettings.apiKey){showToast("Add Gemini API key in ⚙️ Settings first");switchTab(5);return;}
+  const btn=document.getElementById("meal-plan-btn");
+  const result=document.getElementById("meal-plan-result");
+  const remaining=T()-totalCal();
+  const target=remaining>0?remaining:T();
+  const diet=userSettings.diet==="veg"?"pure vegetarian (no eggs, no meat)":userSettings.diet==="egg"?"vegetarian with eggs":"non-vegetarian";
+  btn.textContent="⏳ Generating...";btn.disabled=true;
+  result.style.display="none";
+  try{
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${userSettings.apiKey}`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts:[{text:`You are an Indian dietitian. Create a practical Indian meal plan for ${target} kcal for a ${diet} person from Patna, Bihar.
+Return ONLY valid JSON with this exact structure (no markdown, no explanation):
+{"meals":[
+  {"name":"Breakfast","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]},
+  {"name":"Lunch","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]},
+  {"name":"Snack","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]},
+  {"name":"Dinner","items":[{"name":"food name","cal":number,"emoji":"emoji","p":protein_g,"c":carbs_g,"fa":fat_g}]}
+],"totalCal":number,"note":"brief tip"}
+Use real Indian foods: roti, dal, sabzi, rice, eggs, curd, salad, fruits. Keep it practical for daily cooking.`}]}],generationConfig:{temperature:0.7,maxOutputTokens:1000}})
+    });
+    const data=await resp.json();
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
+    const clean=text.replace(/```json|```/g,"").trim();
+    const plan=JSON.parse(clean);
+    let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap meal to log all items</div>';
+    plan.meals.forEach(meal=>{
+      const mealCal=meal.items.reduce((s,i)=>s+i.cal,0);
+      html+='<div style="background:#f8fdf8;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;border:1px solid #e0e8e0" onclick="logMealPlanSection('+JSON.stringify(meal.items).replace(/"/g,"'")+',\''+meal.name+'\')">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+        +'<strong style="font-size:13px;color:#1b4332">'+meal.name+'</strong>'
+        +'<span style="font-size:12px;color:#97bc62;font-weight:bold">+'+mealCal+' kcal</span></div>'
+        +meal.items.map(i=>'<div style="font-size:12px;color:#555">'+i.emoji+' '+i.name+' ('+i.cal+' kcal)</div>').join("")
+        +'<div style="font-size:11px;color:#97bc62;margin-top:4px">Tap to log all →</div>'
+        +'</div>';
+    });
+    if(plan.note) html+='<div style="font-size:12px;color:#888;font-style:italic;margin-top:4px">💡 '+plan.note+'</div>';
+    result.innerHTML=html;
+    result.style.display="block";
+    btn.textContent="✨ Regenerate Meal Plan";
+  }catch(e){
+    showToast("Could not generate plan. Check API key.");
+    btn.textContent="✨ Generate Today's Meal Plan";
+  }
+  btn.disabled=false;
+}
+
+function logMealPlanSection(items,mealName){
+  items.forEach(item=>{
+    meals.push({id:Date.now()+Math.random(),name:item.name,cal:item.cal,emoji:item.emoji||"🍽️",time:nowTime(),p:item.p||0,c:item.c||0,fa:item.fa||0,fi:0,fromPlan:true});
+  });
+  saveAll();renderMealLog();renderMacros();updateHeader();renderDailySummary();renderRemainingSuggestions();
+  showToast(mealName+" logged — "+items.reduce((s,i)=>s+i.cal,0)+" kcal added ✓");
+}
+
+// ═══════════════ FEATURE H: HEALTH NOTES ═══════════════
+const HEALTH_NOTES_KEY="dt_health_notes";
+let healthNotes=[];
+
+function loadHealthNotes(){
+  try{const n=localStorage.getItem(HEALTH_NOTES_KEY);if(n)healthNotes=JSON.parse(n);}catch(e){}
+}
+function saveHealthNote(){
+  const input=document.getElementById("health-note-input");
+  const text=input.value.trim();
+  if(!text){showToast("Write a note first");return;}
+  healthNotes.unshift({date:TODAY,text,time:nowTime()});
+  if(healthNotes.length>30)healthNotes=healthNotes.slice(0,30);
+  try{localStorage.setItem(HEALTH_NOTES_KEY,JSON.stringify(healthNotes));}catch(e){}
+  input.value="";
+  renderHealthNotes();
+  showToast("Note saved ✓");
+}
+function renderHealthNotes(){
+  const list=document.getElementById("health-notes-list");
+  if(!list) return;
+  if(!healthNotes.length){list.innerHTML='<div style="font-size:12px;color:#bbb;text-align:center;padding:8px">No notes yet</div>';return;}
+  list.innerHTML=healthNotes.slice(0,7).map(n=>
+    '<div style="border-bottom:1px solid #f5f5f5;padding:8px 0">'
+    +'<div style="font-size:11px;color:#aaa;margin-bottom:2px">'+fmtDate(n.date)+(n.time?" · "+n.time:"")+'</div>'
+    +'<div style="font-size:13px;color:var(--text)">'+n.text+'</div>'
+    +'</div>'
+  ).join("");
+}
+
+// ═══════════════ FEATURE C: LOCAL NOTIFICATIONS ═══════════════
+function requestNotificationPermission(){
+  if(!("Notification" in window)){showToast("Notifications not supported on this browser");return;}
+  Notification.requestPermission().then(perm=>{
+    if(perm==="granted"){
+      showToast("Notifications enabled ✓");
+      scheduleNotifications();
+    } else {
+      showToast("Notification permission denied");
+    }
+  });
+}
+
+function scheduleNotifications(){
+  // Use alarms via setTimeout for current session
+  const now=new Date();
+  const schedule=[
+    {hour:8,min:0,msg:"🌅 Morning checklist not started yet! Open Diet Tracker 👀"},
+    {hour:13,min:0,msg:"🍱 Lunch not logged yet — don't forget to track!"},
+    {hour:17,min:0,msg:"⚡ Evening snack time — log what you eat!"},
+    {hour:21,min:0,msg:"🌙 How was your diet today? Complete your checklist!"},
+  ];
+  schedule.forEach(s=>{
+    const target=new Date();target.setHours(s.hour,s.min,0,0);
+    if(target>now){
+      const ms=target-now;
+      setTimeout(()=>{
+        if(Notification.permission==="granted"){
+          new Notification("Diet Tracker",{body:s.msg,icon:"/icon-192.png"});
+        }
+      },ms);
+    }
+  });
+}
+
+// ═══════════════ FEATURE J: ENHANCED BARCODE LOOKUP ═══════════════
+async function lookupBarcode(barcode){
+  const status=document.getElementById("barcode-status");
+  const infoDiv=document.getElementById("barcode-info");
+  status.textContent="🔍 Searching...";
+  infoDiv.innerHTML="";
+
+  // Try Open Food Facts World first, then India-specific
+  const urls=[
+    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`,
+    `https://in.openfoodfacts.org/api/v2/product/${barcode}.json`,
+  ];
+
+  let product=null;
+  for(const url of urls){
+    try{
+      const resp=await fetch(url);
+      const data=await resp.json();
+      if(data.status===1&&data.product){product=data.product;break;}
+    }catch(e){continue;}
+  }
+
+  if(!product){
+    status.textContent="❌ Product not found. Try typing the food name above.";
+    return;
+  }
+
+  const p=product;
+  const n=p.nutriments||{};
+  const name=p.product_name||p.product_name_en||p.product_name_hi||"Unknown product";
+  const brand=p.brands||"";
+  const cal=Math.round(n["energy-kcal_100g"]||n["energy-kcal"]||0);
+  const protein=Math.round(n.proteins_100g||0);
+  const carbs=Math.round(n.carbohydrates_100g||0);
+  const fat=Math.round(n.fat_100g||0);
+  const fibre=Math.round(n.fiber_100g||n.fibers_100g||0);
+  const servingSize=p.serving_size||"100g";
+
+  status.textContent="✅ Found!";
+  const fibreStr=fibre?" · "+fibre+"g fibre":"";
+  const brandStr=brand?" · <span style='font-weight:normal;color:#888'>"+brand+"</span>":"";
+  const sStyle="padding:8px 16px;background:#2d6a4f;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer";
+  const servingBtn=p.serving_size
+    ?'<button onclick="addBarcodeItem(\''+name.replace(/'/g,"\\'")+"',"+Math.round(cal*parseFloat(p.serving_size)/100)+","+Math.round(protein*parseFloat(p.serving_size)/100)+","+Math.round(carbs*parseFloat(p.serving_size)/100)+","+Math.round(fat*parseFloat(p.serving_size)/100)+","+Math.round(fibre*parseFloat(p.serving_size)/100)+",'"+servingSize+"')" +'" style="'+sStyle+'">+ Add 1 serving ('+servingSize+')</button>'
+    :"";
+  infoDiv.innerHTML=`
+    <div style="font-size:14px;font-weight:bold;color:#1b4332;margin-bottom:4px">${name}${brandStr}</div>
+    <div style="font-size:12px;color:#555;margin-bottom:10px">Per 100g: ${cal} kcal · ${protein}g protein · ${carbs}g carbs · ${fat}g fat${fibreStr}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${cal},${protein},${carbs},${fat},${fibre},'per 100g')"
+        style="padding:8px 16px;background:#1b4332;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">
+        + Add 100g (${cal} kcal)
+      </button>
+      ${servingBtn}
+    </div>`;
+}
+
+
 function showGuide(){
   document.getElementById("guide-modal").style.display="block";
   closeSidebar();
@@ -2465,6 +2743,45 @@ function removeEx(id){exercises=exercises.filter(e=>e.id!==id);saveAll();renderE
 function resetExercise(){if(!confirm("Reset exercise log?"))return;exercises=[];saveAll();renderExLog();renderMealLog();updateHeader();showToast("Exercise log reset ✓");}
 
 // ═══════════════ WEIGHT LOG ═══════════════
+function saveWeightGoal(){
+  const tgt=parseFloat(document.getElementById("target-weight-input").value);
+  if(!isNaN(tgt)&&tgt>20&&tgt<300){
+    userSettings.targetWeight=tgt;
+    persistSettings();
+    renderWeightProjection();
+  }
+}
+
+function renderWeightProjection(){
+  const proj=document.getElementById("weight-goal-projection");
+  if(!proj) return;
+  const targetWeight=userSettings.targetWeight;
+  const tgt=parseFloat(document.getElementById("target-weight-input")?.value)||targetWeight;
+  if(!tgt||!weightLog.length){proj.style.display="none";return;}
+  const current=weightLog[weightLog.length-1].weight;
+  const diff=current-tgt;
+  if(diff<=0){
+    proj.style.display="block";
+    proj.innerHTML="🎯 <strong>Goal reached!</strong> You're at "+current+" kg — at or below your target of "+tgt+" kg. Excellent!";
+    return;
+  }
+  // Calculate rate of loss from last 7 entries
+  let weeklyRate=0.5; // default 0.5 kg/week
+  if(weightLog.length>=2){
+    const recent=weightLog.slice(-Math.min(7,weightLog.length));
+    const daysDiff=(new Date(recent[recent.length-1].date)-new Date(recent[0].date))/(1000*60*60*24);
+    const weightDiff=recent[0].weight-recent[recent.length-1].weight;
+    if(daysDiff>0&&weightDiff>0) weeklyRate=Math.round((weightDiff/daysDiff)*7*10)/10;
+  }
+  const weeksNeeded=Math.ceil(diff/Math.max(weeklyRate,0.1));
+  const reachDate=new Date();reachDate.setDate(reachDate.getDate()+(weeksNeeded*7));
+  const reachStr=reachDate.toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+  proj.style.display="block";
+  proj.innerHTML="📉 <strong>"+diff.toFixed(1)+" kg to go</strong> ("+current+" → "+tgt+" kg)<br/>"
+    +"📅 At current rate ("+weeklyRate+" kg/week), you'll reach goal by <strong>"+reachStr+"</strong><br/>"
+    +"💡 1550 kcal/day + daily walks keeps you on track!";
+}
+
 function saveWeight(){
   const val=parseFloat(document.getElementById("weight-input").value);
   if(isNaN(val)||val<20||val>300){showToast("Enter valid weight in kg");return;}
@@ -2481,6 +2798,10 @@ function saveWeight(){
 function renderWeightLog(){
   const list=document.getElementById("weight-log-list");
   const badge=document.getElementById("weight-loss-badge");
+  // Restore saved target weight
+  const savedTarget=userSettings.targetWeight;
+  const tgtInput=document.getElementById("target-weight-input");
+  if(tgtInput&&savedTarget) tgtInput.value=savedTarget;
   if(!weightLog.length){list.innerHTML='<div class="empty">No weight entries yet</div>';badge.innerHTML="";drawWeightChart([]);return;}
   const first=weightLog[0].weight;
   const last=weightLog[weightLog.length-1].weight;
@@ -2494,6 +2815,7 @@ function renderWeightLog(){
     list.appendChild(el);
   });
   drawWeightChart(weightLog.slice(-14));
+  renderWeightProjection();
 }
 function drawWeightChart(data){
   const canvas=document.getElementById("weightChart");
@@ -2612,58 +2934,6 @@ function closeBarcodeScanner(){
   if(barcodeInterval){ clearInterval(barcodeInterval); barcodeInterval=null; }
   document.getElementById("barcode-modal").style.display = "none";
   document.getElementById("barcode-input").value = "";
-}
-
-async function lookupBarcode(barcode){
-  if(!barcode||barcode.length < 4){ showToast("Enter a valid barcode"); return; }
-  document.getElementById("barcode-status").textContent = "🔍 Looking up product...";
-
-  try{
-    // Open Food Facts API — free, no key needed
-    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-    const data = await res.json();
-
-    if(data.status === 1 && data.product){
-      const p = data.product;
-      const name = p.product_name_en || p.product_name || "Unknown Product";
-      const brand = p.brands || "";
-      const n = p.nutriments || {};
-      const cal = Math.round(n["energy-kcal_100g"] || n["energy-kcal"] || (n["energy_100g"]/4.184) || 0);
-      const protein = Math.round(n.proteins_100g || 0);
-      const carbs = Math.round(n.carbohydrates_100g || 0);
-      const fat = Math.round(n.fat_100g || 0);
-      const fibre = Math.round(n.fiber_100g || 0);
-      const servingSize = p.serving_size || "100g";
-
-      // Show result
-      closeBarcodeScanner();
-      const resultDiv = document.getElementById("barcode-result");
-      const infoDiv = document.getElementById("barcode-product-info");
-      resultDiv.style.display = "block";
-
-      const fibreStr = fibre ? " · "+fibre+"g fibre" : "";
-      const servingBtn = p.serving_size ? `<button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${Math.round(cal*parseFloat(p.serving_size)/100)},${Math.round(protein*parseFloat(p.serving_size)/100)},${Math.round(carbs*parseFloat(p.serving_size)/100)},${Math.round(fat*parseFloat(p.serving_size)/100)},${Math.round(fibre*parseFloat(p.serving_size)/100)},'${servingSize}')" style="padding:8px 16px;background:#2d6a4f;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">+ Add 1 serving (${servingSize})</button>` : "";
-
-      infoDiv.innerHTML = `
-        <div style="font-size:14px;font-weight:bold;color:#1b4332;margin-bottom:4px">${name}${brand ? " · <span style='font-weight:normal;color:#888'>"+brand+"</span>" : ""}</div>
-        <div style="font-size:12px;color:#555;margin-bottom:10px">Per 100g: ${cal} kcal · ${protein}g protein · ${carbs}g carbs · ${fat}g fat${fibreStr}</div>
-        <div style="font-size:11px;color:#888;margin-bottom:10px">Serving size: ${servingSize}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button onclick="addBarcodeItem('${name.replace(/'/g,"\\'")}',${cal},${protein},${carbs},${fat},${fibre},'per 100g')"
-            style="padding:8px 16px;background:#1b4332;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">
-            + Add 100g (${cal} kcal)
-          </button>
-          ${servingBtn}
-        </div>`;
-      showToast("Product found: "+name.split(" ").slice(0,3).join(" "));
-    } else {
-      document.getElementById("barcode-status").textContent = "❌ Product not found. Try another barcode or add manually.";
-      showToast("Product not found in database");
-    }
-  }catch(err){
-    document.getElementById("barcode-status").textContent = "Network error. Check internet connection.";
-    console.error("Barcode lookup error:", err);
-  }
 }
 
 function addBarcodeItem(name, cal, p, c, fa, fi, serving){
@@ -3504,7 +3774,7 @@ function switchTab(i){
   if(i===0){renderPriority();renderSections();updateHeader();}
   if(i===1){renderCalTab();}
   if(i===2){renderWater();renderExLog();renderSteps();renderConditionActivities();}
-  if(i===3){renderHistory();renderWeightLog();setTimeout(renderCharts,100);}
+  if(i===3){renderWeeklySummary();renderHistory();renderWeightLog();setTimeout(renderCharts,100);}
   if(i===4){renderHealthTab();}
   if(i===5){renderSettings();}
 }
@@ -3714,8 +3984,8 @@ async function _saveFavsToFirebase(){
 function init(){
   loadAll();
   loadDarkMode();
+  loadHealthNotes();
   checkOnboarding();
-  // Fix: Load saved health conditions from localStorage on app start
   try{
     const saved=localStorage.getItem("dt_conditions");
     if(saved) selectedConditions=new Set(JSON.parse(saved));
@@ -3729,6 +3999,8 @@ function init(){
     userSettings.name = window._fbUser.displayName || "";
     updateHeader();
   }
+  // Schedule notifications if permission already granted
+  if(typeof Notification!=="undefined"&&Notification.permission==="granted") scheduleNotifications();
 }
 
 // Wait for DOM + Firebase auth state

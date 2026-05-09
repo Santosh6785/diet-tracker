@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#1b4332"/>
+<title>Today's Summary — Diet Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Georgia','Palatino',serif;background:#f0f7f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.card{background:#fff;border-radius:20px;padding:24px;max-width:360px;width:100%;box-shadow:0 4px 24px rgba(27,67,50,.12);}
+.header{background:linear-gradient(135deg,#1b4332,#2d6a4f);border-radius:14px;padding:20px;color:#fff;text-align:center;margin-bottom:20px;}
+.header h1{font-size:18px;margin-bottom:4px;}
+.header p{font-size:12px;opacity:.7;}
+.metric{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;}
+.metric:last-child{border-bottom:none;}
+.metric-label{color:#888;font-size:13px;}
+.metric-value{font-weight:bold;font-size:16px;color:#1b4332;}
+.bar-wrap{height:8px;background:#e0e8e0;border-radius:4px;margin-top:16px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;background:#97bc62;transition:width .5s ease;}
+.footer{text-align:center;margin-top:20px;font-size:11px;color:#aaa;}
+.open-app{display:block;margin-top:16px;padding:12px;background:#1b4332;color:#fff;border-radius:10px;text-align:center;text-decoration:none;font-weight:bold;font-size:14px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <h1>🥗 Today's Summary</h1>
+    <p id="date-display">Loading...</p>
+  </div>
+  <div class="metric">
+    <span class="metric-label">✅ Checklist</span>
+    <span class="metric-value" id="checklist-pct">—</span>
+  </div>
+  <div class="metric">
+    <span class="metric-label">🔥 Calories Eaten</span>
+    <span class="metric-value" id="cal-eaten">—</span>
+  </div>
+  <div class="metric">
+    <span class="metric-label">🎯 Daily Target</span>
+    <span class="metric-value" id="cal-target">—</span>
+  </div>
+  <div class="metric">
+    <span class="metric-label">💧 Water</span>
+    <span class="metric-value" id="water">—</span>
+  </div>
+  <div class="metric">
+    <span class="metric-label">🚶 Steps</span>
+    <span class="metric-value" id="steps">—</span>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-fill" id="cal-bar" style="width:0%"></div>
+  </div>
+  <div class="footer" id="cal-label">Calorie progress</div>
+  <a href="https://diet-tracker-app-c22f4.web.app" class="open-app">Open Diet Tracker App →</a>
+  <div class="footer" style="margin-top:12px">Made with ❤️ in Patna, Bihar</div>
+</div>
+
+<script>
+// Read data from localStorage (same origin as the main app when opened in PWA)
+function loadSummary(){
+  try{
+    const d=new Date();
+    const TODAY=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    document.getElementById("date-display").textContent=d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+    // Read from same localStorage keys as main app
+    const store=JSON.parse(localStorage.getItem("dt_v4")||"{}");
+    const settings=JSON.parse(localStorage.getItem("dt_settings_v4")||"{}");
+    const today=store[TODAY]||{};
+    const target=settings.target||1550;
+    const meals=today.meals||[];
+    const cal=meals.reduce((s,m)=>s+m.cal,0);
+    const water=today.water||0;
+    const steps=today.steps||0;
+    const checked=today.checked||{};
+    const checkedCount=Object.values(checked).filter(Boolean).length;
+
+    document.getElementById("cal-eaten").textContent=cal+" kcal";
+    document.getElementById("cal-target").textContent=target+" kcal";
+    document.getElementById("water").textContent=water+" glasses";
+    document.getElementById("steps").textContent=steps.toLocaleString();
+
+    const pct=Math.min(100,Math.round((cal/target)*100));
+    document.getElementById("cal-bar").style.width=pct+"%";
+    document.getElementById("cal-bar").style.background=cal>target?"#c62828":"#97bc62";
+    document.getElementById("cal-label").textContent=pct+"% of daily calorie target";
+
+    if(checkedCount>0){
+      document.getElementById("checklist-pct").textContent=checkedCount+" items ticked";
+    } else {
+      document.getElementById("checklist-pct").textContent="Not started yet";
+    }
+  }catch(e){
+    document.getElementById("date-display").textContent="Open in the Diet Tracker app to see your summary";
+  }
+}
+loadSummary();
+</script>
+</body>
+</html>
