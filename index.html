@@ -2010,41 +2010,82 @@ async function analysePhoto(input){
   try{
     const base64=await compressImage(file);
     if(!base64){ loading.style.display="none"; showToast("Could not read image. Try again."); return; }
-    const mediaType="image/jpeg";
 
-    // Using Gemini Flash — free, no credit needed
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${userSettings.apiKey}`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        contents:[{parts:[
-          {inline_data:{mime_type:mediaType,data:base64}},
-          {text:"Identify all Indian food items visible in this image. Return ONLY a valid JSON array with no extra text: [{\"name\":\"food name\",\"cal\":number,\"emoji\":\"emoji\"}]. Include realistic calorie estimates for typical Indian serving sizes (katori, roti, bowl etc). No explanation, just the JSON array."}
-        ]}],
-        generationConfig:{maxOutputTokens:500,temperature:0.1}
-      })
+    // Try models in order — 2.0-flash first (no thinking issues)
+    const scanModels=[
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+    ];
+    const scanBody=JSON.stringify({
+      contents:[{parts:[
+        {inline_data:{mime_type:"image/jpeg",data:base64}},
+        {text:"List all food items visible in this image. Reply ONLY with a JSON array, nothing else before or after: [{\"name\":\"Roti\",\"cal\":80,\"emoji\":\"🫓\"},{\"name\":\"Dal\",\"cal\":120,\"emoji\":\"🫘\"}]. Use realistic Indian portion calorie estimates."}
+      ]}],
+      generationConfig:{
+        maxOutputTokens:500,
+        temperature:0.1,
+        thinkingConfig:{thinkingBudget:0}
+      }
     });
-    const data=await resp.json();
+
+    let resp=null, lastErr="";
+    for(const url of scanModels){
+      try{
+        const r=await fetch(url+"?key="+userSettings.apiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:scanBody});
+        if(r.ok){resp=r;break;}
+        const e=await r.json().catch(()=>({}));
+        lastErr=e?.error?.message||"HTTP "+r.status;
+        console.warn("Photo scan model failed:",url,lastErr);
+      }catch(fe){lastErr=fe.message;}
+    }
+
     loading.style.display="none";
+    if(!resp){showToast("API error: "+lastErr.substring(0,60));return;}
 
-    if(data.error){showToast("API error: "+data.error.message);console.error(data.error);return;}
+    const data=await resp.json();
+    console.log("Photo scan raw:",JSON.stringify(data).substring(0,400));
 
-    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
+    if(data.error){showToast("API: "+data.error.message.substring(0,60));return;}
+
+    // Extract text — skip thinking parts
+    const parts=data.candidates?.[0]?.content?.parts||[];
+    const text=parts.filter(p=>!p.thought&&p.text).map(p=>p.text).join("").trim()
+      || parts.map(p=>p.text||"").join("").trim();
+
+    // Find JSON array in response
+    const arrStart=text.indexOf("[");
+    const arrEnd=text.lastIndexOf("]");
     let items=[];
-    try{
-      const match=text.match(/\[[\s\S]*\]/);
-      if(match)items=JSON.parse(match[0]);
-    }catch(e){showToast("Could not read response");}
+    if(arrStart!==-1&&arrEnd!==-1){
+      try{ items=JSON.parse(text.slice(arrStart,arrEnd+1)); }
+      catch(pe){ console.warn("JSON parse failed:",text.substring(0,200)); }
+    }
 
-    if(items.length===0){showToast("No food detected — try clearer photo");return;}
-    const container=document.getElementById("scan-items");container.innerHTML="";
+    if(!items.length){
+      // Show what we got for debugging
+      showToast("No food found — see debug below");
+      const container=document.getElementById("scan-items");
+      container.innerHTML='<div style="font-size:11px;color:#888;padding:8px;background:#f5f5f5;border-radius:6px">Raw response: '+text.substring(0,200)+'</div>';
+      resultEl.classList.add("show");
+      return;
+    }
+
+    const container=document.getElementById("scan-items");
+    container.innerHTML="";
     items.forEach(item=>{
-      const row=document.createElement("div");row.className="scan-item-row";
-      row.innerHTML=`<div><span style="font-size:16px">${item.emoji||"🍽️"}</span> <span style="font-size:13px;color:#222">${item.name}</span><br/><span style="font-size:11px;color:#2e7d32;font-weight:bold">${item.cal} kcal</span></div><button class="scan-add-btn" onclick="addScannedMeal('${item.name.replace(/'/g,"\\'")}',${item.cal},'${item.emoji||"🍽️"}')">+ Add</button>`;
+      const row=document.createElement("div");
+      row.className="scan-item-row";
+      row.innerHTML='<div><span style="font-size:16px">'+(item.emoji||"🍽️")+'</span> <span style="font-size:13px;color:#222">'+item.name+'</span><br/><span style="font-size:11px;color:#2e7d32;font-weight:bold">'+(item.cal||0)+' kcal</span></div>'
+        +'<button class="scan-add-btn" onclick="addScannedMeal(\''+item.name.replace(/'/g,"\\'")+'\','+(item.cal||0)+',\''+(item.emoji||"🍽️")+'\')">+ Add</button>';
       container.appendChild(row);
     });
     resultEl.classList.add("show");
-  }catch(e){loading.style.display="none";showToast("Scan failed — check internet");console.error(e);}
+  }catch(e){
+    loading.style.display="none";
+    showToast("Scan failed: "+e.message);
+    console.error("analysePhoto error:",e);
+  }
   input.value="";
 }
 function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});}
