@@ -2013,7 +2013,7 @@ async function analysePhoto(input){
     const mediaType="image/jpeg";
 
     // Using Gemini Flash — free, no credit needed
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${userSettings.apiKey}`,{
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${userSettings.apiKey}`,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
@@ -2399,7 +2399,7 @@ async function generateMealPlan(){
   btn.textContent="⏳ Generating...";btn.disabled=true;
   result.style.display="none";
   try{
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userSettings.apiKey}`,{
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${userSettings.apiKey}`,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{parts:[{text:`You are an Indian dietitian. Create a practical Indian meal plan for ${target} kcal for a ${diet} person from Patna, Bihar.
