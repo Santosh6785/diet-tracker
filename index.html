@@ -1389,9 +1389,15 @@ canvas.chart{width:100%;height:140px;display:block;}
 
 <!-- TAB 6: RECIPES -->
 <div class="content" id="tab-6">
+  <!-- Category tabs -->
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    <button onclick="switchRecipeCat('breakfast')" id="rc-breakfast" style="flex:1;padding:9px 4px;border-radius:10px;border:none;background:#1b4332;color:#fff;font-size:12px;font-weight:bold;font-family:inherit">🍳 Breakfast</button>
+    <button onclick="switchRecipeCat('lunch')" id="rc-lunch" style="flex:1;padding:9px 4px;border-radius:10px;border:none;background:#e0e0e0;color:#555;font-size:12px;font-weight:bold;font-family:inherit">🍱 Lunch</button>
+    <button onclick="switchRecipeCat('dinner')" id="rc-dinner" style="flex:1;padding:9px 4px;border-radius:10px;border:none;background:#e0e0e0;color:#555;font-size:12px;font-weight:bold;font-family:inherit">🥣 Dinner</button>
+  </div>
   <div class="card card-pad">
-    <div class="card-title">🍳 Healthy Indian Breakfasts</div>
-    <p style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px">Ranked by protein, blood sugar impact & energy at 11 AM. Best choices for Indian professionals over 30.</p>
+    <div class="card-title" id="recipe-title">🍳 Healthy Indian Breakfasts</div>
+    <p id="recipe-subtitle" style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px">Ranked by protein, blood sugar impact & energy at 11 AM. Best choices for Indian professionals over 30.</p>
     <div id="recipe-list"></div>
   </div>
 </div>
@@ -1414,6 +1420,7 @@ canvas.chart{width:100%;height:140px;display:block;}
 const STORE_KEY = "dt_v4";
 const SETTINGS_KEY = "dt_settings_v4";
 const WEIGHT_KEY = "dt_weight_v4";
+const RECIPE_CHK_KEY = "dt_recipe_chk";
 
 const ROTATING = {
   0:{emoji:"🐟",label:"Sunday",bg:"#e3f2fd",ac:"#1565c0",items:[{id:"r0a",text:"Fish curry at lunch — by 1 PM",note:"Omega-3 weekly dose"},{id:"r0b",text:"Dinner by 7:30 PM (home day!)",note:"Rare early dinner"},{id:"r0c",text:"Sprouts chaat as evening snack",note:"Living food — peak nutrients"}]},
@@ -1530,6 +1537,7 @@ function loadAll() {
   try{const s=localStorage.getItem(SETTINGS_KEY);if(s)userSettings={...userSettings,...JSON.parse(s)};}catch(e){}
   try{const w=localStorage.getItem(WEIGHT_KEY);if(w)weightLog=JSON.parse(w);}catch(e){}
   try{const f=localStorage.getItem("dt_favs");if(f)favorites=JSON.parse(f);}catch(e){}
+  try{const r=localStorage.getItem(RECIPE_CHK_KEY);if(r){const d=JSON.parse(r);if(d.date===TODAY)recipeChecklist=d.data||{};}}catch(e){}
   // Only load today's data from localStorage if Firebase hasn't already loaded it
   if(!window._fbDataLoaded){
     try{
@@ -1544,6 +1552,9 @@ function saveAll(){
   try{localStorage.setItem(WEIGHT_KEY,JSON.stringify(weightLog));}catch(e){}
   // Also sync to Firebase if logged in
   if(window._fbUser) _saveTodayToFirebase();
+}
+function saveRecipeChecklist(){
+  try{localStorage.setItem(RECIPE_CHK_KEY,JSON.stringify({date:TODAY,data:recipeChecklist}));}catch(e){}
 }
 function saveSettings(){
   const n=document.getElementById("set-name").value.trim();
@@ -1857,8 +1868,13 @@ function renderSections(){
 
       // Apply diet filter FIRST — then calculate done count
       activeItems=activeItems.filter(i=>!i.diet||i.diet.includes(diet));
-      const done=activeItems.filter(i=>checked[i.id]).length;
-      const total=activeItems.length;
+
+      // Check if recipe is active for this section
+      const recipeCat2 = Object.keys(RECIPE_CAT_TO_SECTION).find(k=>RECIPE_CAT_TO_SECTION[k]===sec.id);
+      const activeRecipe2 = recipeCat2 && recipeChecklist[recipeCat2];
+      const countItems = activeRecipe2 ? activeRecipe2.items : activeItems;
+      const done=countItems.filter(i=>checked[i.id]).length;
+      const total=countItems.length;
 
       const open=openSections.has(si);
       const card=document.createElement("div");card.className="card";
@@ -1883,6 +1899,29 @@ function renderSections(){
         itemsDiv.appendChild(note);
       }
 
+      // Check if a recipe has been added for this section
+      const recipeCat = Object.keys(RECIPE_CAT_TO_SECTION).find(k=>RECIPE_CAT_TO_SECTION[k]===sec.id);
+      const activeRecipe = recipeCat && recipeChecklist[recipeCat];
+
+      if(activeRecipe){
+        // Replace section items with recipe items + show recipe banner
+        const recipeBanner=document.createElement("div");
+        recipeBanner.style.cssText="background:#e8f5e9;padding:8px 14px;font-size:12px;color:#1b4332;border-bottom:1px solid #d4edda;display:flex;align-items:center;justify-content:space-between;gap:8px;";
+        recipeBanner.innerHTML=`<span>${activeRecipe.emoji} <strong>${activeRecipe.title}</strong> (from Recipes)</span>`
+          +`<button onclick="removeRecipeFromChecklist('${recipeCat}')" style="background:#ffebee;color:#c62828;border:none;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:bold;font-family:inherit;cursor:pointer;flex-shrink:0">✕ Remove</button>`;
+        itemsDiv.appendChild(recipeBanner);
+        activeRecipe.items.forEach(item=>{
+          const el=document.createElement("div");
+          el.className="chk-item"+(checked[item.id]?" done":"");
+          el.innerHTML=`<div class="chkbox ${checked[item.id]?"on":""}" style="--ac:${sec.ac}"><svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="it-text ${checked[item.id]?"done":""}">${item.text}</div><div class="it-note">${item.note}</div></div>`;
+          el.addEventListener("click",e=>{
+            e.stopPropagation();
+            toggleItem(item.id);
+            renderSections();renderPriority();
+          });
+          itemsDiv.appendChild(el);
+        });
+      } else {
       activeItems.forEach(item=>{
         const el=document.createElement("div");
         el.className="chk-item"+(checked[item.id]?" done":"");
@@ -1895,6 +1934,7 @@ function renderSections(){
         });
         itemsDiv.appendChild(el);
       });
+      } // end else
 
       card.appendChild(hdr);card.appendChild(itemsDiv);c.appendChild(card);
     });
@@ -3984,22 +4024,149 @@ const RECIPES = [
    tip:"Swap to paneer paratha. You go from 8g to 24g protein, halve the carbs, keep the meal."},
 ];
 
+const LUNCH_RECIPES = [
+  {rank:1, title:"Fish Curry + Rice + Salad First", emoji:"🐟", protein:"28g", cal:"420", time:"25 min", rating:"⭐⭐⭐⭐⭐",
+   verdict:"Best mid-week lunch. Omega-3 + controlled carbs. Eat salad first — reduces portion naturally.",
+   ingredients:["2 pieces rohu/katla fish","1 bowl rice (not 1.5)","Cucumber+tomato salad","Mustard, turmeric, onion, garlic paste","1 tsp mustard oil"],
+   steps:["Eat salad FIRST before anything else — reduces portion naturally","Cook fish curry: temper mustard in oil, add onion-garlic paste, turmeric","Add fish pieces, cook 15 min on medium heat","Take max 1 bowl rice — not 1.5 or 2","Finish with a glass of chaas/buttermilk"],
+   tip:"Sunday special. 2x per week for maximum omega-3 benefit."},
+  {rank:2, title:"Chicken Curry + 2 Rotis (No Rice)", emoji:"🍗", protein:"35g", cal:"480", time:"30 min", rating:"⭐⭐⭐⭐⭐",
+   verdict:"Highest protein lunch. Skip rice completely. 2 rotis only.",
+   ingredients:["3 pieces chicken (no cream, no butter)","2 whole wheat rotis","1 katori dal","Large salad — eat first","Curd 150g on side"],
+   steps:["Eat large salad first","Serve chicken curry — dry or semi-gravy, no cream","2 rotis maximum — not 3","Skip rice entirely on chicken days","Curd on side for probiotics"],
+   tip:"Thursday is chicken day per your weekly plan. No cream-based gravies — they add 200+ empty calories."},
+  {rank:3, title:"Rajma + 2 Rotis + Curd", emoji:"🫘", protein:"22g", cal:"420", time:"40 min", rating:"⭐⭐⭐⭐",
+   verdict:"Best vegetarian lunch. Rajma has highest fibre of all dals. Controls evening hunger.",
+   ingredients:["1 katori rajma (soaked overnight)","2 whole wheat rotis","150g plain curd","Salad — eat first","Onion, tomato, cumin, coriander"],
+   steps:["Soak rajma overnight — pressure cook 4 whistles","Make masala: onion-tomato base, cumin, coriander","Add cooked rajma, simmer 10 min","Eat salad first","2 rotis + rajma + curd = complete meal"],
+   tip:"Monday special. Rajma has 15g fibre per 100g — highest of all Indian dals. Holds you till 6 PM."},
+  {rank:4, title:"Dal + Sabzi + 2 Rotis (No Rice)", emoji:"🫘", protein:"18g", cal:"380", time:"20 min", rating:"⭐⭐⭐⭐",
+   verdict:"Standard Indian lunch done right. Key rule: sabzi WITHOUT potato.",
+   ingredients:["1 katori toor/masoor dal","1 katori sabzi — lauki/turai/palak/bhindi","2 whole wheat rotis","Salad first","No potato sabzi"],
+   steps:["Eat salad before dal-roti","Serve dal — don't add extra ghee","Sabzi: choose lauki, turai, bhindi, palak — NOT aloo","2 rotis only","Skip rice on weekdays"],
+   tip:"Aloo sabzi + rice is a double carb hit. Replace aloo with any other vegetable — same taste, half the carbs."},
+  {rank:5, title:"Khichdi + Curd", emoji:"🍚", protein:"12g", cal:"350", time:"20 min", rating:"⭐⭐⭐",
+   verdict:"Lowest blood sugar spike of all rice dishes. Good on sick/rest days or post-heavy dinner.",
+   ingredients:["½ cup rice + ½ cup moong dal (1:1 ratio)","150g curd","Ghee 1 tsp","Cumin, turmeric, salt","Salad on side"],
+   steps:["Wash rice and moong dal together","Pressure cook with 3x water, turmeric, salt — 3 whistles","Temper cumin in 1 tsp ghee, pour over khichdi","Serve with plain curd","Add salad on side"],
+   tip:"The 1:1 rice:dal ratio is key — doubles protein vs plain rice khichdi. Best recovery meal after exercise."},
+];
+
+const DINNER_RECIPES = [
+  {rank:1, title:"2 Rotis + Palak Dal + Curd", emoji:"🥬", protein:"20g", cal:"380", time:"20 min", rating:"⭐⭐⭐⭐⭐",
+   verdict:"Best dinner combo. Iron at night, protein overnight, probiotics from curd. NO rice.",
+   ingredients:["2 whole wheat rotis","1 katori palak dal (toor dal + palak)","150g plain curd","Isabgol 1 tsp (30 min before dinner)","No rice"],
+   steps:["Take isabgol 30 min before dinner — bloat + fibre","Cook palak dal: make toor dal, add blanched palak at end","Temper with ghee + cumin — 1 tsp only","2 rotis maximum","Curd at end — NOT raita with sugar"],
+   tip:"Palak dal = iron + protein in one dish. The most underrated Indian dinner. Takes 20 min, holds you overnight."},
+  {rank:2, title:"Fish Curry + 2 Rotis (No Rice)", emoji:"🐟", protein:"28g", cal:"400", time:"25 min", rating:"⭐⭐⭐⭐⭐",
+   verdict:"2x per week non-negotiable. No rice at dinner is the most critical rule.",
+   ingredients:["2 pieces rohu/hilsa fish","2 whole wheat rotis","1 katori turai/lauki sabzi","No rice","15 min walk after dinner"],
+   steps:["Cook fish curry in mustard oil — no cream","Make light turai/lauki sabzi — least calorie sabzi","2 rotis only","NO rice — this is the most critical dinner rule","15-20 min walk after dinner — drops blood sugar 20%"],
+   tip:"Tuesday and Friday fish dinners per your weekly plan. Hilsa has highest omega-3 of all Indian fish."},
+  {rank:3, title:"Moong Dal + 2 Rotis + Lauki", emoji:"🫘", protein:"16g", cal:"320", time:"20 min", rating:"⭐⭐⭐⭐",
+   verdict:"Lightest dinner. Best for weight loss days and easy overnight digestion.",
+   ingredients:["1 katori moong dal (yellow split)","1 katori lauki sabzi","2 rotis","1 bowl curd","No ghee on rotis"],
+   steps:["Cook moong dal — pressure cook 2 whistles only (keep texture)","Temper with cumin + hing","Make lauki sabzi: minimal oil, cumin, salt, green chilli","2 rotis — no ghee on top","Plain curd at end"],
+   tip:"Moong dal is easiest to digest of all dals. Best on days you feel heavy or had a big lunch."},
+  {rank:4, title:"Paneer Bhurji + 2 Rotis", emoji:"🧀", protein:"22g", cal:"420", time:"15 min", rating:"⭐⭐⭐⭐",
+   verdict:"Best vegetarian dinner protein. Skip dal if having paneer — don't double protein sources.",
+   ingredients:["100g paneer (crumbled)","2 whole wheat rotis","1 onion, 1 tomato","Green chilli, coriander, cumin","1 tsp oil only"],
+   steps:["Heat 1 tsp oil, add cumin, then onion — cook till golden","Add tomato + green chilli, cook till soft","Add crumbled paneer, salt, coriander","Cook 3 minutes — don't overcook paneer","Serve with 2 rotis, skip dal"],
+   tip:"100g paneer = 14g protein. Combined with rotis = complete dinner. No separate dal needed."},
+  {rank:5, title:"Dalia Khichdi + Curd", emoji:"🥣", protein:"10g", cal:"280", time:"20 min", rating:"⭐⭐⭐",
+   verdict:"Best dinner if you overate at lunch. Very low calorie, high fibre, guilt-free.",
+   ingredients:["½ cup dalia (broken wheat)","¼ cup moong dal","Mixed vegetables — peas, carrot, beans","150g curd","1 tsp ghee"],
+   steps:["Dry roast dalia 2 min till fragrant","Add moong dal + vegetables + 3x water","Pressure cook 3 whistles","Temper with 1 tsp ghee + cumin","Serve with plain curd"],
+   tip:"280 calories for a full dinner. Best choice on days you know you overate. High fibre keeps you full overnight."},
+];
+
+const GOLDEN_DINNER_RULES = [
+  "🔑 No rice at dinner — biggest single change for belly fat",
+  "🕘 Eat by 9:30 PM — nothing after 10 PM",
+  "🚶 15 min walk after — drops blood sugar by 20%",
+];
+
+let currentRecipeCat = 'breakfast';
+let recipeChecklist = {}; // {breakfast: {id, title, emoji, items[]}, lunch: {...}, dinner: {...}}
+
+// Map recipe category to SECTIONS id
+const RECIPE_CAT_TO_SECTION = {breakfast:'bfast', lunch:'lunch', dinner:'dinner'};
+
+function addRecipeToChecklist(cat, recipe){
+  recipeChecklist[cat] = {
+    id: 'recipe_'+cat,
+    title: recipe.title,
+    emoji: recipe.emoji,
+    sectionId: RECIPE_CAT_TO_SECTION[cat],
+    items: recipe.ingredients.map((ing,i)=>({
+      id: 'rc_'+cat+'_'+i,
+      text: ing,
+      note: recipe.title
+    }))
+  };
+  saveRecipeChecklist();
+  renderRecipes();
+  renderSections();
+  showToast(recipe.emoji+' '+recipe.title+' added to '+cat+' checklist! ✓');
+}
+
+function removeRecipeFromChecklist(cat){
+  // Clear checked state for recipe items
+  if(recipeChecklist[cat]){
+    recipeChecklist[cat].items.forEach(i=>{ delete checked[i.id]; });
+  }
+  delete recipeChecklist[cat];
+  saveRecipeChecklist();
+  saveAll();
+  renderRecipes();
+  renderSections();
+  showToast('Removed from checklist. Default items restored ✓');
+}
+
+function switchRecipeCat(cat){
+  currentRecipeCat = cat;
+  const titles = {
+    breakfast: {title:'🍳 Healthy Indian Breakfasts', sub:'Ranked by protein, blood sugar impact & energy at 11 AM.'},
+    lunch: {title:'🍱 Healthy Indian Lunches', sub:'Ranked by protein & blood sugar impact. Eat salad FIRST every time.'},
+    dinner: {title:'🥣 Healthy Indian Dinners', sub:'Lighter is better. No rice at dinner is the #1 rule.'}
+  };
+  document.getElementById('recipe-title').textContent = titles[cat].title;
+  document.getElementById('recipe-subtitle').textContent = titles[cat].sub;
+  ['breakfast','lunch','dinner'].forEach(c=>{
+    const btn = document.getElementById('rc-'+c);
+    if(btn){
+      btn.style.background = c===cat ? '#1b4332' : '#e0e0e0';
+      btn.style.color = c===cat ? '#fff' : '#555';
+    }
+  });
+  renderRecipes();
+}
+
 function renderRecipes(){
   const el=document.getElementById("recipe-list");
   if(!el) return;
-  el.innerHTML = RECIPES.map(r=>`
-    <div style="background:#f8fdf8;border:1px solid #d4edda;border-radius:12px;padding:14px;margin-bottom:14px">
+  const data = currentRecipeCat==='breakfast' ? RECIPES : currentRecipeCat==='lunch' ? LUNCH_RECIPES : DINNER_RECIPES;
+
+  let html = data.map(r=>{
+    const isAdded = recipeChecklist[currentRecipeCat] && recipeChecklist[currentRecipeCat].title === r.title;
+    return `
+    <div style="background:${isAdded?'#e8f5e9':'#f8fdf8'};border:2px solid ${isAdded?'#2e7d32':'#d4edda'};border-radius:12px;padding:14px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <span style="background:#1b4332;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0">#${r.rank}</span>
         <span style="font-size:20px">${r.emoji}</span>
-        <span style="font-weight:bold;font-size:14px;color:#1b4332">${r.title}</span>
+        <span style="font-weight:bold;font-size:14px;color:#1b4332;flex:1">${r.title}</span>
+        ${isAdded ? `<span style="background:#2e7d32;color:#fff;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:bold">✅ Added</span>` : ''}
       </div>
       <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <span style="background:#e8f5e9;color:#2e7d32;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:bold">💪 ${r.protein} protein</span>
         <span style="background:#fff3e0;color:#e65100;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:bold">🔥 ${r.cal} kcal</span>
         <span style="background:#e3f2fd;color:#1565c0;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:bold">⏱ ${r.time}</span>
       </div>
-      <div style="font-size:12px;color:#555;font-style:italic;margin-bottom:8px;line-height:1.5">"${r.verdict}"</div>
+      <div style="font-size:12px;color:#555;font-style:italic;margin-bottom:10px;line-height:1.5">"${r.verdict}"</div>
+      ${isAdded
+        ? `<button onclick="removeRecipeFromChecklist('${currentRecipeCat}')" style="width:100%;background:#ffebee;color:#c62828;border:1.5px solid #ef9a9a;border-radius:10px;padding:9px;font-size:13px;font-weight:bold;font-family:inherit;margin-bottom:8px">🗑 Remove from Today's Checklist</button>`
+        : `<button onclick="addRecipeToChecklist('${currentRecipeCat}', ${JSON.stringify(r).replace(/"/g,'&quot;')})" style="width:100%;background:#1b4332;color:#fff;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:bold;font-family:inherit;margin-bottom:8px">✅ Add to Today's Checklist</button>`
+      }
       <details>
         <summary style="font-size:13px;font-weight:bold;color:#1b4332;cursor:pointer;margin-bottom:6px">📋 Ingredients & Steps</summary>
         <div style="margin-top:8px">
@@ -4011,7 +4178,16 @@ function renderRecipes(){
         </div>
       </details>
     </div>
-  `).join("");
+  `}).join("");
+
+  if(currentRecipeCat==='dinner'){
+    html += `<div style="background:#1b4332;border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="font-weight:bold;color:#97bc62;font-size:14px;margin-bottom:10px">🏆 3 Golden Dinner Rules</div>
+      ${GOLDEN_DINNER_RULES.map(r=>`<div style="font-size:13px;color:#fff;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.1);line-height:1.5">${r}</div>`).join("")}
+    </div>`;
+  }
+
+  el.innerHTML = html;
 }
 
 // ═══════════════ NIGHT PREP ═══════════════
