@@ -1538,17 +1538,24 @@ function loadAll() {
   try{const w=localStorage.getItem(WEIGHT_KEY);if(w)weightLog=JSON.parse(w);}catch(e){}
   try{const f=localStorage.getItem("dt_favs");if(f)favorites=JSON.parse(f);}catch(e){}
   try{const r=localStorage.getItem(RECIPE_CHK_KEY);if(r){const d=JSON.parse(r);if(d.date===TODAY)recipeChecklist=d.data||{};}}catch(e){}
-  // Only load today's data from localStorage if Firebase hasn't already loaded it
-  if(!window._fbDataLoaded){
-    try{
-      const r=localStorage.getItem(STORE_KEY);
-      if(r){history=JSON.parse(r);const t=history[TODAY];if(t){checked=t.checked||{};meals=t.meals||[];exercises=t.exercises||[];waterCount=t.water||0;stepCount=t.steps||0;}}
-    }catch(e){}
-  }
+  // Always load full history object (past 7 days) from localStorage
+  try{
+    const r=localStorage.getItem(STORE_KEY);
+    if(r){
+      history=JSON.parse(r);
+      // Only load today's values from localStorage if Firebase hasn't loaded them
+      if(!window._fbDataLoaded){
+        const t=history[TODAY];
+        if(t){checked=t.checked||{};meals=t.meals||[];exercises=t.exercises||[];waterCount=t.water||0;stepCount=t.steps||0;}
+      }
+    }
+  }catch(e){}
 }
 function saveAll(){
-  // Always save to localStorage first (offline fallback)
-  try{history[TODAY]={checked,meals,exercises,water:waterCount,steps:stepCount};localStorage.setItem(STORE_KEY,JSON.stringify(history));}catch(e){}
+  // Always update today's entry in history object
+  history[TODAY]={checked,meals,exercises,water:waterCount,steps:stepCount};
+  // Save full history to localStorage (offline fallback)
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(history));}catch(e){}
   try{localStorage.setItem(WEIGHT_KEY,JSON.stringify(weightLog));}catch(e){}
   // Also sync to Firebase if logged in
   if(window._fbUser) _saveTodayToFirebase();
@@ -4363,6 +4370,21 @@ window._loadFromFirebase = async function(uid){
       waterCount=d.water||0;
       stepCount=d.steps||0;
     }
+
+    // Load past 7 days from Firebase into history object
+    const past7=[]; 
+    for(let i=1;i<=7;i++){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      past7.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`);
+    }
+    const pastDocs=await Promise.all(past7.map(date=>fb.getDoc(fb.doc(fb.db,"users",uid,"daily",date))));
+    pastDocs.forEach((doc,i)=>{
+      if(doc.exists()){
+        history[past7[i]]=doc.data();
+        // Also save to localStorage for offline use
+        try{const stored=JSON.parse(localStorage.getItem(STORE_KEY)||"{}");stored[past7[i]]=doc.data();localStorage.setItem(STORE_KEY,JSON.stringify(stored));}catch(e){}
+      }
+    });
 
     // Load weight log
     const weightDoc=await fb.getDoc(fb.doc(fb.db,"users",uid,"data","weightLog"));
