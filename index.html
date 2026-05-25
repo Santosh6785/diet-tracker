@@ -4203,7 +4203,20 @@ function renderNightPrep(){
   const el=document.getElementById("night-prep-list");
   if(!el) return;
   try{const s=localStorage.getItem("dt_nightprep");if(s)nightPrep=JSON.parse(s);}catch(e){}
-  const items = SECTIONS.flatMap(s=>s.items.slice(0,3).map(i=>({...i,section:s.label})));
+  // Exclude items that are automatic habits (no need to plan)
+  const EXCLUDE_FROM_NIGHTPREP = new Set([
+    'c_lemon',       // Warm lemon water
+    'c_saladFirst',  // Ate salad FIRST
+    'c_sabzi',       // Sabzi without potato
+    'c_noFried',     // Avoided canteen fried snacks
+    'c_noRice',      // NO rice at dinner
+    'c_walk',        // 15-20 min walk after dinner
+    'c_water',       // Drank 8+ glasses water
+    'c_nolate',      // Nothing after 10 PM
+  ]);
+  const items = SECTIONS.flatMap(s=>s.items.slice(0,3)
+    .filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id))
+    .map(i=>({...i,section:s.label})));
   el.innerHTML = items.map(i=>`
     <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.1)">
       <div onclick="toggleNightPrep('${i.id}')" style="width:20px;height:20px;border-radius:6px;flex-shrink:0;border:2px solid ${nightPrep[i.id]?'#97bc62':'rgba(255,255,255,.4)'};background:${nightPrep[i.id]?'#97bc62':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer">
