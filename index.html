@@ -773,10 +773,15 @@ canvas.chart{width:100%;height:140px;display:block;}
   <div id="sec-container"></div>
   <button class="reset-btn" onclick="resetChecklist()">🔄 Reset Today's Checklist</button>
   <div class="card card-pad" style="margin-top:8px;background:linear-gradient(135deg,#0d2b1e,#1b4332);color:#fff">
-    <div style="font-weight:bold;font-size:14px;margin-bottom:6px">🌙 Night Prep — Plan Tomorrow</div>
-    <p style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:10px;line-height:1.5">Check items you plan to do tomorrow. No morning rush!</p>
-    <div id="night-prep-list"></div>
-    <button onclick="saveNightPrep()" style="background:#97bc62;border:none;border-radius:10px;padding:8px 18px;color:#1b4332;font-weight:bold;font-size:13px;margin-top:8px;width:100%">💾 Save Tomorrow's Plan</button>
+    <div onclick="toggleNightPrepSection()" style="font-weight:bold;font-size:14px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
+      <span>🌙 Night Prep — Plan Tomorrow</span>
+      <span id="night-prep-chevron" style="font-size:12px;transition:transform .25s">▼</span>
+    </div>
+    <div id="night-prep-body" style="overflow:hidden;transition:max-height .3s ease,opacity .3s ease">
+      <p style="font-size:12px;color:rgba(255,255,255,.7);margin-top:8px;margin-bottom:10px;line-height:1.5">Check items you plan to do tomorrow. No morning rush!</p>
+      <div id="night-prep-list"></div>
+      <button onclick="saveNightPrep()" style="background:#97bc62;border:none;border-radius:10px;padding:8px 18px;color:#1b4332;font-weight:bold;font-size:13px;margin-top:8px;width:100%">💾 Save Tomorrow's Plan</button>
+    </div>
   </div>
 </div>
 
@@ -4271,6 +4276,9 @@ function renderNightPrep(){
       </div>
     </div>
   `).join("");
+  // Keep expanded height in sync after re-render
+  const body=document.getElementById("night-prep-body");
+  if(body&&body.style.maxHeight!=="0px") body.style.maxHeight=body.scrollHeight+"px";
 }
 function toggleNightPrep(id){
   nightPrep[id]=!nightPrep[id];
@@ -4279,6 +4287,23 @@ function toggleNightPrep(id){
 function saveNightPrep(){
   try{localStorage.setItem("dt_nightprep",JSON.stringify(nightPrep));}catch(e){}
   showToast("Tomorrow's plan saved! ✓");
+}
+function toggleNightPrepSection(){
+  const body=document.getElementById("night-prep-body");
+  const chevron=document.getElementById("night-prep-chevron");
+  if(!body||!chevron) return;
+  const collapsed=body.style.maxHeight==="0px";
+  if(collapsed){
+    body.style.maxHeight=body.scrollHeight+"px";
+    body.style.opacity="1";
+    chevron.style.transform="rotate(0deg)";
+    try{localStorage.setItem("dt_nightprep_collapsed","0");}catch(e){}
+  } else {
+    body.style.maxHeight="0px";
+    body.style.opacity="0";
+    chevron.style.transform="rotate(-90deg)";
+    try{localStorage.setItem("dt_nightprep_collapsed","1");}catch(e){}
+  }
 }
 
 function switchTab(i){
@@ -4529,6 +4554,18 @@ function init(){
   renderPriority();
   renderSections();
   renderNightPrep();
+  // Restore night prep collapsed state
+  (function(){
+    const body=document.getElementById("night-prep-body");
+    const chevron=document.getElementById("night-prep-chevron");
+    if(!body||!chevron) return;
+    if(localStorage.getItem("dt_nightprep_collapsed")==="1"){
+      body.style.maxHeight="0px";body.style.opacity="0";
+      chevron.style.transform="rotate(-90deg)";
+    } else {
+      body.style.maxHeight=body.scrollHeight+"px";body.style.opacity="1";
+    }
+  })();
   renderFoodFact();
   if(window._fbUser && !userSettings.name){
     userSettings.name = window._fbUser.displayName || "";
