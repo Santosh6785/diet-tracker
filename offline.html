@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Offline — Diet Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Georgia',serif;background:linear-gradient(160deg,#1b4332 0%,#2d6a4f 60%,#40916c 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;}
+.icon{font-size:80px;margin-bottom:20px;}
+h1{color:#fff;font-size:24px;font-weight:normal;margin-bottom:12px;}
+p{color:rgba(255,255,255,.7);font-size:14px;line-height:1.7;max-width:300px;margin-bottom:28px;}
+button{background:#97bc62;color:#1b4332;border:none;border-radius:14px;padding:14px 28px;font-size:15px;font-weight:bold;font-family:inherit;cursor:pointer;}
+button:active{transform:scale(.97);}
+.tip{margin-top:24px;color:rgba(255,255,255,.5);font-size:12px;max-width:280px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="icon">📵</div>
+<h1>You're Offline</h1>
+<p>No internet connection. Your data is saved locally — all your logs and checklist progress are safe.</p>
+<button onclick="location.reload()">Try Again ↻</button>
+<div class="tip">💡 Tip: Your food logs, checklist and weight data are stored on this device. They'll sync to the cloud when you're back online.</div>
+</body>
+</html>

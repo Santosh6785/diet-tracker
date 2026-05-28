@@ -33,6 +33,7 @@ jobs:
           cp version.json public/version.json
           cp summary.html public/summary.html 2>/dev/null || true
           cp privacy.html public/privacy.html 2>/dev/null || true
+          cp offline.html public/offline.html 2>/dev/null || true
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
