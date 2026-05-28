@@ -237,11 +237,11 @@ body.dark .sidebar{background:#0f2a1e;}
 .cat-btn{flex-shrink:0;padding:5px 13px;border-radius:20px;border:none;background:#fff;color:#555;font-size:11px;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);}
 .cat-btn.on{background:#1b4332;color:#fff;}
 .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
-.p-name{font-size:12px;color:#222;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;}
 .preset-card{background:#fff;border-radius:11px;padding:10px 9px;box-shadow:0 1px 5px rgba(0,0,0,.08);display:flex;align-items:center;gap:7px;border:none;text-align:left;font-family:inherit;}
 .preset-card:active{transform:scale(.97);}
 .p-emoji{font-size:22px;flex-shrink:0;}
-.p-cal{font-weight:bold;font-size:12px;color:#2e7d32;margin-top:1px;}
+.p-name{font-size:13px;color:#222;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.p-cal{font-weight:bold;font-size:13px;color:#2e7d32;margin-top:1px;}
 .p-plus{width:22px;height:22px;border-radius:5px;background:#f0f7f0;display:flex;align-items:center;justify-content:center;color:#2e7d32;font-weight:bold;font-size:16px;flex-shrink:0;}
 .cust-box{background:#fff;border-radius:14px;padding:13px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:10px;}
 .cust-toggle{width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;font-family:inherit;padding:0;font-size:13px;font-weight:bold;color:#1b4332;}
@@ -666,7 +666,7 @@ canvas.chart{width:100%;height:140px;display:block;}
       <div class="sc-lbl">CHECKLIST</div>
       <div class="sc-val" id="check-pct" style="color:#ffd166">0%</div>
       <div class="sc-sub" id="check-count">0/0</div>
-      <div class="sc-desc" id="check-lbl">Tap to begin 👆</div>
+      <div class="sc-desc" id="check-lbl">Needs work ❌</div>
     </div>
     <div class="sc">
       <div class="sc-lbl">CALORIES IN</div>
@@ -1148,7 +1148,7 @@ canvas.chart{width:100%;height:140px;display:block;}
     <div class="chart-legend">
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#2e7d32"></div>≥80% Excellent</div>
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#f57f17"></div>60–79% Good</div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ef5350"></div>&lt;60% Keep going</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ef5350"></div>&lt;60% Needs work</div>
     </div>
   </div>
 
@@ -1163,7 +1163,7 @@ canvas.chart{width:100%;height:140px;display:block;}
   <div style="background:linear-gradient(135deg,#1b4332,#2d6a4f);border-radius:14px;padding:14px;text-align:center">
     <p style="color:#c8f0c8;font-size:13px;line-height:1.9">
       5 days ≥80% checklist + under target kcal<br/>
-      = consistent fat loss progress in <strong style="color:#fff">4–6 weeks</strong>
+      = visible belly fat reduction in <strong style="color:#fff">4–6 weeks</strong>
     </p>
   </div>
 </div>
@@ -1514,7 +1514,7 @@ const PRIORITY = [
 const PRESETS = [
   {name:"Sattu sharbat 1 glass",cal:120,emoji:"🥛",cat:"Drinks"},{name:"Milk tea with sugar",cal:65,emoji:"☕",cat:"Drinks"},{name:"Milk tea mild sugar",cal:50,emoji:"☕",cat:"Drinks"},{name:"Milk tea no sugar",cal:35,emoji:"☕",cat:"Drinks"},{name:"Green tea",cal:5,emoji:"🍵",cat:"Drinks"},{name:"Black coffee no sugar",cal:5,emoji:"☕",cat:"Drinks"},{name:"Black coffee with sugar",cal:30,emoji:"☕",cat:"Drinks"},{name:"Lemon water",cal:10,emoji:"🍋",cat:"Drinks"},{name:"Milk 250ml full fat",cal:150,emoji:"🥛",cat:"Drinks"},{name:"Milk 250ml toned",cal:120,emoji:"🥛",cat:"Drinks"},{name:"Buttermilk/chaas",cal:35,emoji:"🥛",cat:"Drinks"},{name:"Sweet lassi 1 glass",cal:180,emoji:"🥛",cat:"Drinks"},{name:"Salted lassi 1 glass",cal:120,emoji:"🥛",cat:"Drinks"},{name:"Coconut water 1 glass",cal:45,emoji:"🥥",cat:"Drinks"},{name:"Nimbu pani with sugar",cal:60,emoji:"🍋",cat:"Drinks"},{name:"Nimbu pani no sugar",cal:15,emoji:"🍋",cat:"Drinks"},{name:"Aam panna 1 glass",cal:90,emoji:"🥭",cat:"Drinks"},{name:"Jaljeera 1 glass",cal:40,emoji:"🫙",cat:"Drinks"},{name:"Turmeric milk haldi doodh",cal:120,emoji:"🥛",cat:"Drinks"},{name:"Sugarcane juice 1 glass",cal:180,emoji:"🌿",cat:"Drinks"},{name:"Badam milk 1 glass",cal:200,emoji:"🥛",cat:"Drinks"},{name:"Protein shake 1 scoop",cal:150,emoji:"💪",cat:"Drinks"},{name:"Cold drink 300ml",cal:130,emoji:"🥤",cat:"Drinks"},{name:"Fruit juice 1 glass",cal:120,emoji:"🧃",cat:"Drinks"},{name:"Horlicks/Bournvita",cal:160,emoji:"🥛",cat:"Drinks"},
   {name:"Litti 2 pieces",cal:320,emoji:"🟤",cat:"Grains"},{name:"Litti chokha 1 plate",cal:480,emoji:"🟤",cat:"Grains"},{name:"Dal pitha 2 pieces",cal:220,emoji:"🫓",cat:"Grains"},{name:"Sattu paratha 1",cal:230,emoji:"🫓",cat:"Grains"},{name:"Makai roti (1)",cal:90,emoji:"🫓",cat:"Grains"},{name:"Roti (1) whole wheat",cal:75,emoji:"🫓",cat:"Grains"},{name:"Rotis (2) whole wheat",cal:150,emoji:"🫓",cat:"Grains"},{name:"Rotis (3) whole wheat",cal:225,emoji:"🫓",cat:"Grains"},{name:"Butter roti (1)",cal:115,emoji:"🫓",cat:"Grains"},{name:"Paratha plain (1)",cal:200,emoji:"🫓",cat:"Grains"},{name:"Paratha aloo (1)",cal:260,emoji:"🫓",cat:"Grains"},{name:"Puri (1)",cal:110,emoji:"🫓",cat:"Grains"},{name:"Bhatura (1)",cal:280,emoji:"🫓",cat:"Grains"},{name:"Naan (1)",cal:260,emoji:"🫓",cat:"Grains"},{name:"Rice 1 bowl",cal:165,emoji:"🍚",cat:"Grains"},{name:"Rice 1.5 bowl",cal:245,emoji:"🍚",cat:"Grains"},{name:"Rice 2 bowl",cal:330,emoji:"🍚",cat:"Grains"},{name:"Brown rice 1 bowl",cal:150,emoji:"🍚",cat:"Grains"},{name:"Biryani chicken 1 plate",cal:450,emoji:"🍚",cat:"Grains"},{name:"Biryani veg 1 plate",cal:350,emoji:"🍚",cat:"Grains"},{name:"Khichdi 1 bowl",cal:220,emoji:"🍚",cat:"Grains"},{name:"Dal khichdi 1 bowl",cal:250,emoji:"🍚",cat:"Grains"},{name:"Poha 1 bowl",cal:180,emoji:"🥣",cat:"Grains"},{name:"Upma 1 bowl",cal:200,emoji:"🥣",cat:"Grains"},{name:"Oats plain 1 bowl",cal:150,emoji:"🥣",cat:"Grains"},{name:"Oats with milk 1 bowl",cal:250,emoji:"🥣",cat:"Grains",p:10,c:35,fa:5,fi:4},{name:"Oats with milk + banana",cal:340,emoji:"🥣",cat:"Grains",p:11,c:60,fa:5,fi:5},{name:"Muesli with milk 1 bowl",cal:320,emoji:"🥣",cat:"Grains",p:9,c:55,fa:6,fi:4},{name:"Muesli dry 40g",cal:160,emoji:"🥣",cat:"Grains",p:4,c:28,fa:3,fi:3},{name:"Cornflakes with milk 1 bowl",cal:200,emoji:"🥣",cat:"Grains",p:6,c:38,fa:2,fi:1},{name:"Cornflakes dry 30g",cal:110,emoji:"🥣",cat:"Grains",p:2,c:25,fa:0,fi:0},{name:"Dalia sweet 1 bowl",cal:180,emoji:"🥣",cat:"Grains",p:5,c:35,fa:2,fi:4},{name:"Dalia khichdi 1 bowl",cal:200,emoji:"🥣",cat:"Grains",p:7,c:38,fa:3,fi:5},{name:"Rasgulla 2 pieces",cal:180,emoji:"🍮",cat:"Junk"},{name:"Protein shake whey 1 scoop",cal:120,emoji:"💪",cat:"Protein",p:24,c:5,fa:2,fi:0},{name:"Oats with milk + whey 1 bowl",cal:380,emoji:"🥣",cat:"Grains",p:38,c:40,fa:6,fi:4},{name:"Besan chilla 2 pieces",cal:260,emoji:"🥞",cat:"Grains",p:14,c:24,fa:8,fi:4},{name:"Besan chilla + paneer stuffing",cal:380,emoji:"🥞",cat:"Grains",p:28,c:26,fa:18,fi:4},{name:"Paneer paratha 1 (100g paneer)",cal:450,emoji:"🫓",cat:"Grains",p:22,c:35,fa:22,fi:3},{name:"Paneer paratha + curd",cal:540,emoji:"🫓",cat:"Grains",p:27,c:43,fa:26,fi:3},{name:"3 eggs + brown bread + curd",cal:450,emoji:"🍳",cat:"Protein",p:30,c:30,fa:14,fi:2},{name:"Idli 2 pieces",cal:130,emoji:"🍚",cat:"Grains"},{name:"Dosa plain 1",cal:170,emoji:"🥞",cat:"Grains"},{name:"Masala dosa 1",cal:300,emoji:"🥞",cat:"Grains"},{name:"White bread 2 slices",cal:160,emoji:"🍞",cat:"Grains"},{name:"Brown bread 2 slices",cal:140,emoji:"🍞",cat:"Grains"},{name:"Sandwich veg 1",cal:250,emoji:"🥪",cat:"Grains"},{name:"Bajra roti (1)",cal:105,emoji:"🫓",cat:"Grains"},{name:"Besan chilla (1)",cal:130,emoji:"🥞",cat:"Grains"},
-  {name:"Toor/masoor dal 1 katori",cal:140,emoji:"🫘",cat:"Protein",p:9,c:20,fa:1,fi:4},{name:"Moong dal 1 katori",cal:120,emoji:"🫘",cat:"Protein",p:8,c:18,fa:1,fi:3},{name:"Rajma/chana dal 1 katori",cal:165,emoji:"🫘",cat:"Protein",p:11,c:25,fa:1,fi:6},{name:"Kala chana ½ katori",cal:140,emoji:"🫘",cat:"Protein",p:10,c:20,fa:1,fi:5},{name:"Chana masala 1 katori",cal:200,emoji:"🫘",cat:"Protein",p:10,c:28,fa:5,fi:6},{name:"Rajma masala 1 katori",cal:210,emoji:"🫘",cat:"Protein",p:12,c:30,fa:4,fi:7},{name:"Sprouts boiled 1 katori",cal:90,emoji:"🌱",cat:"Protein",p:7,c:14,fa:0,fi:4},{name:"Paneer 50g",cal:140,emoji:"🧀",cat:"Protein",p:7,c:1,fa:11,fi:0},{name:"Paneer 100g",cal:280,emoji:"🧀",cat:"Protein",p:14,c:2,fa:22,fi:0},{name:"Paneer bhurji 1 katori",cal:250,emoji:"🧀",cat:"Protein",p:12,c:5,fa:18,fi:1},{name:"Shahi paneer 1 katori",cal:320,emoji:"🧀",cat:"Protein",p:12,c:10,fa:24,fi:1},{name:"Boiled egg (1)",cal:70,emoji:"🥚",cat:"Protein",p:6,c:0,fa:5,fi:0},{name:"Boiled eggs (2)",cal:140,emoji:"🥚",cat:"Protein",p:12,c:0,fa:10,fi:0},{name:"Egg bhurji 1 egg",cal:105,emoji:"🍳",cat:"Protein",p:6,c:1,fa:8,fi:0},{name:"Egg bhurji 2 eggs",cal:185,emoji:"🍳",cat:"Protein",p:12,c:2,fa:14,fi:0},{name:"Omelette 2 eggs",cal:190,emoji:"🍳",cat:"Protein",p:13,c:1,fa:14,fi:0},{name:"Egg curry 2 eggs",cal:220,emoji:"🍳",cat:"Protein",p:13,c:5,fa:15,fi:1},{name:"Soya chunks sabzi 1 katori",cal:180,emoji:"🫘",cat:"Protein",p:18,c:12,fa:2,fi:3},
+  {name:"Toor/masoor dal 1 katori",cal:140,emoji:"🫘",cat:"Protein",p:9,c:20,fa:1,fi:4},{name:"Moong dal 1 katori",cal:120,emoji:"🫘",cat:"Protein",p:8,c:18,fa:1,fi:3},{name:"Rajma/chana dal 1 katori",cal:165,emoji:"🫘",cat:"Protein",p:11,c:25,fa:1,fi:6},{name:"Kala chana ½ katori",cal:140,emoji:"🫘",cat:"Protein",p:10,c:20,fa:1,fi:5},{name:"Chana masala 1 katori",cal:200,emoji:"🫘",cat:"Protein",p:10,c:28,fa:5,fi:6},{name:"Rajma masala 1 katori",cal:210,emoji:"🫘",cat:"Protein",p:12,c:30,fa:4,fi:7},{name:"Sprouts boiled 1 katori",cal:90,emoji:"🌱",cat:"Protein",p:7,c:14,fa:0,fi:4},{name:"Paneer 50g",cal:140,emoji:"🧀",cat:"Protein",p:7,c:1,fa:11,fi:0},{name:"Paneer 100g",cal:280,emoji:"🧀",cat:"Protein",p:14,c:2,fa:22,fi:0},{name:"Paneer bhurji 1 katori",cal:250,emoji:"🧀",cat:"Protein",p:12,c:5,fa:18,fi:1},{name:"Shahi paneer 1 katori",cal:320,emoji:"🧀",cat:"Protein",p:12,c:10,fa:24,fi:1},{name:"Boiled egg (1)",cal:70,emoji:"🥚",cat:"Protein",p:6,c:0,fa:5,fi:0},{name:"Boiled eggs (2)",cal:140,emoji:"🥚",cat:"Protein",p:12,c:0,fa:10,fi:0},{name:"Egg bhurji 1 egg",cal:105,emoji:"🍳",cat:"Protein",p:6,c:1,fa:8,fi:0},{name:"Egg bhurji 2 eggs",cal:185,emoji:"🍳",cat:"Protein",p:12,c:2,fa:14,fi:0},{name:"Omelette 2 eggs",cal:190,emoji:"🍳",cat:"Protein",p:13,c:1,fa:14,fi:0},{name:"Egg curry 2 eggs",cal:220,emoji:"🍳",cat:"Protein",p:13,c:5,fa:15,fi:1},{name:"Soya chunks sabzi 1 katori",cal:180,emoji:"🫘",cat:"Protein",p:18,c:12,fa:2,fi:3},{name:"Soya chunks dry 50g",cal:175,emoji:"🫘",cat:"Protein",p:26,c:17,fa:0,fi:3},{name:"Greek yogurt 150g",cal:90,emoji:"🥛",cat:"Protein",p:13,c:6,fa:1,fi:0},{name:"Greek yogurt 100g",cal:60,emoji:"🥛",cat:"Protein",p:9,c:4,fa:0,fi:0},
   {name:"Roasted chana 30g",cal:110,emoji:"🌰",cat:"Snacks"},{name:"Roasted chana 40g",cal:147,emoji:"🌰",cat:"Snacks"},{name:"Roasted chana 50g",cal:183,emoji:"🌰",cat:"Snacks"},{name:"Roasted chana 75g",cal:275,emoji:"🌰",cat:"Snacks"},{name:"Peanuts roasted 20g",cal:114,emoji:"🥜",cat:"Snacks"},{name:"Peanuts roasted 30g",cal:170,emoji:"🥜",cat:"Snacks"},{name:"Peanuts roasted 50g",cal:285,emoji:"🥜",cat:"Snacks"},{name:"Almonds 6 + Walnuts 2",cal:80,emoji:"🌰",cat:"Snacks"},{name:"Mixed nuts 30g",cal:180,emoji:"🌰",cat:"Snacks"},{name:"Makhana fox nuts 30g",cal:105,emoji:"🌰",cat:"Snacks"},{name:"Sprouts chaat 1 bowl",cal:130,emoji:"🌱",cat:"Snacks"},{name:"Dhokla 2 pieces",cal:150,emoji:"🟡",cat:"Snacks"},{name:"Murmura 1 bowl",cal:110,emoji:"🍚",cat:"Snacks"},{name:"Bhel puri 1 plate",cal:180,emoji:"🍿",cat:"Snacks"},{name:"Biscuits Marie 4",cal:120,emoji:"🍪",cat:"Snacks"},{name:"Biscuits Parle-G 4",cal:160,emoji:"🍪",cat:"Snacks"},{name:"Khakhra 2 pieces",cal:120,emoji:"🫓",cat:"Snacks"},{name:"Thepla 1 piece",cal:150,emoji:"🫓",cat:"Snacks"},
   {name:"Apple medium",cal:80,emoji:"🍎",cat:"Fruits"},{name:"Guava medium",cal:55,emoji:"🍏",cat:"Fruits"},{name:"Pear medium",cal:85,emoji:"🍐",cat:"Fruits"},{name:"Banana medium",cal:90,emoji:"🍌",cat:"Fruits"},{name:"Mango 1 cup sliced",cal:100,emoji:"🥭",cat:"Fruits"},{name:"Watermelon 2 cups",cal:80,emoji:"🍉",cat:"Fruits"},{name:"Papaya 200g",cal:78,emoji:"🍈",cat:"Fruits"},{name:"Orange medium",cal:60,emoji:"🍊",cat:"Fruits"},{name:"Grapes 1 cup",cal:105,emoji:"🍇",cat:"Fruits"},{name:"Pomegranate ½ cup",cal:70,emoji:"🔴",cat:"Fruits"},{name:"Kiwi 1 medium",cal:45,emoji:"🥝",cat:"Fruits"},{name:"Strawberries 1 cup",cal:50,emoji:"🍓",cat:"Fruits"},{name:"Amla fresh 1",cal:10,emoji:"🟢",cat:"Fruits"},{name:"Dates 3 pieces",cal:70,emoji:"🟤",cat:"Fruits"},{name:"Coconut fresh ½ cup",cal:140,emoji:"🥥",cat:"Fruits"},
   {name:"Plain sabzi 1 katori",cal:90,emoji:"🥬",cat:"Sabzi"},{name:"Palak sabzi 1 katori",cal:95,emoji:"🥬",cat:"Sabzi"},{name:"Turai/lauki 1 katori",cal:80,emoji:"🥒",cat:"Sabzi"},{name:"Kaddu sabzi 1 katori",cal:110,emoji:"🎃",cat:"Sabzi"},{name:"Hari saag ½ katori",cal:45,emoji:"🌿",cat:"Sabzi"},{name:"Dal wadi+brinjal 1 katori",cal:180,emoji:"🍆",cat:"Sabzi"},{name:"Aloo chokha",cal:120,emoji:"🥔",cat:"Sabzi"},{name:"Aloo+gobi 1 katori",cal:150,emoji:"🥔",cat:"Sabzi"},{name:"Aloo matar 1 katori",cal:180,emoji:"🥔",cat:"Sabzi"},{name:"Bhindi masala 1 katori",cal:120,emoji:"🥬",cat:"Sabzi"},{name:"Baingan bharta 1 katori",cal:130,emoji:"🍆",cat:"Sabzi"},{name:"Karela sabzi 1 katori",cal:85,emoji:"🥬",cat:"Sabzi"},{name:"Methi sabzi 1 katori",cal:80,emoji:"🌿",cat:"Sabzi"},{name:"Palak paneer 1 katori",cal:280,emoji:"🥬",cat:"Sabzi"},{name:"Matar paneer 1 katori",cal:310,emoji:"🧀",cat:"Sabzi"},{name:"Mix veg sabzi 1 katori",cal:140,emoji:"🥗",cat:"Sabzi"},{name:"Mushroom masala 1 katori",cal:145,emoji:"🍄",cat:"Sabzi"},{name:"Sarson da saag 1 katori",cal:130,emoji:"🌿",cat:"Sabzi"},
@@ -2206,7 +2206,7 @@ function renderDailySummary(){
   let habitMsg="";
   if(pct>=80) habitMsg="⭐ Habit score: <strong>"+pct+"%</strong> — Excellent day!";
   else if(pct>=50) habitMsg="👍 Habit score: <strong>"+pct+"%</strong> — Keep going!";
-  else if(pct>0) habitMsg="💪 Habit score: <strong>"+pct+"%</strong> — Keep going, more to check off!";
+  else if(pct>0) habitMsg="💪 Habit score: <strong>"+pct+"%</strong> — More to tick off!";
   let burnMsg="";
   if(burned>0) burnMsg="🔥 <strong>"+burned+" kcal</strong> burned from activity.";
   txt.innerHTML=[calMsg,habitMsg,burnMsg].filter(Boolean).join("<br/>");
@@ -2486,7 +2486,7 @@ function renderWeeklySummary(){
     +'<div style="text-align:center;background:#e3f2fd;border-radius:8px;padding:8px">'
     +'<div style="font-size:20px;font-weight:bold;color:#1565c0">'+(best.day||"—")+'</div>'
     +'<div style="font-size:11px;color:#888">Best day</div></div></div>'
-    +(missed.length?'<div style="font-size:12px;color:#888">Room to improve: '+missed.join(", ")+'</div>':'<div style="font-size:12px;color:#2e7d32">🎉 Hit target every day this week!</div>');
+    +(missed.length?'<div style="font-size:12px;color:#888">Missed target: '+missed.join(", ")+'</div>':'<div style="font-size:12px;color:#2e7d32">🎉 Hit target every day this week!</div>');
 }
 
 function shareWeeklySummary(){
@@ -4037,6 +4037,21 @@ const RECIPES = [
    ingredients:["BETTER: Replace aloo with 100g paneer in stuffing","50:50 atta + besan dough","150g curd instead of achaar","1 tsp real ghee only"],
    steps:["Swap aloo filling for paneer filling","Use 50:50 besan-atta dough for protein","Add minimal spices — no achaar (600-800mg sodium)","Cook in 1 tsp real ghee","Serve with curd, not chai with sugar"],
    tip:"Swap to paneer paratha. You go from 8g to 24g protein, halve the carbs, keep the meal."},
+  {rank:10, title:"Greek Yogurt + Nuts + Seeds", emoji:"🥛", protein:"18–20g", cal:"280", time:"2 min", rating:"⭐⭐⭐⭐",
+   verdict:"Easiest high-protein breakfast. No cooking. Perfect for lazy mornings or travel.",
+   ingredients:["150g Greek yogurt (Epigamia/Mother Dairy)","10g walnuts (2-3 pieces)","10g almonds (8-10 pieces)","1 tsp flaxseeds or chia seeds","Black pepper + salt OR cinnamon"],
+   steps:["Take 150g plain Greek yogurt — NOT flavoured (12-15g hidden sugar in flavoured)","Add walnuts and almonds on top","Sprinkle flaxseeds or chia seeds","Add black pepper + salt for savoury OR cinnamon for sweet","Eat immediately — takes 2 minutes total"],
+   tip:"Greek yogurt has 2-3x protein of regular curd. Regular curd = 3.5g/100g. Greek yogurt = 9g/100g. This one swap gives you 6g extra protein with zero extra effort."},
+  {rank:11, title:"Sprouts + 2 Boiled Eggs Chaat", emoji:"🌱", protein:"22g", cal:"260", time:"8 min", rating:"⭐⭐⭐⭐",
+   verdict:"Turn a low-protein snack into a real meal. Sprouts alone = 5g protein. Add 2 eggs = 22g total.",
+   ingredients:["1 bowl sprouted moong (100g)","2 boiled eggs","Onion, tomato, cucumber (chopped)","Chaat masala, lemon, green chilli","Coriander for garnish"],
+   steps:["Boil 2 eggs — 8 minutes for hard boiled","Mix sprouted moong with chopped onion, tomato, cucumber","Add chaat masala, lemon juice, green chilli","Slice boiled eggs and place on top","Sprinkle coriander and serve immediately"],
+   tip:"Sprouts alone give you 5g protein — less than 1 egg. Adding 2 eggs converts it from a snack to a 22g protein meal. This is the upgrade most Indians never make."},
+  {rank:12, title:"Soya Chunks Bhurji on Toast", emoji:"🫘", protein:"28g", cal:"380", time:"12 min", rating:"⭐⭐⭐⭐",
+   verdict:"Cheapest high-protein breakfast. ₹15 worth of soya = 26g protein. Better protein density than paneer at 1/10th the price.",
+   ingredients:["50g dry soya chunks (Nutrela)","2 slices brown bread","1 onion, 1 tomato","Cumin, turmeric, chilli, salt","1 tsp oil"],
+   steps:["Soak 50g dry soya in hot water 20 min — squeeze out water completely","Heat 1 tsp oil, add cumin, onion — cook till golden","Add tomato, turmeric, chilli, salt","Add squeezed soya chunks, cook 5 min","Serve on 2 brown bread slices toasted"],
+   tip:"₹15 for 26g protein. Soya has complete amino acid profile and 95% bioavailability. The testosterone myth is false — studies show no measurable hormone effect at Indian dietary doses."},
 ];
 
 const LUNCH_RECIPES = [
@@ -4065,6 +4080,16 @@ const LUNCH_RECIPES = [
    ingredients:["½ cup rice + ½ cup moong dal (1:1 ratio)","150g curd","Ghee 1 tsp","Cumin, turmeric, salt","Salad on side"],
    steps:["Wash rice and moong dal together","Pressure cook with 3x water, turmeric, salt — 3 whistles","Temper cumin in 1 tsp ghee, pour over khichdi","Serve with plain curd","Add salad on side"],
    tip:"The 1:1 rice:dal ratio is key — doubles protein vs plain rice khichdi. Best recovery meal after exercise."},
+  {rank:6, title:"Soya Chunks Curry + 2 Rotis", emoji:"🫘", protein:"30g", cal:"420", time:"25 min", rating:"⭐⭐⭐⭐⭐",
+   verdict:"Best vegetarian protein lunch. 50g dry soya = 26g protein for ₹15. Cheapest protein in India.",
+   ingredients:["50g dry soya chunks (soaked 20 min)","2 whole wheat rotis","1 onion, 2 tomatoes, ginger-garlic paste","Cumin, coriander, turmeric, garam masala","150g curd on side"],
+   steps:["Soak soya in hot water 20 min — SQUEEZE OUT water fully (removes raw smell)","Heat 1 tsp oil, temper cumin, add onion till golden","Add ginger-garlic paste, tomatoes, all spices — cook 5 min","Add squeezed soya chunks, cook 8-10 min on medium heat","Serve with 2 rotis and 150g plain curd on side"],
+   tip:"Squeeze water out of soya completely — this is the key step most people skip. Unsqueezed soya = spongy and raw-smelling. Properly cooked soya absorbs masala like chicken."},
+  {rank:7, title:"High-Protein Rajma Upgrade", emoji:"🫘", protein:"26g", cal:"450", time:"30 min", rating:"⭐⭐⭐⭐",
+   verdict:"Turn rajma chawal from 12g to 26g protein with 3 simple changes. Same dish, double the protein.",
+   ingredients:["200g cooked rajma (double the usual)","½ katori rice only (half the usual)","100g curd on side","Salad — eat first","No bread/roti alongside"],
+   steps:["Eat salad FIRST before anything else","Serve 200g rajma — double the standard portion","Take only ½ katori rice — half the standard portion","Add 100g curd on the side","Skip roti if having rice — not both"],
+   tip:"Standard rajma chawal = 12g protein (small rajma, big rice). This upgrade = 26g protein. Same dish. Just flip the ratios — more rajma, less rice, add curd."},
 ];
 
 const DINNER_RECIPES = [
@@ -4093,6 +4118,16 @@ const DINNER_RECIPES = [
    ingredients:["½ cup dalia (broken wheat)","¼ cup moong dal","Mixed vegetables — peas, carrot, beans","150g curd","1 tsp ghee"],
    steps:["Dry roast dalia 2 min till fragrant","Add moong dal + vegetables + 3x water","Pressure cook 3 whistles","Temper with 1 tsp ghee + cumin","Serve with plain curd"],
    tip:"280 calories for a full dinner. Best choice on days you know you overate. High fibre keeps you full overnight."},
+  {rank:6, title:"Soya Chunks + Palak Sabzi + 2 Rotis", emoji:"🫘", protein:"28g", cal:"380", time:"20 min", rating:"⭐⭐⭐⭐⭐",
+   verdict:"Best vegetarian dinner for protein. Soya + palak = protein + iron in one dish. ₹20 total cost.",
+   ingredients:["50g dry soya chunks (soaked + squeezed)","1 bunch palak (spinach)","2 whole wheat rotis","Onion, garlic, cumin, turmeric","1 tsp oil, salt"],
+   steps:["Soak soya 20 min in hot water, squeeze water out completely","Blanch palak 2 min in boiling water, drain","Heat 1 tsp oil, add cumin, garlic, onion — cook 3 min","Add palak + soya chunks + turmeric + salt","Cook 5 min on medium heat, serve with 2 rotis"],
+   tip:"Soya is the most underused Indian protein. ₹40/kg, 52g protein per 100g dry. Iron from palak + protein from soya = complete dinner for under ₹20."},
+  {rank:7, title:"3 Eggs Any Style + Sabzi + 1 Roti", emoji:"🍳", protein:"24g", cal:"380", time:"12 min", rating:"⭐⭐⭐⭐⭐",
+   verdict:"Simplest high-protein dinner. 3 eggs = 18g protein + complete amino acids. Fastest to cook.",
+   ingredients:["3 eggs (boiled, bhurji, or omelette)","1 katori turai/lauki/bhindi sabzi","1 whole wheat roti","Salt, pepper, green chilli","1 tsp ghee for cooking"],
+   steps:["Cook sabzi first — turai or lauki takes 10 min","Make eggs any style in 1 tsp ghee: bhurji, omelette, or boiled","1 roti only — not 2 on egg nights","Eat sabzi first, then eggs with roti","No dal needed — eggs replace it completely"],
+   tip:"3 eggs at dinner = 18g protein for ₹30. Combined with 1 roti = 24g total. Dietary cholesterol from eggs does NOT raise blood cholesterol — this myth was retracted decades ago."},
 ];
 
 const GOLDEN_DINNER_RULES = [
@@ -4231,8 +4266,8 @@ function renderNightPrep(){
         ${nightPrep[i.id]?'<span style="color:#1b4332;font-size:12px">✓</span>':''}
       </div>
       <div>
-        <div style="font-size:12px;color:rgba(255,255,255,.95)">${i.text}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.6)">${i.section}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.9)">${i.text}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4)">${i.section}</div>
       </div>
     </div>
   `).join("");
