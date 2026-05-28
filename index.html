@@ -4692,7 +4692,7 @@ function checkForUpdates(){
   fetch('/version.json?t='+Date.now())
     .then(r=>r.json())
     .then(data=>{
-      if(data.version && data.version !== APP_VERSION){
+      if(data.version && data.version !== 'offline' && data.version !== APP_VERSION){
         console.log("New version detected:", data.version, "vs", APP_VERSION);
         showUpdateBanner(data.version);
       }

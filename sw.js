@@ -24,11 +24,9 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   if(e.request.method !== "GET") return;
 
-  // Never cache version.json
+  // Never cache version.json — always fetch live; silently skip if offline
   if(e.request.url.includes("version.json")){
-    e.respondWith(
-      fetch(e.request).catch(()=>new Response('{"version":"offline"}',{headers:{"Content-Type":"application/json"}}))
-    );
+    e.respondWith(fetch(e.request));
     return;
   }
 
