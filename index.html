@@ -2569,9 +2569,9 @@ async function generateMealPlan(){
 
     const prompt=`Indian meal plan for ${target} kcal, ${diet}, Patna Bihar.
 Current time: ${new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}. Only suggest these remaining meals for today: ${mealSlotsStr}.
-Respond with ONLY this JSON (no markdown, no text before or after):
-{"meals":[{"name":"${mealSlots[0]}","items":[{"name":"Poha","cal":250,"emoji":"🍛","p":4,"c":45,"fa":5}]}],"totalCal":${target},"note":"Eat slowly and chew well"}
-Replace with real Indian foods. Split ${target} kcal equally across the ${mealSlots.length} meal(s): ${mealSlotsStr}.`;
+Output ONLY valid JSON. No markdown, no code blocks, no trailing commas, no comments, no extra text before or after.
+Exact format: {"meals":[{"name":"${mealSlots[0]}","items":[{"name":"Poha","cal":250,"emoji":"🍛","p":4,"c":45,"fa":5,"fi":2}]}],"totalCal":${target},"note":"Eat slowly and chew well"}
+Replace with real Indian foods. Each item must have: name(string), cal(number), emoji(string), p(protein g number), c(carbs g number), fa(fat g number), fi(fiber g number). Split ${target} kcal across ${mealSlots.length} meal(s): ${mealSlotsStr}.`;
 
     const body=JSON.stringify({
       contents:[{parts:[{text:prompt}]}],
@@ -2604,18 +2604,22 @@ Replace with real Indian foods. Split ${target} kcal equally across the ${mealSl
     rawText=parts.filter(p=>!p.thought&&p.text).map(p=>p.text).join("").trim();
     if(!rawText) rawText=parts.map(p=>p.text||"").join("").trim();
 
+    // Strip markdown code fences that Gemini sometimes adds
+    rawText=rawText.replace(/^```(?:json)?\s*/im,'').replace(/\s*```\s*$/m,'').trim();
+
     // Find JSON object in response
     const start=rawText.indexOf("{");
     const end=rawText.lastIndexOf("}");
     if(start===-1||end===-1){
-      // Show what we got for debugging
       result.innerHTML='<div style="color:#c62828;font-size:12px;padding:8px;background:#fce4ec;border-radius:8px">'
-        +'<strong>Debug — API returned:</strong><br><pre style="white-space:pre-wrap;font-size:11px">'+rawText.substring(0,300)+'</pre></div>';
+        +'<strong>Unexpected response:</strong><br><pre style="white-space:pre-wrap;font-size:11px">'+rawText.substring(0,300)+'</pre></div>';
       result.style.display="block";
       throw new Error("No JSON found in response");
     }
 
-    const plan=JSON.parse(rawText.slice(start,end+1));
+    // Fix trailing commas before } or ] — common LLM output mistake
+    let jsonStr=rawText.slice(start,end+1).replace(/,(\s*[}\]])/g,'$1');
+    const plan=JSON.parse(jsonStr);
     let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap any meal to log it</div>';
     plan.meals.forEach(meal=>{
       const mealCal=meal.items.reduce((s,i)=>s+(i.cal||0),0);
