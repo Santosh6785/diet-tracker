@@ -518,7 +518,7 @@ canvas.chart{width:100%;height:140px;display:block;}
       </div>
       <div class="guide-step">
         <div class="guide-num">4</div>
-        <div><strong>📷 Photo Scan Setup</strong><br/>Go to ⚙️ Settings → add your free Gemini API key from aistudio.google.com. Then take photos of your food for instant calorie estimates.</div>
+        <div><strong>📷 Photo Scan Setup</strong><br/>Go to ⚙️ Settings → add your free Gemini API key from aistudio.google.com. Then take photos of your food for approximate AI-based calorie estimates. Results are indicative only — adjust manually if needed.</div>
       </div>
       <div class="guide-step">
         <div class="guide-num">5</div>
@@ -592,10 +592,10 @@ canvas.chart{width:100%;height:140px;display:block;}
     <div class="onboard-title">Daily calorie target?</div>
     <div class="onboard-desc">Choose based on your goal. You can change this anytime in Settings.</div>
     <div class="onboard-cal-presets">
-      <button class="onboard-cal-btn" data-val="1200" onclick="obSelectCal(this,1200)">1200<br/><small>Strict loss</small></button>
-      <button class="onboard-cal-btn" data-val="1400" onclick="obSelectCal(this,1400)">1400<br/><small>Moderate</small></button>
-      <button class="onboard-cal-btn on" data-val="1550" onclick="obSelectCal(this,1550)">1550<br/><small>Belly fat ⭐</small></button>
-      <button class="onboard-cal-btn" data-val="1800" onclick="obSelectCal(this,1800)">1800<br/><small>Maintain</small></button>
+      <button class="onboard-cal-btn" data-val="1200" onclick="obSelectCal(this,1200)">1200<br/><small>Light (guidance only)</small></button>
+      <button class="onboard-cal-btn" data-val="1400" onclick="obSelectCal(this,1400)">1400<br/><small>Gradual loss</small></button>
+      <button class="onboard-cal-btn on" data-val="1550" onclick="obSelectCal(this,1550)">1550<br/><small>Popular choice ⭐</small></button>
+      <button class="onboard-cal-btn" data-val="1800" onclick="obSelectCal(this,1800)">1800<br/><small>Maintain weight</small></button>
       <button class="onboard-cal-btn" data-val="2000" onclick="obSelectCal(this,2000)">2000<br/><small>Active</small></button>
     </div>
     <button class="onboard-next" onclick="obFinish()" style="font-size:18px;padding:18px;">🚀 Start Tracking!</button>
@@ -621,6 +621,9 @@ canvas.chart{width:100%;height:140px;display:block;}
   <button class="login-guest-btn" onclick="continueAsGuest()">
     Continue without account (data stays on this device only)
   </button>
+  <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;text-align:center;line-height:1.5;max-width:300px">
+    ⚠️ Guest data will be lost if you clear browser storage, uninstall the app, or change your phone. Sign in to save permanently.
+  </div>
   <div class="login-err" id="login-err"></div>
 </div>
 
@@ -1213,10 +1216,11 @@ canvas.chart{width:100%;height:140px;display:block;}
     <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-bottom:10px"><span>1000</span><span>1500</span><span>2000</span><span>2500</span></div>
     <label class="set-lbl">Quick select by goal</label>
     <div class="cal-presets">
-      <button class="cal-preset-btn" data-val="1200" onclick="setCalPreset(1200)">1200 — Strict</button>
-      <button class="cal-preset-btn" data-val="1400" onclick="setCalPreset(1400)">1400 — Moderate</button>
-      <button class="cal-preset-btn on" data-val="1550" onclick="setCalPreset(1550)">1550 — Belly fat</button>
+      <button class="cal-preset-btn" data-val="1200" onclick="setCalPreset(1200)">1200 — Light</button>
+      <button class="cal-preset-btn" data-val="1400" onclick="setCalPreset(1400)">1400 — Gradual loss</button>
+      <button class="cal-preset-btn on" data-val="1550" onclick="setCalPreset(1550)">1550 — Popular ⭐</button>
       <button class="cal-preset-btn" data-val="1800" onclick="setCalPreset(1800)">1800 — Maintain</button>
+      <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.5">⚠️ These are general reference ranges only. Ideal targets vary by age, height, weight and activity level. Use the calculator below or consult a nutritionist for personalised guidance.</div>
       <button class="cal-preset-btn" data-val="2000" onclick="setCalPreset(2000)">2000 — Active</button>
       <button class="cal-preset-btn" data-val="2200" onclick="setCalPreset(2200)">2200 — Muscle</button>
     </div>
@@ -1402,6 +1406,9 @@ canvas.chart{width:100%;height:140px;display:block;}
   </div>
 </div>
 
+<div style="font-size:11px;color:#888;text-align:center;padding:8px 16px 4px;line-height:1.6">
+  ⚕️ This app is for general wellness tracking only and is not a substitute for medical advice. Consult your doctor before making significant dietary changes.
+</div>
 <div class="footer-note">Made with ❤️ in Patna, Bihar &nbsp;·&nbsp; v2.0 &nbsp;·&nbsp; <a href="privacy.html" style="color:#97bc62;text-decoration:none">Privacy Policy</a></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -3162,58 +3169,58 @@ function addBarcodeItem(name, cal, p, c, fa, fi, serving){
 // ═══════════════ HEALTH TAB ═══════════════
 const HEALTH_CONDITIONS = [
   {
-    id:"diabetes", label:"🩸 Diabetes", bg:"linear-gradient(135deg,#c62828,#e53935)",
-    subtitle:"Type 2 · Blood Sugar Management",
+    id:"diabetes", label:"🩸 Diabetic-Friendly", bg:"linear-gradient(135deg,#c62828,#e53935)",
+    subtitle:"Blood Sugar Friendly Habits & Diet",
     overview:"Focus on low glycaemic index foods that release sugar slowly. Avoid refined carbs, sugary foods and large portions of rice.",
     eat:[{e:"🥒",n:"Karela"},{e:"🌿",n:"Methi"},{e:"🫘",n:"Moong dal"},{e:"🥬",n:"Palak"},{e:"🌾",n:"Bajra roti"},{e:"🥚",n:"Boiled eggs"},{e:"🐟",n:"Fish"},{e:"🥜",n:"Peanuts"},{e:"🍈",n:"Amla"},{e:"🥛",n:"Plain curd"},{e:"🌾",n:"Oats"},{e:"🌰",n:"Almonds & walnuts"},{e:"🥗",n:"Salad before meals"}],
     avoid:[{e:"🍚",n:"White rice (large)"},{e:"🍞",n:"Maida puri/paratha"},{e:"🧁",n:"Sweets/mithai"},{e:"🥤",n:"Fruit juice"},{e:"🍌",n:"Banana/mango"},{e:"🥔",n:"Potato (excess)"},{e:"🍯",n:"Sugar & jaggery"}],
     tips:"💡 Eat small meals every 3-4 hours. Walk 20 min after every meal. Never skip breakfast.",
-    target:"Ideal: 1400-1600 kcal/day. Monitor blood sugar 2 hours after eating."
+    target:"Lifestyle tip: 1400-1600 kcal/day works well. Walking after meals helps control blood sugar naturally."
   },
   {
-    id:"bp", label:"💓 High BP", bg:"linear-gradient(135deg,#1565c0,#1976d2)",
-    subtitle:"Hypertension · Blood Pressure Control",
-    overview:"DASH diet — reduce sodium, increase potassium and magnesium. Avoid salty and processed foods.",
+    id:"bp", label:"💓 Heart-Healthy", bg:"linear-gradient(135deg,#1565c0,#1976d2)",
+    subtitle:"Heart-Healthy Habits & Low-Sodium Diet",
+    overview:"DASH-style eating — reduce sodium, increase potassium and magnesium. Avoid salty and processed foods.",
     eat:[{e:"🍌",n:"Banana (potassium)"},{e:"🥬",n:"Palak (magnesium)"},{e:"🥛",n:"Low-fat curd"},{e:"🐟",n:"Fish (omega-3)"},{e:"🌰",n:"Walnuts"},{e:"🧄",n:"Raw garlic daily"},{e:"🍅",n:"Tomato"},{e:"🥒",n:"Cucumber"},{e:"🫘",n:"Dal/lentils"},{e:"🍈",n:"Amla"}],
     avoid:[{e:"🧂",n:"Salt (max 1 tsp/day)"},{e:"🥒",n:"Achaar/pickle"},{e:"🍟",n:"Fried snacks"},{e:"☕",n:"Excess tea/coffee"},{e:"🥫",n:"Packaged foods"},{e:"🥩",n:"Red meat"}],
-    tips:"💡 Reduce salt gradually — taste buds adjust in 2-3 weeks. Monitor BP morning and evening.",
-    target:"Target BP: 120/80. Losing 5kg can reduce BP by 5 points."
+    tips:"💡 Reduce salt gradually — taste buds adjust in 2-3 weeks. Track your BP morning and evening.",
+    target:"Lifestyle tip: Losing 5kg naturally supports healthy blood pressure. Daily walking helps greatly."
   },
   {
-    id:"cholesterol", label:"🫀 Cholesterol", bg:"linear-gradient(135deg,#6a1b9a,#8e24aa)",
-    subtitle:"High LDL · Heart Health",
+    id:"cholesterol", label:"🫀 Cholesterol-Friendly", bg:"linear-gradient(135deg,#6a1b9a,#8e24aa)",
+    subtitle:"Heart-Friendly Diet & Healthy Fats",
     overview:"Reduce saturated fats, increase soluble fibre and omega-3. Focus on plant-based proteins.",
-    eat:[{e:"🌾",n:"Oats (soluble fibre)"},{e:"🫘",n:"Rajma, chana"},{e:"🐟",n:"Rohu/katla fish"},{e:"🌰",n:"Walnuts"},{e:"🧄",n:"Garlic (lowers LDL)"},{e:"🍅",n:"Tomato"},{e:"🥬",n:"Palak, methi"},{e:"🌿",n:"Flaxseeds (alsi)"},{e:"🍈",n:"Amla & guava"}],
+    eat:[{e:"🌾",n:"Oats (soluble fibre)"},{e:"🫘",n:"Rajma, chana"},{e:"🐟",n:"Rohu/katla fish"},{e:"🌰",n:"Walnuts"},{e:"🧄",n:"Garlic (supports heart)"},{e:"🍅",n:"Tomato"},{e:"🥬",n:"Palak, methi"},{e:"🌿",n:"Flaxseeds (alsi)"},{e:"🍈",n:"Amla & guava"}],
     avoid:[{e:"🧈",n:"Ghee/butter (excess)"},{e:"🥩",n:"Red meat"},{e:"🥚",n:"Egg yolk daily"},{e:"🍟",n:"Deep fried foods"},{e:"🥥",n:"Coconut oil"},{e:"🥛",n:"Full cream milk"}],
-    tips:"💡 Oats every morning can reduce LDL by 5-10% in 6 weeks. Fish twice a week improves heart health.",
-    target:"Target: LDL below 100, HDL above 40. Lipid profile every 6 months."
+    tips:"💡 Oats every morning supports healthy cholesterol naturally. Fish twice a week is great for heart health.",
+    target:"Lifestyle tip: Regular walking + oats + fish = significant improvement in 6-8 weeks."
   },
   {
-    id:"thyroid", label:"🦋 Thyroid", bg:"linear-gradient(135deg,#00695c,#00897b)",
-    subtitle:"Hypothyroidism · Metabolism Support",
-    overview:"Thyroid needs iodine, selenium and zinc. Avoid raw goitrogens. Eat small frequent meals.",
+    id:"thyroid", label:"🦋 Thyroid-Friendly", bg:"linear-gradient(135deg,#00695c,#00897b)",
+    subtitle:"Thyroid-Friendly Diet & Energy Habits",
+    overview:"Thyroid function needs iodine, selenium and zinc. Avoid raw goitrogens. Eat small frequent meals.",
     eat:[{e:"🐟",n:"Fish (selenium)"},{e:"🥚",n:"Eggs (iodine)"},{e:"🫘",n:"Dal & legumes"},{e:"🌰",n:"Walnuts"},{e:"🥕",n:"Cooked carrots"},{e:"🥛",n:"Milk & curd"},{e:"🌾",n:"Millet/quinoa"},{e:"🐓",n:"Lean chicken"}],
     avoid:[{e:"🥦",n:"Raw broccoli/cabbage"},{e:"🥬",n:"Raw palak (cook it)"},{e:"🌱",n:"Soy (excess)"},{e:"🍬",n:"Sugar (causes fatigue)"},{e:"☕",n:"Coffee with medication"}],
     tips:"💡 Take thyroid medicine on empty stomach, wait 45 min before eating. Cook cruciferous vegetables.",
-    target:"TSH: 0.5-2.5 for optimal energy. Check every 3-6 months."
+    target:"Lifestyle tip: Consistent meal timing and sleep schedule supports thyroid function naturally."
   },
   {
-    id:"pcod", label:"🌸 PCOD/PCOS", bg:"linear-gradient(135deg,#ad1457,#c2185b)",
-    subtitle:"Hormonal Balance · Insulin Resistance",
-    overview:"PCOD is driven by insulin resistance. Low glycaemic, anti-inflammatory, high protein diet is most effective.",
+    id:"pcod", label:"🌸 PCOD-Friendly", bg:"linear-gradient(135deg,#ad1457,#c2185b)",
+    subtitle:"Hormone-Friendly Habits & Anti-Inflammatory Diet",
+    overview:"PCOD responds well to low glycaemic, anti-inflammatory, high protein lifestyle habits.",
     eat:[{e:"🌾",n:"Bajra/jowar/ragi roti"},{e:"🫘",n:"Dal, rajma, chana"},{e:"🥬",n:"Palak, methi"},{e:"🐟",n:"Fish (omega-3)"},{e:"🌰",n:"Walnuts & flaxseeds"},{e:"🥚",n:"Eggs"},{e:"🍈",n:"Amla"},{e:"🥛",n:"Chaas/curd"},{e:"🌿",n:"Spearmint tea"}],
     avoid:[{e:"🍚",n:"White rice & maida"},{e:"🧁",n:"Sugar & sweets"},{e:"🥛",n:"Full cream dairy"},{e:"🍟",n:"Fried food"},{e:"🥤",n:"Cold drinks"},{e:"☕",n:"Excess caffeine"}],
-    tips:"💡 Walk 30 min daily — reduces PCOD symptoms significantly. 5-10% weight loss can restore periods.",
-    target:"Intermittent fasting (12-14 hr gap) helps insulin sensitivity in PCOD."
+    tips:"💡 Walk 30 min daily — one of the most effective lifestyle changes for hormonal balance.",
+    target:"Lifestyle tip: 12-14 hour eating window naturally supports insulin sensitivity."
   },
   {
-    id:"acidity", label:"🔥 Acidity/GERD", bg:"linear-gradient(135deg,#e65100,#f4511e)",
-    subtitle:"Acid Reflux · Digestive Health",
+    id:"acidity", label:"🔥 Acidity-Friendly", bg:"linear-gradient(135deg,#e65100,#f4511e)",
+    subtitle:"Gut-Friendly Habits & Digestive Wellness",
     overview:"Avoid late meals, spicy food and large portions. Small frequent meals and not lying down after eating are key.",
-    eat:[{e:"🍌",n:"Banana (antacid)"},{e:"🥛",n:"Cold milk"},{e:"🥒",n:"Cucumber"},{e:"🌿",n:"Pudina/mint"},{e:"🌾",n:"Oats"},{e:"🥬",n:"Lauki/turai"},{e:"🍚",n:"Plain khichdi"},{e:"🫘",n:"Moong dal"},{e:"🍈",n:"Papaya"},{e:"🌿",n:"Saunf after meals"},{e:"🫙",n:"Chaas/buttermilk"}],
+    eat:[{e:"🍌",n:"Banana (soothing)"},{e:"🥛",n:"Cold milk"},{e:"🥒",n:"Cucumber"},{e:"🌿",n:"Pudina/mint"},{e:"🌾",n:"Oats"},{e:"🥬",n:"Lauki/turai"},{e:"🍚",n:"Plain khichdi"},{e:"🫘",n:"Moong dal"},{e:"🍈",n:"Papaya"},{e:"🌿",n:"Saunf after meals"},{e:"🫙",n:"Chaas/buttermilk"}],
     avoid:[{e:"🌶️",n:"Spicy food"},{e:"☕",n:"Tea on empty stomach"},{e:"🍋",n:"Citrus empty stomach"},{e:"🧅",n:"Raw onion"},{e:"🍫",n:"Chocolate"},{e:"🍟",n:"Fried food"},{e:"🥩",n:"Heavy non-veg at night"}],
     tips:"💡 Eat dinner by 7-8 PM. Don't lie down for 2 hours after eating. Chew slowly and eat small portions.",
-    target:"Losing belly fat reduces acidity by 40% — belly fat presses directly on the stomach."
+    target:"Lifestyle tip: Losing belly fat naturally reduces acidity — belly fat presses on the stomach."
   }
 ];
 
@@ -3289,7 +3296,7 @@ function renderHealthCards(){
 // ═══════════════ CONDITION-SPECIFIC CHECKLISTS ═══════════════
 const CONDITION_CHECKLISTS = {
   diabetes:{
-    label:"🩸 Diabetes Daily Checklist",
+    label:"🩸 Diabetic-Friendly Daily Habits",
     color:"#c62828",
     priority:[
       {id:"dm_p1",label:"No rice at dinner",icon:"🚫"},
@@ -3299,7 +3306,7 @@ const CONDITION_CHECKLISTS = {
       {id:"dm_p5",label:"Isabgol taken",icon:"🌿"},
     ],
     todaySpecial:{
-      label:"🩸 Diabetes Focus Today",
+      label:"🩸 Diabetic-Friendly Focus Today",
       bg:"#fce4ec", ac:"#c62828",
       items:[
         {id:"dm_ts1",text:"Ate karela or methi in any meal",note:"Best natural blood sugar reducers",emoji:"🥒"},
@@ -3428,7 +3435,7 @@ const CONDITION_CHECKLISTS = {
   },
 
   cholesterol:{
-    label:"🫀 Cholesterol Daily Checklist",
+    label:"🫀 Cholesterol-Friendly Daily Habits",
     color:"#6a1b9a",
     priority:[
       {id:"ch_p1",label:"Oats for breakfast",icon:"🌾"},
@@ -3438,7 +3445,7 @@ const CONDITION_CHECKLISTS = {
       {id:"ch_p5",label:"Garlic taken today",icon:"🧄"},
     ],
     todaySpecial:{
-      label:"🫀 Cholesterol Focus Today",
+      label:"🫀 Cholesterol-Friendly Focus Today",
       bg:"#f3e5f5", ac:"#6a1b9a",
       items:[
         {id:"ch_ts1",text:"Ate rajma or chana dal today",note:"Soluble fibre binds and removes cholesterol",cal:200,emoji:"🫘"},
@@ -3495,7 +3502,7 @@ const CONDITION_CHECKLISTS = {
   },
 
   thyroid:{
-    label:"🦋 Thyroid Daily Checklist",
+    label:"🦋 Thyroid-Friendly Daily Habits",
     color:"#00695c",
     priority:[
       {id:"th_p1",label:"Medicine on empty stomach",icon:"💊"},
@@ -3505,7 +3512,7 @@ const CONDITION_CHECKLISTS = {
       {id:"th_p5",label:"Sleep by 10:30 PM",icon:"😴"},
     ],
     todaySpecial:{
-      label:"🦋 Thyroid Focus Today",
+      label:"🦋 Thyroid-Friendly Focus Today",
       bg:"#e0f2f1", ac:"#00695c",
       items:[
         {id:"th_ts1",text:"Thyroid medicine taken correctly",note:"Empty stomach + 45 min wait",emoji:"💊"},
@@ -3561,7 +3568,7 @@ const CONDITION_CHECKLISTS = {
   },
 
   pcod:{
-    label:"🌸 PCOD/PCOS Daily Checklist",
+    label:"🌸 PCOD-Friendly Daily Habits",
     color:"#ad1457",
     priority:[
       {id:"pc_p1",label:"30 min exercise done",icon:"🏃"},
@@ -3571,7 +3578,7 @@ const CONDITION_CHECKLISTS = {
       {id:"pc_p5",label:"Stress management done",icon:"🧘"},
     ],
     todaySpecial:{
-      label:"🌸 PCOD Focus Today",
+      label:"🌸 PCOD-Friendly Focus Today",
       bg:"#fce4ec", ac:"#ad1457",
       items:[
         {id:"pc_ts1",text:"Spearmint tea on empty stomach",note:"Reduces androgens (male hormones)",cal:5,emoji:"🍵"},
@@ -3629,7 +3636,7 @@ const CONDITION_CHECKLISTS = {
   },
 
   acidity:{
-    label:"🔥 Acidity/GERD Daily Checklist",
+    label:"🔥 Gut-Friendly Daily Habits",
     color:"#e65100",
     priority:[
       {id:"ac_p1",label:"No tea on empty stomach",icon:"☕"},
@@ -3639,7 +3646,7 @@ const CONDITION_CHECKLISTS = {
       {id:"ac_p5",label:"2 hrs upright after dinner",icon:"🚶"},
     ],
     todaySpecial:{
-      label:"🔥 Acidity Focus Today",
+      label:"🔥 Gut-Friendly Focus Today",
       bg:"#fff8e1", ac:"#e65100",
       items:[
         {id:"ac_ts1",text:"Saunf (fennel) water first thing",note:"Most effective natural antacid",emoji:"🌿"},
