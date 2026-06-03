@@ -2961,15 +2961,17 @@ function handleMotion(e){
   const mag = Math.sqrt(x**2 + y**2 + z**2);
 
   stepMagBuffer.push(mag);
-  if(stepMagBuffer.length > 4) stepMagBuffer.shift();
-  if(stepMagBuffer.length < 4) return;
+  if(stepMagBuffer.length > 10) stepMagBuffer.shift();
+  if(stepMagBuffer.length < 10) return;
 
   const avg = stepMagBuffer.reduce((a,b)=>a+b,0) / stepMagBuffer.length;
 
-  const threshold = useLinear ? 1.8 : 3.0;
+  // Linear: require absolute floor (3.5) so slow hand motion (<3.5 m/s²) is ignored,
+  // plus relative peak (2.0 above average) to catch genuine foot-strike spikes.
+  // Gravity-based: require 4.0 m/s² deviation from 9.8 to reduce tilt false triggers.
   const isStep = useLinear ?
-    (mag > avg + threshold) :
-    (Math.abs(mag - 9.8) > threshold);
+    (mag > 3.5 && mag > avg + 2.0) :
+    (Math.abs(mag - 9.8) > 4.0);
 
   const now = Date.now();
   if(isStep && !stepCooldown && (now - stepLastPeakTime) > 400){
