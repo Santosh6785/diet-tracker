@@ -40,6 +40,15 @@
   }
 })();
 </script>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem('diet_dark')==='1'){
+      document.body.classList.add('dark');
+    }
+  }catch(e){}
+})();
+</script>
 <!-- Firebase SDK -->
 <script type="module">
   import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1338,11 +1347,21 @@ canvas.chart{width:100%;height:140px;display:block;}
     </button>
   </div>
 
+  <div class="card card-pad" style="margin-top:8px">
+    <div class="card-title">💡 Food Facts</div>
+    <p style="font-size:12px;color:#888;margin-bottom:10px">
+      Daily nutrition tips shown on home screen.
+    </p>
+    <button class="save-btn" onclick="toggleFoodFact()" id="food-fact-toggle-btn" style="background:#1b4332">
+      Show Food Facts
+    </button>
+  </div>
+
   <!-- Notifications -->
   <div class="card card-pad" style="margin-top:12px">
     <div class="card-title">🔔 Daily Reminders</div>
     <p style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px">
-      Get reminders at 8 AM (morning checklist), 1 PM (lunch), 5 PM (evening snack) and 9 PM (post-dinner walk).
+      Get reminders while the app is open. Reminders fire at 8 AM, 1 PM, 5 PM and 9 PM for today's pending times. Keep the app open in background for best results.
     </p>
     <button class="save-btn" onclick="requestNotificationPermission()" id="notif-btn"
       style="background:#1565c0">
@@ -3234,6 +3253,8 @@ function renderSettings(){
   if("Notification" in window) updateNotifBtn(Notification.permission);
   ["veg","egg","nonveg"].forEach(d=>document.getElementById("diet-"+d).classList.toggle("on",d===diet));
   document.querySelectorAll(".cal-preset-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===target));
+  const ffBtn = document.getElementById('food-fact-toggle-btn');
+  if(ffBtn){ ffBtn.textContent = localStorage.getItem('dt_hide_foodfact') ? 'Show Food Facts' : 'Hide Food Facts'; }
 }
 function updateSlider(val){document.getElementById("set-cal-disp").textContent=val;document.querySelectorAll(".cal-preset-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===parseInt(val)));}
 function setCalPreset(val){document.getElementById("set-cal-slider").value=val;updateSlider(val);}
@@ -3889,6 +3910,22 @@ function hideFoodFact(){
   if(c) c.style.display='none';
   try{localStorage.setItem('dt_hide_foodfact','1');}catch(e){}
 }
+function toggleFoodFact(){
+  const hidden = localStorage.getItem('dt_hide_foodfact');
+  const card = document.getElementById('food-fact-card');
+  const btn = document.getElementById('food-fact-toggle-btn');
+  if(hidden){
+    localStorage.removeItem('dt_hide_foodfact');
+    if(card) card.style.display='';
+    if(btn) btn.textContent='Hide Food Facts';
+    renderFoodFact();
+    showToast('Food facts restored ✓');
+  } else {
+    hideFoodFact();
+    if(btn) btn.textContent='Show Food Facts';
+    showToast('Food facts hidden ✓');
+  }
+}
 // Auto-rotate every 35 seconds
 setInterval(()=>{ currentFactIdx=(currentFactIdx+1)%FOOD_FACTS.length; renderFoodFact(); }, 35000);
 
@@ -4059,7 +4096,7 @@ function toggleDark(){
 function loadDarkMode(){
   try{
     const d = localStorage.getItem("diet_dark");
-    if(d==="1"){ document.body.classList.add("dark"); document.getElementById("dark-toggle").textContent="☀️"; }
+    if(d==="1"){ document.body.classList.add("dark"); const btn=document.getElementById("dark-toggle"); if(btn) btn.textContent="☀️"; }
   }catch(e){}
 }
 
