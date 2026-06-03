@@ -2944,7 +2944,7 @@ function startSteps(){
   showToast("Step counting started 👟");
 }
 function stopSteps(){
-  stepTracking=false;document.getElementById("step-btn").textContent="▶ Start Counting";document.getElementById("step-btn").style.color="#4a148c";
+  stepTracking=false;lastMag=-1;document.getElementById("step-btn").textContent="▶ Start Counting";document.getElementById("step-btn").style.color="#4a148c";
   window.removeEventListener("devicemotion",handleMotion);
   try{localStorage.removeItem(STEP_TRACKING_KEY);}catch(e){}
   saveAll();showToast("Steps saved: "+stepCount);
@@ -2954,14 +2954,12 @@ function handleMotion(e){
   const a=useLinear?e.acceleration:e.accelerationIncludingGravity;
   if(!a)return;
   const mag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2);
-  if(lastMag<0){lastMag=mag;return;}
-  const delta=Math.abs(mag-lastMag);
-  const threshold=useLinear?1.8:3.5;
-  if(delta>threshold&&!stepCooldown){stepCount++;stepCooldown=true;setTimeout(()=>stepCooldown=false,350);renderSteps();if(stepCount%100===0)saveAll();}
-  lastMag=mag;
+  const isStep=useLinear?(mag>1.2):(Math.abs(mag-9.8)>2.5);
+  if(isStep&&!stepCooldown){stepCount++;stepCooldown=true;setTimeout(()=>stepCooldown=false,350);renderSteps();if(stepCount%100===0)saveAll();}
 }
 function resetSteps(){if(!confirm("Reset step count?"))return;stepCount=0;saveAll();renderSteps();showToast("Steps reset ✓");}
 function autoResumeSteps(){
+  if(stepTracking) return;
   try{
     const s=localStorage.getItem(STEP_TRACKING_KEY);
     if(!s) return;
