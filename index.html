@@ -1558,7 +1558,9 @@ const _d = new Date();
 const TODAY = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,"0")}-${String(_d.getDate()).padStart(2,"0")}`;
 const DOW = _d.getDay();
 let checked={}, meals=[], exercises=[], history={}, weightLog=[];
-let waterCount=0, stepCount=0, stepTracking=false, lastMag=-1, stepCooldown=false;
+let waterCount=0, stepCount=0, stepTracking=false,
+lastMag=-1, stepCooldown=false,
+stepMagBuffer=[], stepLastPeakTime=0;
 let currentCat="All", openSections=new Set();
 let userSettings={name:"",target:1550,diet:"egg",weight:80,apiKey:"",waterTarget:8};
 let favorites = []; // array of food names
@@ -2939,12 +2941,13 @@ function toggleSteps(){
 }
 function startSteps(){
   stepTracking=true;document.getElementById("step-btn").textContent="⏹ Stop Counting";document.getElementById("step-btn").style.color="#c62828";
+  stepMagBuffer = []; stepLastPeakTime = 0;
   window.addEventListener("devicemotion",handleMotion);
   try{localStorage.setItem(STEP_TRACKING_KEY,JSON.stringify({active:true,date:TODAY}));}catch(e){}
   showToast("Step counting started 👟");
 }
 function stopSteps(){
-  stepTracking=false;lastMag=-1;document.getElementById("step-btn").textContent="▶ Start Counting";document.getElementById("step-btn").style.color="#4a148c";
+  stepTracking=false;lastMag=-1;stepMagBuffer=[];stepLastPeakTime=0;document.getElementById("step-btn").textContent="▶ Start Counting";document.getElementById("step-btn").style.color="#4a148c";
   window.removeEventListener("devicemotion",handleMotion);
   try{localStorage.removeItem(STEP_TRACKING_KEY);}catch(e){}
   saveAll();showToast("Steps saved: "+stepCount);
@@ -2957,17 +2960,23 @@ function handleMotion(e){
   const x = a.x||0, y = a.y||0, z = a.z||0;
   const mag = Math.sqrt(x**2 + y**2 + z**2);
 
+  stepMagBuffer.push(mag);
+  if(stepMagBuffer.length > 4) stepMagBuffer.shift();
+  if(stepMagBuffer.length < 4) return;
+
+  const avg = stepMagBuffer.reduce((a,b)=>a+b,0) / stepMagBuffer.length;
+
+  const threshold = useLinear ? 1.8 : 3.0;
   const isStep = useLinear ?
-    (mag > 3.0) :
-    (Math.abs(mag - 9.8) > 4.0);
+    (mag > avg + threshold) :
+    (Math.abs(mag - 9.8) > threshold);
 
-  const verticalDominant = useLinear ?
-    (Math.abs(y) > Math.abs(x) * 1.5) : true;
-
-  if(isStep && verticalDominant && !stepCooldown){
+  const now = Date.now();
+  if(isStep && !stepCooldown && (now - stepLastPeakTime) > 400){
     stepCount++;
+    stepLastPeakTime = now;
     stepCooldown = true;
-    setTimeout(()=>stepCooldown=false, 500);
+    setTimeout(()=>stepCooldown=false, 400);
     renderSteps();
     if(stepCount % 100 === 0) saveAll();
   }
