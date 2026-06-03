@@ -2942,12 +2942,20 @@ function toggleSteps(){
 function startSteps(){
   stepTracking=true;document.getElementById("step-btn").textContent="⏹ Stop Counting";document.getElementById("step-btn").style.color="#c62828";
   stepMagBuffer = []; stepLastPeakTime = 0;
+  let motionTestTimer = setTimeout(()=>{
+    if(stepMagBuffer.length === 0){
+      showToast("⚠️ Motion sensor not available on this device");
+      stopSteps();
+    }
+  }, 3000);
+  window._motionTestTimer = motionTestTimer;
   window.addEventListener("devicemotion",handleMotion);
   try{localStorage.setItem(STEP_TRACKING_KEY,JSON.stringify({active:true,date:TODAY}));}catch(e){}
   showToast("Step counting started 👟");
 }
 function stopSteps(){
   stepTracking=false;lastMag=-1;stepMagBuffer=[];stepLastPeakTime=0;document.getElementById("step-btn").textContent="▶ Start Counting";document.getElementById("step-btn").style.color="#4a148c";
+  if(window._motionTestTimer){ clearTimeout(window._motionTestTimer); window._motionTestTimer = null; }
   window.removeEventListener("devicemotion",handleMotion);
   try{localStorage.removeItem(STEP_TRACKING_KEY);}catch(e){}
   saveAll();showToast("Steps saved: "+stepCount);
@@ -2961,8 +2969,8 @@ function handleMotion(e){
   const mag = Math.sqrt(x**2 + y**2 + z**2);
 
   stepMagBuffer.push(mag);
-  if(stepMagBuffer.length > 10) stepMagBuffer.shift();
-  if(stepMagBuffer.length < 10) return;
+  if(stepMagBuffer.length > 6) stepMagBuffer.shift();
+  if(stepMagBuffer.length < 6) return;
 
   const avg = stepMagBuffer.reduce((a,b)=>a+b,0) / stepMagBuffer.length;
 
@@ -2970,7 +2978,7 @@ function handleMotion(e){
   // plus relative peak (2.0 above average) to catch genuine foot-strike spikes.
   // Gravity-based: require 4.0 m/s² deviation from 9.8 to reduce tilt false triggers.
   const isStep = useLinear ?
-    (mag > 3.5 && mag > avg + 2.0) :
+    (mag > 2.5 && mag > avg + 1.5) :
     (Math.abs(mag - 9.8) > 4.0);
 
   const now = Date.now();
