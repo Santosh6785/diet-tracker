@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Diet Tracker"/>
 <meta name="app-version" content="BUILD_VERSION_20260507"/>
-<title>Diet Tracker — Belly Fat Plan</title>
+<meta name="description" content="Free Indian diet tracker with AI food scan, 200+ Indian foods, daily habit checklist and healthy Indian recipes. Built for Indian professionals."/>
+<title>Diet Tracker — Indian Calorie Counter</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="shortcut icon" href="icon-192.png"/>
@@ -68,7 +69,6 @@
   // Handle redirect result when page loads back from Google
   getRedirectResult(auth).then(result=>{
     if(result&&result.user){
-      console.log("Redirect sign-in successful:",result.user.email);
     }
   }).catch(err=>{
     if(err.code!=="auth/no-current-user"){
@@ -657,7 +657,7 @@ canvas.chart{width:100%;height:140px;display:block;}
   <!-- User bar -->
   <div class="user-bar" id="user-bar" style="display:none">
     <div style="display:flex;align-items:center">
-      <img class="user-photo" id="user-photo" src="" alt=""/>
+      <img class="user-photo" id="user-photo" src="" alt="Profile photo"/>
       <span class="user-name-sm" id="user-name-sm"></span>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -2132,7 +2132,7 @@ async function analysePhoto(input){
     for(const url of scanModels){
       try{
         const r=await fetch(url+"?key="+userSettings.apiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:scanBody});
-        if(r.ok){resp=r;console.log("Photo scan succeeded with:",url.match(/models\/([^:]+)/)?.[1]||url);break;}
+        if(r.ok){resp=r;break;}
         const e=await r.json().catch(()=>({}));
         lastErr=e?.error?.message||"HTTP "+r.status;
         console.warn("Photo scan model failed:",url,lastErr);
@@ -2143,7 +2143,6 @@ async function analysePhoto(input){
     if(!resp){showToast("API error: "+lastErr.substring(0,60));return;}
 
     const data=await resp.json();
-    console.log("Photo scan raw:",JSON.stringify(data).substring(0,400));
 
     if(data.error){showToast("API: "+data.error.message.substring(0,60));return;}
 
@@ -2271,7 +2270,7 @@ function resetAllData(){
       setDoc(doc(db,"users",uid,"data","history"),{cleared:true,ts:Date.now()});
     }catch(e){console.log("Firebase clear error:",e);}
   }
-  localStorage.clear();
+  ['dt_v4','dt_settings_v4','dt_weight_v4','dt_conditions','dt_onboarded','dt_app_version','dt_recipe_chk','dt_nightprep','dt_favs'].forEach(k=>localStorage.removeItem(k));
   showToast("All data deleted. Refreshing...");
   setTimeout(()=>location.reload(), 1500);
 }
@@ -2597,7 +2596,6 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
     }
 
     const data=await resp.json();
-    console.log("Gemini raw response:",JSON.stringify(data).substring(0,500));
 
     // Extract text from all non-thought parts
     const parts=data.candidates?.[0]?.content?.parts||[];
@@ -4697,7 +4695,6 @@ function checkForUpdates(){
     .then(r=>r.json())
     .then(data=>{
       if(data.version && data.version !== 'offline' && data.version !== APP_VERSION){
-        console.log("New version detected:", data.version, "vs", APP_VERSION);
         showUpdateBanner(data.version);
       }
     })
@@ -4738,7 +4735,6 @@ function forceUpdate(){
 // Service Worker Registration
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg=>{
-    console.log('SW registered ✓');
 
     // Check for SW updates every 30 seconds
     setInterval(()=>reg.update(), 30000);
@@ -4777,7 +4773,6 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SYNC_QUEUE_FLUSH'&&window._fbUser){
       _saveTodayToFirebase();
-      console.log('Background sync: flushed pending writes to Firebase');
     }
   });
 }
