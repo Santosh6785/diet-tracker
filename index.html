@@ -493,7 +493,10 @@ canvas.chart{width:100%;height:140px;display:block;}
 <div class="card card-pad" id="food-fact-card" style="margin-bottom:10px;background:linear-gradient(135deg,#1b4332,#2d6a4f);color:#fff;border-radius:14px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
     <span style="font-size:12px;font-weight:bold;opacity:.7;letter-spacing:1px;text-transform:uppercase">💡 Food Fact</span>
-    <button onclick="nextFoodFact()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;border-radius:8px;padding:3px 8px;font-family:inherit;cursor:pointer">Next →</button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button onclick="nextFoodFact()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;border-radius:8px;padding:3px 8px;font-family:inherit;cursor:pointer">Next →</button>
+      <button onclick="hideFoodFact()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;border-radius:8px;padding:3px 8px;font-family:inherit;cursor:pointer">✕</button>
+    </div>
   </div>
   <div id="food-fact-text" style="font-size:13px;line-height:1.7;opacity:.95"></div>
 </div>
@@ -889,8 +892,6 @@ canvas.chart{width:100%;height:140px;display:block;}
       <option value="Favourites">❤️ Favourites</option>
     </select>
   </div>
-  <div id="cat-bar" style="display:none"></div>
-
   <!-- Search bar -->
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
@@ -898,6 +899,7 @@ canvas.chart{width:100%;height:140px;display:block;}
       oninput="onSearchInput(this.value)"/>
     <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
   </div>
+  <div id="cat-bar" style="display:none"></div>
 
   <!-- Macros summary with circular rings -->
   <div class="macro-card" id="macro-card">
@@ -1451,12 +1453,12 @@ const WEIGHT_KEY = "dt_weight_v4";
 const RECIPE_CHK_KEY = "dt_recipe_chk";
 
 const ROTATING = {
-  0:{emoji:"🐟",label:"Sunday",bg:"#e3f2fd",ac:"#1565c0",items:[{id:"r0a",text:"Fish curry at lunch — by 1 PM",note:"Omega-3 weekly dose"},{id:"r0b",text:"Dinner by 7:30 PM (home day!)",note:"Rare early dinner"},{id:"r0c",text:"Sprouts chaat as evening snack",note:"Living food — peak nutrients"}]},
+  0:{emoji:"🐟",label:"Sunday",bg:"#e3f2fd",ac:"#1565c0",items:[{id:"r0a",text:"Fish curry at lunch — by 1 PM",note:"Omega-3 weekly dose",diet:["nonveg","egg"]},{id:"r0a_veg",text:"Rajma curry at lunch",note:"Vegetarian omega boost",diet:["veg"]},{id:"r0b",text:"Dinner by 7:30 PM (home day!)",note:"Rare early dinner"},{id:"r0c",text:"Sprouts chaat as evening snack",note:"Living food — peak nutrients"}]},
   1:{emoji:"🫘",label:"Monday",bg:"#f3e5f5",ac:"#6a1b9a",items:[{id:"r1a",text:"Rajma instead of toor dal at lunch",note:"Highest fibre dal"},{id:"r1b",text:"Palak sabzi at dinner",note:"Iron + folate overnight"},{id:"r1c",text:"Beetroot in lunch salad",note:"Iron + metabolism boost"}]},
-  2:{emoji:"🐟",label:"Tuesday",bg:"#e8f5e9",ac:"#2e7d32",items:[{id:"r2a",text:"Fish (rohu/katla) at dinner",note:"Omega-3 — best for belly fat"},{id:"r2b",text:"Keep lunch lighter today",note:"Balance with fish dinner"},{id:"r2c",text:"Beetroot in salad",note:"Iron + nitrates"}]},
+  2:{emoji:"🐟",label:"Tuesday",bg:"#e8f5e9",ac:"#2e7d32",items:[{id:"r2a",text:"Fish (rohu/katla) at dinner",note:"Omega-3 — best for belly fat",diet:["nonveg","egg"]},{id:"r2a_veg",text:"Soya chunks curry at dinner",note:"Protein — veg omega alternative",diet:["veg"]},{id:"r2b",text:"Keep lunch lighter today",note:"Balance with fish dinner"},{id:"r2c",text:"Beetroot in salad",note:"Iron + nitrates"}]},
   3:{emoji:"🥬",label:"Wednesday",bg:"#e0f2f1",ac:"#00695c",items:[{id:"r3a",text:"Palak dal OR palak paneer at lunch",note:"Iron + calcium combo"},{id:"r3b",text:"Palak/lauki sabzi at dinner",note:"Double palak — iron reset"},{id:"r3c",text:"Sprouts in desk snack",note:"Living food"}]},
-  4:{emoji:"🍗",label:"Thursday",bg:"#fff8e1",ac:"#f57f17",items:[{id:"r4a",text:"Chicken curry at lunch (no cream)",note:"Mid-week protein boost"},{id:"r4b",text:"Turai/lauki at dinner",note:"Lowest cal — balances lunch"},{id:"r4c",text:"Extra large salad at lunch",note:"Compensates chicken"}]},
-  5:{emoji:"🫘",label:"Friday",bg:"#fce4ec",ac:"#c62828",items:[{id:"r5a",text:"Kabuli chana sabzi at dinner",note:"Magnesium + fibre"},{id:"r5b",text:"Fish at lunch if available",note:"Second omega-3 dose"},{id:"r5c",text:"Extra light dinner — highest risk",note:"Friday fatigue = overeating"}]},
+  4:{emoji:"🍗",label:"Thursday",bg:"#fff8e1",ac:"#f57f17",items:[{id:"r4a",text:"Chicken curry at lunch (no cream)",note:"Mid-week protein boost",diet:["nonveg"]},{id:"r4a_veg",text:"Paneer curry at lunch",note:"Mid-week protein boost — veg",diet:["veg"]},{id:"r4b",text:"Turai/lauki at dinner",note:"Lowest cal — balances lunch"},{id:"r4c",text:"Extra large salad at lunch",note:"Compensates chicken"}]},
+  5:{emoji:"🫘",label:"Friday",bg:"#fce4ec",ac:"#c62828",items:[{id:"r5a",text:"Kabuli chana sabzi at dinner",note:"Magnesium + fibre"},{id:"r5b",text:"Fish at lunch if available",note:"Second omega-3 dose",diet:["nonveg","egg"]},{id:"r5b_veg",text:"Moong dal chilla at lunch",note:"Light protein option",diet:["veg"]},{id:"r5c",text:"Extra light dinner — highest risk",note:"Friday fatigue = overeating"}]},
   6:{emoji:"🥚",label:"Saturday",bg:"#fff3e0",ac:"#e65100",items:[{id:"r6a",text:"2 egg bhurji + sprouts at breakfast",note:"Higher protein semi-active"},{id:"r6b",text:"Rajma or chana dal at lunch",note:"Weekend fibre boost"},{id:"r6c",text:"30 min walk today",note:"Weekend — use it"}]},
 };
 
@@ -1630,7 +1632,7 @@ function allItems(){
     else if(s.id==="lunch" && isSunday) items=s.sundayItems||s.items;
     else items=s.items;
     return items.filter(i=>!i.diet||i.diet.includes(diet));
-  }),...ROTATING[DOW].items];
+  }),...ROTATING[DOW].items.filter(i=>!i.diet||i.diet.includes(diet))];
 }
 function totalCal(){return meals.reduce((s,m)=>s+m.cal,0);}
 function totalBurned(){return exercises.reduce((s,e)=>s+e.burn,0)+(Math.round(stepCount*0.04));}
@@ -1697,10 +1699,12 @@ function renderRotating(){
   const hdr=document.getElementById("rot-hdr");hdr.style.background=rot.bg;
   document.getElementById("rot-title").style.color=rot.ac;
   document.getElementById("rot-title").textContent=rot.emoji+" "+rot.label+" Special";
-  const done=rot.items.filter(i=>checked[i.id]).length;
-  const b=document.getElementById("rot-badge");b.textContent=done+"/"+rot.items.length;b.style.background=rot.ac;
+  const diet=userSettings.diet||"egg";
+  const filteredItems=rot.items.filter(i=>!i.diet||i.diet.includes(diet));
+  const done=filteredItems.filter(i=>checked[i.id]).length;
+  const b=document.getElementById("rot-badge");b.textContent=done+"/"+filteredItems.length;b.style.background=rot.ac;
   const c=document.getElementById("rot-items");c.innerHTML="";
-  rot.items.forEach(item=>{
+  filteredItems.forEach(item=>{
     const el=document.createElement("div");
     el.className="chk-item"+(checked[item.id]?" done":"");
     el.innerHTML=`<div class="chkbox ${checked[item.id]?"on":""}" style="--ac:${rot.ac}"><svg width="13" height="13" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="it-text ${checked[item.id]?"done":""}">${item.text}</div><div class="it-note">${item.note}</div></div>`;
@@ -1997,7 +2001,7 @@ function getChecklistItemMap(){
     items.filter(i=>!i.diet||i.diet.includes(diet)).forEach(i=>{ if(i.id) map[i.id]=i; });
   });
   // Rotating items
-  ROTATING[DOW].items.forEach(i=>{ if(i.id) map[i.id]=i; });
+  ROTATING[DOW].items.filter(i=>!i.diet||i.diet.includes(diet)).forEach(i=>{ if(i.id) map[i.id]=i; });
   // ALL condition items — sections + todaySpecial + priority
   if(selectedConditions && selectedConditions.size>0){
     for(const condId of selectedConditions){
@@ -3811,6 +3815,11 @@ const FOOD_FACTS = [
 let currentFactIdx = Math.floor(Math.random() * FOOD_FACTS.length);
 
 function renderFoodFact(){
+  if(localStorage.getItem('dt_hide_foodfact')){
+    const c=document.getElementById('food-fact-card');
+    if(c) c.style.display='none';
+    return;
+  }
   const el = document.getElementById("food-fact-text");
   if(el) el.textContent = FOOD_FACTS[currentFactIdx];
 }
@@ -3818,6 +3827,11 @@ function nextFoodFact(){
   currentFactIdx = (currentFactIdx + 1) % FOOD_FACTS.length;
   renderFoodFact();
   haptic("light");
+}
+function hideFoodFact(){
+  const c=document.getElementById('food-fact-card');
+  if(c) c.style.display='none';
+  try{localStorage.setItem('dt_hide_foodfact','1');}catch(e){}
 }
 // Auto-rotate every 35 seconds
 setInterval(()=>{ currentFactIdx=(currentFactIdx+1)%FOOD_FACTS.length; renderFoodFact(); }, 35000);
