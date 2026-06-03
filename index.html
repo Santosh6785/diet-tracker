@@ -1451,6 +1451,7 @@ const STORE_KEY = "dt_v4";
 const SETTINGS_KEY = "dt_settings_v4";
 const WEIGHT_KEY = "dt_weight_v4";
 const RECIPE_CHK_KEY = "dt_recipe_chk";
+const STEP_TRACKING_KEY = "dt_step_tracking";
 
 const ROTATING = {
   0:{emoji:"🐟",label:"Sunday",bg:"#e3f2fd",ac:"#1565c0",items:[{id:"r0a",text:"Fish curry at lunch — by 1 PM",note:"Omega-3 weekly dose",diet:["nonveg","egg"]},{id:"r0a_veg",text:"Rajma curry at lunch",note:"Vegetarian omega boost",diet:["veg"]},{id:"r0b",text:"Dinner by 7:30 PM (home day!)",note:"Rare early dinner"},{id:"r0c",text:"Sprouts chaat as evening snack",note:"Living food — peak nutrients"}]},
@@ -2923,6 +2924,11 @@ function renderSteps(){
   document.getElementById("step-km").textContent=(stepCount*0.00075).toFixed(1);
   document.getElementById("step-cal").textContent=Math.round(stepCount*0.04);
   document.getElementById("step-target-pct").textContent=Math.min(100,Math.round((stepCount/tgtSteps)*100))+"%";
+  const btn=document.getElementById("step-btn");
+  if(btn){
+    btn.textContent=stepTracking?"⏹ Stop Counting":"▶ Start Counting";
+    btn.style.color=stepTracking?"#c62828":"#4a148c";
+  }
 }
 function toggleSteps(){
   if(!stepTracking){
@@ -2933,11 +2939,15 @@ function toggleSteps(){
 }
 function startSteps(){
   stepTracking=true;document.getElementById("step-btn").textContent="⏹ Stop Counting";document.getElementById("step-btn").style.color="#c62828";
-  window.addEventListener("devicemotion",handleMotion);showToast("Step counting started 👟");
+  window.addEventListener("devicemotion",handleMotion);
+  try{localStorage.setItem(STEP_TRACKING_KEY,JSON.stringify({active:true,date:TODAY}));}catch(e){}
+  showToast("Step counting started 👟");
 }
 function stopSteps(){
   stepTracking=false;document.getElementById("step-btn").textContent="▶ Start Counting";document.getElementById("step-btn").style.color="#4a148c";
-  window.removeEventListener("devicemotion",handleMotion);saveAll();showToast("Steps saved: "+stepCount);
+  window.removeEventListener("devicemotion",handleMotion);
+  try{localStorage.removeItem(STEP_TRACKING_KEY);}catch(e){}
+  saveAll();showToast("Steps saved: "+stepCount);
 }
 function handleMotion(e){
   const useLinear=e.acceleration&&e.acceleration.x!=null;
@@ -2951,6 +2961,19 @@ function handleMotion(e){
   lastMag=mag;
 }
 function resetSteps(){if(!confirm("Reset step count?"))return;stepCount=0;saveAll();renderSteps();showToast("Steps reset ✓");}
+function autoResumeSteps(){
+  try{
+    const s=localStorage.getItem(STEP_TRACKING_KEY);
+    if(!s) return;
+    const data=JSON.parse(s);
+    if(data.active&&data.date===TODAY){
+      startSteps();
+      showToast("Step counting resumed 👟");
+    } else {
+      localStorage.removeItem(STEP_TRACKING_KEY);
+    }
+  }catch(e){}
+}
 
 // ═══════════════ EXERCISE ═══════════════
 function renderConditionActivities(){
@@ -4681,6 +4704,8 @@ function init(){
   }
   // Schedule notifications if permission already granted
   if(typeof Notification!=="undefined"&&Notification.permission==="granted") scheduleNotifications();
+  // Resume step tracking if it was active before reload (1s delay lets Firebase load first)
+  setTimeout(autoResumeSteps, 1000);
 }
 
 // Wait for DOM + Firebase auth state
