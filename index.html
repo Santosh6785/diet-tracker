@@ -148,6 +148,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;}
 input,select,textarea{font-family:inherit;outline:none;}
 /* Header */
 .hdr{background:linear-gradient(160deg,#1b4332 0%,#2d6a4f 60%,#40916c 100%);padding:16px 14px 14px;position:relative;overflow:hidden;}
+body.dark .hdr{background:#0f2a1e;}
 .hdr-circle{position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.05);}
 .hdr h1{color:#fff;font-size:19px;font-weight:normal;text-align:center;}
 .hdr-sub{color:rgba(255,255,255,.6);font-size:11px;text-align:center;margin:3px 0 12px;font-style:italic;}
@@ -373,6 +374,7 @@ body.dark .macro-bar-wrap{background:#333;}
 .fav-empty{text-align:center;padding:24px;color:#aaa;font-size:13px;grid-column:1/-1;line-height:1.7;}
 /* ── Login Screen ── */
 .login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#1b4332 0%,#2d6a4f 60%,#40916c 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;z-index:99998;}
+body.dark .login-screen{background:linear-gradient(135deg,#0a1a0f,#0f2a1a);}
 .login-logo{font-size:80px;margin-bottom:16px;}
 .login-title{color:#fff;font-size:26px;font-weight:bold;font-family:'Georgia',serif;text-align:center;margin-bottom:8px;}
 .login-sub{color:rgba(255,255,255,.7);font-size:13px;text-align:center;line-height:1.7;margin-bottom:28px;}
@@ -1044,44 +1046,72 @@ canvas.chart{width:100%;height:140px;display:block;}
     </div>
   </div>
 
-  <!-- Step Counter -->
-  <div class="step-hero">
-    <div class="step-count" id="step-count">0</div>
-    <div class="step-label">steps today</div>
-    <div class="step-stats">
-      <div class="step-stat">
-        <div class="step-stat-val" id="step-km">0.0</div>
-        <div class="step-stat-lbl">km</div>
+  <!-- Steps Counter -->
+  <div class="card card-pad" style="background:linear-gradient(135deg,#1a237e,#283593);color:#fff;margin-bottom:10px">
+    <div style="text-align:center;padding:10px 0 6px">
+      <div style="font-size:48px;font-weight:bold" id="step-count-disp">0</div>
+      <div style="font-size:13px;opacity:.7">steps today</div>
+    </div>
+    <div style="background:rgba(255,255,255,.2);border-radius:10px;height:6px;margin:8px 0">
+      <div id="step-prog-bar" style="background:#7986cb;border-radius:10px;height:6px;width:0%;transition:width .4s"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:8px;text-align:center">
+        <div style="font-size:16px;font-weight:bold" id="step-km-disp">0.0</div>
+        <div style="font-size:10px;opacity:.6">km</div>
       </div>
-      <div class="step-stat">
-        <div class="step-stat-val" id="step-cal">0</div>
-        <div class="step-stat-lbl">kcal burned</div>
+      <div style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:8px;text-align:center">
+        <div style="font-size:16px;font-weight:bold" id="step-kcal-disp">0</div>
+        <div style="font-size:10px;opacity:.6">kcal burned</div>
       </div>
-      <div class="step-stat">
-        <div class="step-stat-val" id="step-target-pct">0%</div>
-        <div class="step-stat-lbl">of 8000 goal</div>
+      <div style="flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:8px;text-align:center">
+        <div style="font-size:16px;font-weight:bold" id="step-pct-disp">0%</div>
+        <div style="font-size:10px;opacity:.6">of 8000</div>
       </div>
     </div>
-    <div class="step-btns">
-      <button class="step-start" id="step-btn" onclick="toggleSteps()">▶ Start Counting</button>
-      <button class="step-reset" onclick="resetSteps()">Reset</button>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button onclick="switchStepMode('auto')" id="step-mode-auto-btn"
+        style="flex:1;padding:8px;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:bold;background:#fff;color:#1a237e;cursor:pointer">
+        📱 Auto Count
+      </button>
+      <button onclick="switchStepMode('manual')" id="step-mode-manual-btn"
+        style="flex:1;padding:8px;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:bold;background:rgba(255,255,255,.2);color:#fff;cursor:pointer">
+        ✏️ Manual Entry
+      </button>
     </div>
-  </div>
-  <div class="card card-pad" style="margin-bottom:10px">
-    <p style="font-size:12px;color:#888;line-height:1.7">
-      📱 <strong>How to use:</strong> Tap "Start Counting" and keep your phone in your pocket or hand while walking. Step counting continues in the background — even if you lock the screen. Keep the app open in background for best results.
-      The accelerometer detects each step automatically. Works best while walking normally.
-    </p>
-  </div>
-  <div class="card card-pad" style="margin-top:8px">
-    <div style="font-weight:bold;font-size:13px;margin-bottom:6px">🎚️ Step Detection Sensitivity</div>
-    <p style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.5">Adjust if steps are missing or over-counting on your device.</p>
-    <select id="step-sensitivity" onchange="saveStepSensitivity(this.value)"
-      style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0e0e0;font-family:inherit;font-size:13px;background:var(--input-bg);color:var(--text)">
-      <option value="low">🔴 Low — strong steps only (phone in hand)</option>
-      <option value="medium" selected>🟡 Medium — normal walking (recommended)</option>
-      <option value="high">🟢 High — light steps (phone in pocket)</option>
-    </select>
+    <div id="step-auto-panel">
+      <p style="font-size:11px;opacity:.6;margin-bottom:8px;line-height:1.5">⚠️ Phone-based counting is approximate. Works best with phone in pocket. Shaking may add false steps.</p>
+      <button id="step-btn" onclick="toggleSteps()"
+        style="width:100%;padding:12px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:10px;color:#fff;font-size:14px;font-weight:bold;font-family:inherit;cursor:pointer">
+        ▶ Start Counting
+      </button>
+      <div style="margin-top:10px">
+        <div style="font-size:11px;opacity:.6;margin-bottom:4px">Detection Sensitivity:</div>
+        <select id="step-sensitivity" onchange="saveStepSensitivity(this.value)"
+          style="width:100%;padding:8px;border-radius:8px;border:none;font-family:inherit;font-size:12px;background:rgba(255,255,255,.15);color:#fff">
+          <option value="low">🔴 Low — strong steps only</option>
+          <option value="medium" selected>🟡 Medium — normal walking</option>
+          <option value="high">🟢 High — phone in pocket</option>
+        </select>
+      </div>
+      <button onclick="resetSteps()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.1);border:none;border-radius:8px;color:rgba(255,255,255,.7);font-family:inherit;font-size:12px;cursor:pointer">
+        🔄 Reset Steps
+      </button>
+    </div>
+    <div id="step-manual-panel" style="display:none">
+      <p style="font-size:12px;opacity:.7;margin-bottom:8px;line-height:1.5">Enter your steps from Google Fit, Samsung Health or your phone's built-in health app for best accuracy.</p>
+      <div style="display:flex;gap:8px">
+        <input type="number" id="step-manual-input" placeholder="e.g. 4500"
+          style="flex:1;padding:10px;border-radius:8px;border:none;font-size:16px;font-family:inherit;background:rgba(255,255,255,.15);color:#fff;outline:none"
+          min="0" max="100000"/>
+        <button onclick="saveManualSteps()" style="padding:10px 16px;background:#7986cb;border:none;border-radius:8px;color:#fff;font-weight:bold;font-family:inherit;font-size:13px;cursor:pointer">
+          Save
+        </button>
+      </div>
+      <button onclick="resetSteps()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.1);border:none;border-radius:8px;color:rgba(255,255,255,.7);font-family:inherit;font-size:12px;cursor:pointer">
+        🔄 Reset Steps
+      </button>
+    </div>
   </div>
 
   <!-- Condition-specific activity suggestions -->
@@ -1371,7 +1401,7 @@ canvas.chart{width:100%;height:140px;display:block;}
   <div class="card card-pad" style="margin-top:12px">
     <div class="card-title">🔔 Daily Reminders</div>
     <p style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px">
-      Get reminders while the app is open. Reminders fire at 8 AM, 1 PM, 5 PM and 9 PM for today's pending times. Keep the app open in background for best results.
+      Reminders fire at 8 AM, 1 PM, 5 PM and 9 PM while app is open or running in background. For best results keep Diet Tracker open in your browser.
     </p>
     <button class="save-btn" onclick="requestNotificationPermission()" id="notif-btn"
       style="background:#1565c0">
@@ -2797,26 +2827,41 @@ function updateNotifBtn(perm){
 }
 
 function scheduleNotifications(){
-  // Use alarms via setTimeout for current session
-  const now=new Date();
-  const schedule=[
-    {hour:8,min:0,msg:"🌅 Morning checklist not started yet! Open Diet Tracker 👀"},
-    {hour:13,min:0,msg:"🍱 Lunch not logged yet — don't forget to track!"},
-    {hour:17,min:0,msg:"⚡ Evening snack time — log what you eat!"},
-    {hour:21,min:0,msg:"🌙 How was your diet today? Complete your checklist!"},
+  if(Notification.permission !== "granted") return;
+  if(window._reminderInterval){ clearInterval(window._reminderInterval); }
+  const schedule = [
+    {hour:8,  min:0, msg:"🌅 Morning checklist — start your day right! Open Diet Tracker"},
+    {hour:13, min:0, msg:"🍱 Lunch time — log your meal in Diet Tracker!"},
+    {hour:17, min:0, msg:"⚡ Evening snack time — track what you eat!"},
+    {hour:21, min:0, msg:"🌙 End of day — complete your checklist in Diet Tracker!"},
   ];
-  schedule.forEach(s=>{
-    const target=new Date();target.setHours(s.hour,s.min,0,0);
-    if(target>now){
-      const ms=target-now;
-      setTimeout(()=>{
-        if(Notification.permission==="granted"){
-          new Notification("Diet Tracker",{body:s.msg,icon:"/icon-192.png"});
-        }
-      },ms);
-    }
-  });
+  let firedToday = new Set();
+  window._reminderInterval = setInterval(()=>{
+    if(Notification.permission !== "granted") return;
+    const now = new Date();
+    const todayKey = now.toDateString();
+    if(window._reminderDay !== todayKey){ firedToday = new Set(); window._reminderDay = todayKey; }
+    schedule.forEach(s=>{
+      const key = s.hour+':'+s.min;
+      if(firedToday.has(key)) return;
+      const h = now.getHours(), m = now.getMinutes();
+      if(h === s.hour && m === s.min){
+        firedToday.add(key);
+        try{ new Notification("Diet Tracker",{body:s.msg,icon:"/icon-192.png",badge:"/icon-192.png",tag:"diet-reminder-"+key}); }
+        catch(err){ console.error("Notification error:",err); }
+      }
+    });
+  }, 60000);
+  showToast("✅ Reminders active for this session");
 }
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'
+    && typeof Notification !== 'undefined'
+    && Notification.permission === 'granted'
+    && !window._reminderInterval){
+    scheduleNotifications();
+  }
+});
 
 // ═══════════════ FEATURE J: ENHANCED BARCODE LOOKUP ═══════════════
 async function lookupBarcode(barcode){
@@ -2982,15 +3027,16 @@ function addWater(n){
 // ═══════════════ STEPS ═══════════════
 function renderSteps(){
   const tgtSteps=8000;
-  document.getElementById("step-count").textContent=stepCount;
-  document.getElementById("step-km").textContent=(stepCount*0.00075).toFixed(1);
-  document.getElementById("step-cal").textContent=Math.round(stepCount*0.04);
-  document.getElementById("step-target-pct").textContent=Math.min(100,Math.round((stepCount/tgtSteps)*100))+"%";
+  const pct=Math.min(100,Math.round((stepCount/tgtSteps)*100));
+  const cntEl=document.getElementById("step-count-disp"); if(cntEl) cntEl.textContent=stepCount;
+  const kmEl=document.getElementById("step-km-disp"); if(kmEl) kmEl.textContent=(stepCount*0.00075).toFixed(1);
+  const kcalEl=document.getElementById("step-kcal-disp"); if(kcalEl) kcalEl.textContent=Math.round(stepCount*0.04);
+  const pctEl=document.getElementById("step-pct-disp"); if(pctEl) pctEl.textContent=pct+"%";
+  const barEl=document.getElementById("step-prog-bar"); if(barEl) barEl.style.width=pct+"%";
   const btn=document.getElementById("step-btn");
-  if(btn){
-    btn.textContent=stepTracking?"⏹ Stop Counting":"▶ Start Counting";
-    btn.style.color=stepTracking?"#c62828":"#4a148c";
-  }
+  if(btn){ btn.textContent=stepTracking?"⏹ Stop Counting":"▶ Start Counting"; }
+  const savedMode=localStorage.getItem('dt_step_mode')||'auto';
+  switchStepMode(savedMode);
   const sensEl=document.getElementById('step-sensitivity');
   if(sensEl){ sensEl.value=localStorage.getItem('dt_step_sens')||'medium'; }
 }
@@ -3059,6 +3105,28 @@ function handleMotion(e){
 function saveStepSensitivity(val){
   try{ localStorage.setItem('dt_step_sens', val); }catch(e){}
   showToast('Sensitivity: ' + val + ' ✓');
+}
+function switchStepMode(mode){
+  const isAuto = mode === 'auto';
+  const autoPanel = document.getElementById('step-auto-panel');
+  const manualPanel = document.getElementById('step-manual-panel');
+  const autoBtn = document.getElementById('step-mode-auto-btn');
+  const manualBtn = document.getElementById('step-mode-manual-btn');
+  if(autoPanel) autoPanel.style.display = isAuto ? 'block' : 'none';
+  if(manualPanel) manualPanel.style.display = isAuto ? 'none' : 'block';
+  if(autoBtn){ autoBtn.style.background = isAuto ? '#fff' : 'rgba(255,255,255,.2)'; autoBtn.style.color = isAuto ? '#1a237e' : '#fff'; }
+  if(manualBtn){ manualBtn.style.background = isAuto ? 'rgba(255,255,255,.2)' : '#fff'; manualBtn.style.color = isAuto ? '#fff' : '#1a237e'; }
+  try{ localStorage.setItem('dt_step_mode', mode); }catch(e){}
+}
+function saveManualSteps(){
+  const input = document.getElementById('step-manual-input');
+  const val = parseInt(input.value) || 0;
+  if(val < 0 || val > 100000){ showToast('Enter steps between 0-100000'); return; }
+  stepCount = val;
+  saveAll();
+  renderSteps();
+  input.value = '';
+  showToast('Steps saved: ' + val + ' ✓');
 }
 function getStepThreshold(){
   const s = localStorage.getItem('dt_step_sens') || 'medium';
@@ -4158,8 +4226,13 @@ function toggleDark(){
 function loadDarkMode(){
   try{
     const d = localStorage.getItem("diet_dark");
-    if(d==="1"){ document.body.classList.add("dark"); const btn=document.getElementById("dark-toggle"); if(btn) btn.textContent="☀️"; }
+    if(d==="1"){ document.body.classList.add("dark"); }
   }catch(e){}
+  document.addEventListener('DOMContentLoaded', function(){
+    const d2 = localStorage.getItem("diet_dark");
+    const btn = document.getElementById("dark-toggle");
+    if(btn) btn.textContent = d2==="1" ? "☀️" : "🌙";
+  });
 }
 
 // ═══════════════ FOOD SEARCH ═══════════════
