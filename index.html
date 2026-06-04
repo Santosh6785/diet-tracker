@@ -44,7 +44,7 @@
 (function(){
   try{
     if(localStorage.getItem('diet_dark')==='1'){
-      document.body.classList.add('dark');
+      document.documentElement.classList.add('dark-pending');
     }
   }catch(e){}
 })();
@@ -4220,22 +4220,29 @@ function renderCharts(){
 }
 
 
+function applyDarkHeader(isDark){
+  const hdr = document.querySelector('.hdr');
+  if(!hdr) return;
+  hdr.style.background = isDark
+    ? 'linear-gradient(160deg,#050e07 0%,#0a150c 60%,#0f1e12 100%)'
+    : '';
+}
 function toggleDark(){
   const isDark = document.body.classList.toggle("dark");
   const btn = document.getElementById("dark-toggle");
   if(btn) btn.textContent = isDark ? "☀️" : "🌙";
+  applyDarkHeader(isDark);
   try{ localStorage.setItem("diet_dark", isDark?"1":"0"); }catch(e){}
 }
 function loadDarkMode(){
   try{
     const d = localStorage.getItem("diet_dark");
-    if(d==="1"){ document.body.classList.add("dark"); }
-  }catch(e){}
-  document.addEventListener('DOMContentLoaded', function(){
-    const d2 = localStorage.getItem("diet_dark");
+    const isDark = d === "1";
+    if(isDark) document.body.classList.add("dark");
     const btn = document.getElementById("dark-toggle");
-    if(btn) btn.textContent = d2==="1" ? "☀️" : "🌙";
-  });
+    if(btn) btn.textContent = isDark ? "☀️" : "🌙";
+    applyDarkHeader(isDark);
+  }catch(e){}
 }
 
 // ═══════════════ FOOD SEARCH ═══════════════
