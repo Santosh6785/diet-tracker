@@ -870,46 +870,6 @@ canvas.chart{width:100%;height:140px;display:block;}
   <!-- Remaining calorie suggestions -->
   <div id="remaining-suggestions" class="card card-pad" style="display:none;margin-bottom:10px;border-left:3px solid #97bc62"></div>
 
-  <!-- Meal log -->
-  <div class="card card-pad">
-    <div class="log-hdr">
-      <span style="font-weight:bold;color:#1b4332;font-size:15px">🍽️ Today's Food Log</span>
-      <span class="log-total-val" id="log-total">0 kcal</span>
-    </div>
-    <div class="prog-wrap"><div class="prog-fill" id="log-bar" style="width:0%;background:#2e7d32"></div></div>
-    <div class="prog-labels">
-      <span style="color:#888">Target: <span id="log-target-lbl">1550</span> kcal</span>
-      <span id="log-rem-lbl" style="font-weight:bold;color:#2e7d32">1550 remaining</span>
-    </div>
-    <div id="meal-log"></div>
-  </div>
-
-  <!-- Category filter dropdown -->
-  <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
-    <select id="cat-dropdown" onchange="currentCat=this.value;renderPresets()"
-      style="flex:1;padding:10px 12px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:14px;font-family:inherit;background:var(--input-bg);color:var(--text);appearance:auto">
-      <option value="All">🍽️ All Foods</option>
-      <option value="Drinks">☕ Drinks</option>
-      <option value="Grains">🌾 Grains & Rice</option>
-      <option value="Protein">🥚 Protein</option>
-      <option value="Snacks">🥜 Snacks</option>
-      <option value="Fruits">🍎 Fruits</option>
-      <option value="Sabzi">🥬 Sabzi & Salad</option>
-      <option value="Dairy">🥛 Dairy</option>
-      <option value="Meat">🍗 Meat & Fish</option>
-      <option value="Junk">🍟 Junk Food</option>
-      <option value="Favourites">❤️ Favourites</option>
-    </select>
-  </div>
-  <!-- Search bar -->
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" id="food-search" placeholder="Search food... e.g. chicken, dal, roti"
-      oninput="onSearchInput(this.value)"/>
-    <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
-  </div>
-  <div id="cat-bar" style="display:none"></div>
-
   <!-- Macros summary with circular rings -->
   <div class="macro-card" id="macro-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -984,6 +944,46 @@ canvas.chart{width:100%;height:140px;display:block;}
     </button>
     <div id="meal-plan-result" style="display:none;margin-top:10px"></div>
   </div>
+
+  <!-- Meal log -->
+  <div class="card card-pad">
+    <div class="log-hdr">
+      <span style="font-weight:bold;color:#1b4332;font-size:15px">🍽️ Today's Food Log</span>
+      <span class="log-total-val" id="log-total">0 kcal</span>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill" id="log-bar" style="width:0%;background:#2e7d32"></div></div>
+    <div class="prog-labels">
+      <span style="color:#888">Target: <span id="log-target-lbl">1550</span> kcal</span>
+      <span id="log-rem-lbl" style="font-weight:bold;color:#2e7d32">1550 remaining</span>
+    </div>
+    <div id="meal-log"></div>
+  </div>
+
+  <!-- Category filter dropdown -->
+  <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
+    <select id="cat-dropdown" onchange="currentCat=this.value;renderPresets()"
+      style="flex:1;padding:10px 12px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:14px;font-family:inherit;background:var(--input-bg);color:var(--text);appearance:auto">
+      <option value="All">🍽️ All Foods</option>
+      <option value="Drinks">☕ Drinks</option>
+      <option value="Grains">🌾 Grains & Rice</option>
+      <option value="Protein">🥚 Protein</option>
+      <option value="Snacks">🥜 Snacks</option>
+      <option value="Fruits">🍎 Fruits</option>
+      <option value="Sabzi">🥬 Sabzi & Salad</option>
+      <option value="Dairy">🥛 Dairy</option>
+      <option value="Meat">🍗 Meat & Fish</option>
+      <option value="Junk">🍟 Junk Food</option>
+      <option value="Favourites">❤️ Favourites</option>
+    </select>
+  </div>
+  <!-- Search bar -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="food-search" placeholder="Search food... e.g. chicken, dal, roti"
+      oninput="onSearchInput(this.value)"/>
+    <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+  </div>
+  <div id="cat-bar" style="display:none"></div>
 
   <!-- Quick Add common Indian foods -->
   <div class="card card-pad" style="margin-bottom:10px">
@@ -1072,6 +1072,16 @@ canvas.chart{width:100%;height:140px;display:block;}
       📱 <strong>How to use:</strong> Tap "Start Counting" and keep your phone in your pocket or hand while walking. Step counting continues in the background — even if you lock the screen. Keep the app open in background for best results.
       The accelerometer detects each step automatically. Works best while walking normally.
     </p>
+  </div>
+  <div class="card card-pad" style="margin-top:8px">
+    <div style="font-weight:bold;font-size:13px;margin-bottom:6px">🎚️ Step Detection Sensitivity</div>
+    <p style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.5">Adjust if steps are missing or over-counting on your device.</p>
+    <select id="step-sensitivity" onchange="saveStepSensitivity(this.value)"
+      style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0e0e0;font-family:inherit;font-size:13px;background:var(--input-bg);color:var(--text)">
+      <option value="low">🔴 Low — strong steps only (phone in hand)</option>
+      <option value="medium" selected>🟡 Medium — normal walking (recommended)</option>
+      <option value="high">🟢 High — light steps (phone in pocket)</option>
+    </select>
   </div>
 
   <!-- Condition-specific activity suggestions -->
@@ -2460,6 +2470,7 @@ function calcBMR(){
   const weight=parseFloat(document.getElementById("set-weight").value)||userSettings.weight||75;
   const activity=parseFloat(document.getElementById("bmr-activity").value)||1.2;
   const goal=parseFloat(document.getElementById("bmr-goal").value)||0.9;
+  try{ if(age) localStorage.setItem('dt_bmr_age',age); if(height) localStorage.setItem('dt_bmr_height',height); }catch(e){}
   if(!age||!height||age<10||age>100||height<100||height>250){showToast("Enter valid age and height");return;}
   // Mifflin-St Jeor formula
   let bmr = bmrGender==="male"?(10*weight+6.25*height-5*age+5):(10*weight+6.25*height-5*age-161);
@@ -2946,7 +2957,9 @@ function closeSidebar(){
   document.getElementById("sidebar-overlay").classList.remove("open");
 }
 // Close sidebar on orientation change or resize
-window.addEventListener("resize",closeSidebar);
+window.addEventListener("resize", function(){
+  if(window.innerWidth > 480) closeSidebar();
+});
 
 // ═══════════════ WATER ═══════════════
 function renderWater(){
@@ -2978,6 +2991,8 @@ function renderSteps(){
     btn.textContent=stepTracking?"⏹ Stop Counting":"▶ Start Counting";
     btn.style.color=stepTracking?"#c62828":"#4a148c";
   }
+  const sensEl=document.getElementById('step-sensitivity');
+  if(sensEl){ sensEl.value=localStorage.getItem('dt_step_sens')||'medium'; }
 }
 function toggleSteps(){
   if(!stepTracking){
@@ -3021,12 +3036,10 @@ function handleMotion(e){
 
   const avg = stepMagBuffer.reduce((a,b)=>a+b,0) / stepMagBuffer.length;
 
-  // Linear: require absolute floor (3.5) so slow hand motion (<3.5 m/s²) is ignored,
-  // plus relative peak (2.0 above average) to catch genuine foot-strike spikes.
-  // Gravity-based: require 4.0 m/s² deviation from 9.8 to reduce tilt false triggers.
+  const t = getStepThreshold();
   const isStep = useLinear ?
-    (mag > 2.5 && mag > avg + 1.5) :
-    (Math.abs(mag - 9.8) > 4.0);
+    (mag > t.floor && mag > avg + t.rel) :
+    (Math.abs(mag - 9.8) > (t.floor + 0.5));
 
   const now = Date.now();
   if(isStep && !stepCooldown && (now - stepLastPeakTime) > 400){
@@ -3038,6 +3051,16 @@ function handleMotion(e){
     if(stepCount % 100 === 0) saveAll();
   }
   lastMag = mag;
+}
+function saveStepSensitivity(val){
+  try{ localStorage.setItem('dt_step_sens', val); }catch(e){}
+  showToast('Sensitivity: ' + val + ' ✓');
+}
+function getStepThreshold(){
+  const s = localStorage.getItem('dt_step_sens') || 'medium';
+  if(s === 'low')  return {floor: 3.5, rel: 2.5};
+  if(s === 'high') return {floor: 1.5, rel: 0.8};
+  return {floor: 2.5, rel: 1.5};
 }
 function resetSteps(){if(!confirm("Reset step count?"))return;stepCount=0;saveAll();renderSteps();showToast("Steps reset ✓");}
 function autoResumeSteps(){
@@ -3283,6 +3306,12 @@ function renderSettings(){
   document.querySelectorAll(".cal-preset-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===target));
   const ffBtn = document.getElementById('food-fact-toggle-btn');
   if(ffBtn){ ffBtn.textContent = localStorage.getItem('dt_hide_foodfact') ? 'Show Food Facts' : 'Hide Food Facts'; }
+  try{
+    const sa=localStorage.getItem('dt_bmr_age'); const sh=localStorage.getItem('dt_bmr_height');
+    const ageEl=document.getElementById('bmr-age'); const htEl=document.getElementById('bmr-height');
+    if(sa&&ageEl&&!ageEl.value) ageEl.value=sa;
+    if(sh&&htEl&&!htEl.value) htEl.value=sh;
+  }catch(e){}
 }
 function updateSlider(val){document.getElementById("set-cal-disp").textContent=val;document.querySelectorAll(".cal-preset-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===parseInt(val)));}
 function setCalPreset(val){document.getElementById("set-cal-slider").value=val;updateSlider(val);}
@@ -4118,7 +4147,8 @@ function renderCharts(){
 
 function toggleDark(){
   const isDark = document.body.classList.toggle("dark");
-  document.getElementById("dark-toggle").textContent = isDark ? "☀️" : "🌙";
+  const btn = document.getElementById("dark-toggle");
+  if(btn) btn.textContent = isDark ? "☀️" : "🌙";
   try{ localStorage.setItem("diet_dark", isDark?"1":"0"); }catch(e){}
 }
 function loadDarkMode(){
