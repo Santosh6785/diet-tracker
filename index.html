@@ -3031,22 +3031,26 @@ function handleMotion(e){
   const mag = Math.sqrt(x**2 + y**2 + z**2);
 
   stepMagBuffer.push(mag);
-  if(stepMagBuffer.length > 6) stepMagBuffer.shift();
-  if(stepMagBuffer.length < 6) return;
+  if(stepMagBuffer.length > 10) stepMagBuffer.shift();
+  if(stepMagBuffer.length < 10) return;
 
   const avg = stepMagBuffer.reduce((a,b)=>a+b,0) / stepMagBuffer.length;
 
   const t = getStepThreshold();
+
+  const yDominant = useLinear ?
+    (Math.abs(y) > 0.4 * mag) : true;
+
   const isStep = useLinear ?
-    (mag > t.floor && mag > avg + t.rel) :
+    (mag > t.floor && mag > avg + t.rel && yDominant) :
     (Math.abs(mag - 9.8) > (t.floor + 0.5));
 
   const now = Date.now();
-  if(isStep && !stepCooldown && (now - stepLastPeakTime) > 400){
+  if(isStep && !stepCooldown && (now - stepLastPeakTime) > 600){
     stepCount++;
     stepLastPeakTime = now;
     stepCooldown = true;
-    setTimeout(()=>stepCooldown=false, 400);
+    setTimeout(()=>stepCooldown=false, 600);
     renderSteps();
     if(stepCount % 100 === 0) saveAll();
   }
@@ -3058,9 +3062,9 @@ function saveStepSensitivity(val){
 }
 function getStepThreshold(){
   const s = localStorage.getItem('dt_step_sens') || 'medium';
-  if(s === 'low')  return {floor: 3.5, rel: 2.5};
-  if(s === 'high') return {floor: 1.5, rel: 0.8};
-  return {floor: 2.5, rel: 1.5};
+  if(s === 'low')  return {floor: 5.0, rel: 3.5};
+  if(s === 'high') return {floor: 3.0, rel: 2.0};
+  return {floor: 4.0, rel: 2.8};
 }
 function resetSteps(){if(!confirm("Reset step count?"))return;stepCount=0;saveAll();renderSteps();showToast("Steps reset ✓");}
 function autoResumeSteps(){
