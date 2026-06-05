@@ -4607,10 +4607,49 @@ function renderNightPrep(){
     'c_water',       // Drank 8+ glasses water
     'c_nolate',      // Nothing after 10 PM
   ]);
+  const diet = userSettings.diet || 'egg';
   const items = SECTIONS.flatMap(s=>s.items.slice(0,3)
     .filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id))
+    .filter(i=>!i.diet || i.diet.includes(diet))
     .map(i=>({...i,section:s.label})));
-  el.innerHTML = items.map(i=>`
+  // Add condition-specific checklist items
+  if(selectedConditions && selectedConditions.size > 0){
+    const condItems = [];
+    selectedConditions.forEach(condId=>{
+      const cond = HEALTH_CONDITIONS.find(c=>c.id===condId);
+      if(cond && cond.checkItems){
+        cond.checkItems.slice(0,2).forEach(item=>{
+          if(!EXCLUDE_FROM_NIGHTPREP.has(item.id)){
+            condItems.push({...item, section: cond.label + ' condition'});
+          }
+        });
+      }
+    });
+    items.push(...condItems);
+  }
+  // Show tomorrow's recipe plan if set
+  const recipeNote = [];
+  ['breakfast','lunch','dinner'].forEach(cat=>{
+    if(recipeChecklist[cat]){
+      recipeNote.push({
+        id: 'recipe_note_'+cat,
+        text: recipeChecklist[cat].title,
+        section: cat.charAt(0).toUpperCase()+cat.slice(1)+' Recipe',
+        emoji: recipeChecklist[cat].emoji,
+        isRecipe: true
+      });
+    }
+  });
+  const recipeHtml = recipeNote.map(r=>`
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(151,188,98,.1);border-radius:6px;padding:8px;margin-bottom:4px">
+      <span style="font-size:18px">${r.emoji}</span>
+      <div>
+        <div style="font-size:12px;color:#97bc62;font-weight:bold">${r.text}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.5)">${r.section} planned</div>
+      </div>
+    </div>
+  `).join("");
+  el.innerHTML = recipeHtml + items.map(i=>`
     <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.1)">
       <div onclick="toggleNightPrep('${i.id}')" style="width:20px;height:20px;border-radius:6px;flex-shrink:0;border:2px solid ${nightPrep[i.id]?'#97bc62':'rgba(255,255,255,.4)'};background:${nightPrep[i.id]?'#97bc62':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer">
         ${nightPrep[i.id]?'<span style="color:#1b4332;font-size:12px">✓</span>':''}
@@ -4635,7 +4674,8 @@ function saveNightPrep(){
 }
 function shareNightPrep(){
   const EXCLUDE_FROM_NIGHTPREP=new Set(['c_lemon','c_saladFirst','c_sabzi','c_noFried','c_noRice','c_walk','c_water','c_nolate']);
-  const items=SECTIONS.flatMap(s=>s.items.slice(0,3).filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id)).map(i=>({...i,section:s.label})));
+  const diet=userSettings.diet||'egg';
+  const items=SECTIONS.flatMap(s=>s.items.slice(0,3).filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id)).filter(i=>!i.diet||i.diet.includes(diet)).map(i=>({...i,section:s.label})));
   const checkedItems=items.filter(i=>nightPrep[i.id]);
   if(!checkedItems.length){showToast("Tick some items first to share");return;}
   const text="🌙 My Plan for Tomorrow:\n\n"+checkedItems.map(i=>"✅ "+i.text+" ("+i.section+")").join("\n")+"\n\n— Diet Tracker";
