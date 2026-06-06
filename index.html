@@ -2798,8 +2798,15 @@ function renderHealthNotes(){
 // ═══════════════ FEATURE C: LOCAL NOTIFICATIONS ═══════════════
 function requestNotificationPermission(){
   if(!("Notification" in window)){showToast("Notifications not supported on this browser");return;}
+  // Toggle off if already active
+  if(Notification.permission==="granted" && !localStorage.getItem('dt_notif_disabled')){
+    disableNotifications();
+    return;
+  }
   if(Notification.permission==="granted"){
-    showToast("Reminders already enabled ✓");
+    // Re-enable after being disabled
+    localStorage.removeItem('dt_notif_disabled');
+    showToast("Daily reminders re-enabled ✓");
     scheduleNotifications();
     updateNotifBtn("granted");
     return;
@@ -2807,6 +2814,7 @@ function requestNotificationPermission(){
   Notification.requestPermission().then(perm=>{
     updateNotifBtn(perm);
     if(perm==="granted"){
+      localStorage.removeItem('dt_notif_disabled');
       showToast("Daily reminders enabled ✓");
       scheduleNotifications();
     } else {
@@ -2815,18 +2823,37 @@ function requestNotificationPermission(){
   });
 }
 
+function disableNotifications(){
+  localStorage.setItem('dt_notif_disabled','1');
+  if(window._reminderInterval){clearInterval(window._reminderInterval);window._reminderInterval=null;}
+  // Cancel any scheduled SW notifications
+  navigator.serviceWorker&&navigator.serviceWorker.ready.then(reg=>{
+    reg.getNotifications({includeTriggered:true}).then(ns=>ns.forEach(n=>n.close())).catch(()=>{});
+  }).catch(()=>{});
+  showToast("Daily reminders disabled");
+  updateNotifBtn("granted");
+}
+
 function updateNotifBtn(perm){
   const btn=document.getElementById("notif-btn");
   const status=document.getElementById("notif-status");
   if(!btn||!status) return;
   if(perm==="granted"){
-    btn.textContent="✅ Reminders Enabled";
-    btn.style.background="#2e7d32";
-    btn.disabled=true;
-    status.textContent="Scheduling reminders at 8 AM · 1 PM · 5 PM · 9 PM…";
+    const disabled=!!localStorage.getItem('dt_notif_disabled');
+    btn.disabled=false;
+    if(disabled){
+      btn.textContent="🔔 Enable Daily Reminders";
+      btn.style.background="#1565c0";
+      status.textContent="Reminders are currently off. Tap to re-enable.";
+    } else {
+      btn.textContent="✅ Reminders On — Tap to Disable";
+      btn.style.background="#2e7d32";
+      status.textContent="Reminders at 8 AM · 1 PM · 5 PM · 9 PM";
+    }
   } else if(perm==="denied"){
     btn.textContent="🚫 Permission Denied";
     btn.style.background="#c62828";
+    btn.disabled=false;
     status.textContent="Go to browser Settings → Site Settings → Notifications to enable.";
   }
 }
@@ -2858,7 +2885,7 @@ async function _fireReminder(s, reg){
 }
 
 async function _checkRemindersNow(reg){
-  if(Notification.permission!=="granted") return;
+  if(Notification.permission!=="granted"||localStorage.getItem('dt_notif_disabled')) return;
   const now=new Date();
   const nowMins=now.getHours()*60+now.getMinutes();
   for(const s of _REMINDER_SCHEDULE){
@@ -2876,6 +2903,7 @@ function _nextOccurrence(hour, min, dayOffset){
 
 async function scheduleNotifications(){
   if(Notification.permission!=="granted") return;
+  if(localStorage.getItem('dt_notif_disabled')) return;
   const reg = await navigator.serviceWorker.ready.catch(()=>null);
 
   // Try TimestampTrigger — works even when app is closed (Chrome Android)
@@ -2908,6 +2936,7 @@ async function scheduleNotifications(){
 
 document.addEventListener("visibilitychange", async function(){
   if(document.visibilityState!=="visible"||typeof Notification==="undefined"||Notification.permission!=="granted") return;
+  if(localStorage.getItem('dt_notif_disabled')) return;
   const reg=await navigator.serviceWorker.ready.catch(()=>null);
   _checkRemindersNow(reg); // catch any missed notification when tab comes back
   if(!window._reminderInterval) scheduleNotifications();
