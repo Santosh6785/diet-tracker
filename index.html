@@ -2829,9 +2829,8 @@ function _setNotifStatus(msg){
 
 function _nextOccurrence(hour, min, dayOffset){
   const t=new Date();
+  t.setDate(t.getDate()+dayOffset);
   t.setHours(hour,min,0,0);
-  if(dayOffset===0 && t<=new Date()) t.setDate(t.getDate()+1);
-  else if(dayOffset>0) t.setDate(t.getDate()+dayOffset);
   return t.getTime();
 }
 
@@ -2879,10 +2878,12 @@ async function scheduleNotifications(){
     const now=new Date();
     const todayKey=now.toDateString();
     if(window._reminderDay!==todayKey){firedToday=new Set();window._reminderDay=todayKey;}
+    const nowMins=now.getHours()*60+now.getMinutes();
     for(const s of SCHEDULE){
       const key=s.hour+":"+s.min;
       if(firedToday.has(key)) continue;
-      if(now.getHours()===s.hour && now.getMinutes()===s.min){
+      const diff=nowMins-(s.hour*60+s.min);
+      if(diff>=0 && diff<5){ // 5-min window handles throttled/delayed timers
         firedToday.add(key);
         try{
           if(reg){
