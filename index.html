@@ -677,9 +677,6 @@ canvas.chart{width:100%;height:140px;display:block;}
   <!-- Top action bar: hamburger left, actions right -->
   <div class="hdr-top-bar">
     <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
-    <div class="hdr-top-actions">
-      <button onclick="showGuide()" style="background:rgba(255,255,255,.15);border:none;border-radius:20px;padding:5px 10px;color:#fff;font-size:13px;cursor:pointer">❓ Guide</button>
-    </div>
   </div>
 
   <!-- User bar -->
@@ -776,6 +773,9 @@ canvas.chart{width:100%;height:140px;display:block;}
     </button>
   </nav>
   <div class="sidebar-footer">
+    <button class="sidebar-btn" onclick="showGuide();closeSidebar()" style="border-left-color:transparent">
+      <span class="s-icon">📖</span><span>App Guide</span>
+    </button>
     <button class="sidebar-btn" id="dark-toggle" onclick="toggleDark();closeSidebar()" style="border-left-color:transparent">
       <span class="s-icon">🌙</span><span>Toggle Dark Mode</span>
     </button>
@@ -3063,7 +3063,8 @@ async function lookupBarcode(barcode){
 
 
 function showGuide(){
-  document.getElementById("guide-modal").style.display="block";
+  const modal=document.getElementById("guide-modal");
+  if(modal){modal.style.display="block";modal.style.zIndex="9999";}
   closeSidebar();
 }
 
