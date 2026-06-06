@@ -2836,6 +2836,37 @@ function _setNotifStatus(msg){
   if(el) el.textContent=msg;
 }
 
+const _REMINDER_SCHEDULE=[
+  {hour:8,  min:0, msg:"🌅 Morning checklist — start your day right!"},
+  {hour:13, min:0, msg:"🍱 Lunch time — log your meal in Diet Tracker!"},
+  {hour:17, min:0, msg:"⚡ Evening snack time — track what you eat!"},
+  {hour:21, min:0, msg:"🌙 End of day — complete your checklist!"},
+];
+
+async function _fireReminder(s, reg){
+  const key=s.hour+":"+s.min;
+  const todayKey=new Date().toDateString();
+  if(!window._firedToday||window._reminderDay!==todayKey){
+    window._firedToday=new Set(); window._reminderDay=todayKey;
+  }
+  if(window._firedToday.has(key)) return;
+  window._firedToday.add(key);
+  try{
+    if(reg) await reg.showNotification("Diet Tracker 🥗",{body:s.msg,icon:"./icon-192.png",badge:"./icon-192.png",tag:"diet-reminder-"+key,renotify:true});
+    else new Notification("Diet Tracker 🥗",{body:s.msg,icon:"./icon-192.png",tag:"diet-reminder-"+key});
+  }catch(e){window._firedToday.delete(key); console.error("Notification error:",e);}
+}
+
+async function _checkRemindersNow(reg){
+  if(Notification.permission!=="granted") return;
+  const now=new Date();
+  const nowMins=now.getHours()*60+now.getMinutes();
+  for(const s of _REMINDER_SCHEDULE){
+    const diff=nowMins-(s.hour*60+s.min);
+    if(diff>=0 && diff<10) await _fireReminder(s,reg); // 10-min catch window
+  }
+}
+
 function _nextOccurrence(hour, min, dayOffset){
   const t=new Date();
   t.setDate(t.getDate()+dayOffset);
@@ -2845,75 +2876,41 @@ function _nextOccurrence(hour, min, dayOffset){
 
 async function scheduleNotifications(){
   if(Notification.permission!=="granted") return;
-  const SCHEDULE=[
-    {hour:8,  min:0, msg:"🌅 Morning checklist — start your day right!"},
-    {hour:13, min:0, msg:"🍱 Lunch time — log your meal in Diet Tracker!"},
-    {hour:17, min:0, msg:"⚡ Evening snack time — track what you eat!"},
-    {hour:21, min:0, msg:"🌙 End of day — complete your checklist!"},
-  ];
   const reg = await navigator.serviceWorker.ready.catch(()=>null);
 
   // Try TimestampTrigger — works even when app is closed (Chrome Android)
   if(reg && typeof TimestampTrigger !== "undefined"){
     try{
-      // Clear previous scheduled notifications
       const existing=await reg.getNotifications({includeTriggered:true}).catch(()=>[]);
       existing.forEach(n=>n.close());
-      // Schedule for next 3 days
       for(let d=0;d<3;d++){
-        for(const s of SCHEDULE){
+        for(const s of _REMINDER_SCHEDULE){
           const ts=_nextOccurrence(s.hour,s.min,d);
           if(ts<=Date.now()) continue;
           await reg.showNotification("Diet Tracker 🥗",{
-            body:s.msg,
-            icon:"./icon-192.png",
-            badge:"./icon-192.png",
+            body:s.msg,icon:"./icon-192.png",badge:"./icon-192.png",
             tag:"diet-sched-"+d+"-"+s.hour,
-            showTrigger:new TimestampTrigger(ts),
-            renotify:false,
+            showTrigger:new TimestampTrigger(ts),renotify:false,
           });
         }
       }
       _setNotifStatus("✅ Push notifications scheduled — arrive even when app is closed");
       return;
-    }catch(e){ /* fall through to interval fallback */ }
+    }catch(e){ /* fall through */ }
   }
 
-  // Fallback: interval check via SW showNotification (works when browser is open)
+  // Fallback: interval every 30 s + immediate check on each call
   if(window._reminderInterval) clearInterval(window._reminderInterval);
-  let firedToday=new Set();
-  window._reminderInterval=setInterval(async()=>{
-    if(Notification.permission!=="granted") return;
-    const now=new Date();
-    const todayKey=now.toDateString();
-    if(window._reminderDay!==todayKey){firedToday=new Set();window._reminderDay=todayKey;}
-    const nowMins=now.getHours()*60+now.getMinutes();
-    for(const s of SCHEDULE){
-      const key=s.hour+":"+s.min;
-      if(firedToday.has(key)) continue;
-      const diff=nowMins-(s.hour*60+s.min);
-      if(diff>=0 && diff<5){ // 5-min window handles throttled/delayed timers
-        firedToday.add(key);
-        try{
-          if(reg){
-            await reg.showNotification("Diet Tracker 🥗",{body:s.msg,icon:"./icon-192.png",badge:"./icon-192.png",tag:"diet-reminder-"+key});
-          } else {
-            new Notification("Diet Tracker 🥗",{body:s.msg,icon:"./icon-192.png",tag:"diet-reminder-"+key});
-          }
-        }catch(err){console.error("Notification error:",err);}
-      }
-    }
-  },60000);
+  _checkRemindersNow(reg); // fire immediately in case we just opened the app
+  window._reminderInterval=setInterval(()=>_checkRemindersNow(reg), 30000);
   _setNotifStatus("🔔 Reminders active while browser is open (8 AM · 1 PM · 5 PM · 9 PM)");
 }
 
-document.addEventListener("visibilitychange",function(){
-  if(document.visibilityState==="visible"
-    && typeof Notification!=="undefined"
-    && Notification.permission==="granted"
-    && !window._reminderInterval){
-    scheduleNotifications();
-  }
+document.addEventListener("visibilitychange", async function(){
+  if(document.visibilityState!=="visible"||typeof Notification==="undefined"||Notification.permission!=="granted") return;
+  const reg=await navigator.serviceWorker.ready.catch(()=>null);
+  _checkRemindersNow(reg); // catch any missed notification when tab comes back
+  if(!window._reminderInterval) scheduleNotifications();
 });
 
 // ═══════════════ FEATURE J: ENHANCED BARCODE LOOKUP ═══════════════
