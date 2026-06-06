@@ -516,53 +516,65 @@ canvas.chart{width:100%;height:140px;display:block;}
 </div>
 
 <!-- Guide Modal -->
-<div id="guide-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;overflow-y:auto;padding:20px 16px">
-  <div style="background:var(--card, #fff);border-radius:18px;max-width:420px;margin:0 auto;overflow:hidden">
+<div id="guide-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;overflow-y:auto;padding:20px 16px">
+  <div style="background:var(--card,#fff);border-radius:18px;max-width:420px;margin:0 auto;overflow:hidden">
     <div style="background:linear-gradient(135deg,#1b4332,#2d6a4f);padding:20px;display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="font-size:24px">📖</div>
         <div style="color:#fff;font-weight:bold;font-size:17px;margin-top:4px">How to Use Diet Tracker</div>
-        <div style="color:rgba(255,255,255,.6);font-size:12px">Quick guide for new users</div>
+        <div style="color:rgba(255,255,255,.6);font-size:12px">Complete guide — all features</div>
       </div>
-      <button onclick="document.getElementById('guide-modal').style.display='none'"
-        style="background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
+      <button onclick="document.getElementById('guide-modal').style.display='none'" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
     <div style="padding:16px">
       <div class="guide-step">
         <div class="guide-num">1</div>
-        <div><strong>☰ Open the Sidebar</strong><br/>Tap the ☰ button (top-left) to navigate between all 6 sections: Checklist, Calories, Activity, History, Health and Settings.</div>
+        <div><strong>☰ Navigation</strong><br/>Tap ☰ (top-left) to open the sidebar. Navigate between 7 tabs: Checklist, Calories, Activity, History, Health, Settings and Recipes. Dark mode toggle is also in the sidebar.</div>
       </div>
       <div class="guide-step">
         <div class="guide-num">2</div>
-        <div><strong>✅ Daily Checklist</strong><br/>Start here every morning. Tick each habit as you complete it — morning ritual, meals, snacks and post-dinner walk. Calories auto-add when you tick food items!</div>
+        <div><strong>✅ Daily Checklist</strong><br/>Start every morning here. Tick habits as you complete them — morning ritual, breakfast, snacks, lunch and dinner. Calories auto-log when you tick food items. Check your streak and completion % at the top.</div>
       </div>
       <div class="guide-step">
         <div class="guide-num">3</div>
-        <div><strong>🔥 Log Calories</strong><br/>Tap ⚡ Quick Add for common foods (Roti, Dal, Rice). Use the search bar or select a category from the dropdown. Tap 📷 Photo Scan to let AI identify your food from a photo.</div>
+        <div><strong>🌙 Night Prep</strong><br/>Scroll to the bottom of Checklist tab every night. Plan tomorrow's habits in advance — no morning rush! Items adapt to your diet type and health conditions automatically.</div>
       </div>
       <div class="guide-step">
         <div class="guide-num">4</div>
-        <div><strong>📷 Photo Scan Setup</strong><br/>Go to ⚙️ Settings → add your free Gemini API key from aistudio.google.com. Then take photos of your food for approximate AI-based calorie estimates. Results are indicative only — adjust manually if needed.</div>
+        <div><strong>🔥 Log Calories</strong><br/>Use ⚡ Quick Add for common foods. Search 200+ Indian foods by name or category. Macros (protein, carbs, fat) update automatically. Tap + button (bottom-right) for quick Log Food, Add Water or Log Weight.</div>
       </div>
       <div class="guide-step">
         <div class="guide-num">5</div>
-        <div><strong>🏥 Health Conditions</strong><br/>Have diabetes, BP, thyroid or PCOD? Go to Health tab → tap your condition. Your Checklist will automatically switch to condition-specific meals and habits!</div>
+        <div><strong>📷 Photo Scan & AI Meal Plan</strong><br/>Take a photo of your food — AI estimates calories automatically. Needs free Gemini API key from aistudio.google.com (add in Settings → Tools). AI Meal Plan generates a complete Indian meal plan for your remaining calories.</div>
       </div>
       <div class="guide-step">
         <div class="guide-num">6</div>
-        <div><strong>💧 Activity Tracking</strong><br/>Log water intake, steps and exercises in the Activity tab. Your calorie burn updates the net calories in real time.</div>
+        <div><strong>🍳 Recipes Tab</strong><br/>26 healthy Indian recipes ranked by protein — breakfast, lunch and dinner. Each recipe shows protein, calories and cooking time. Tap "Add to Today's Checklist" to replace your meal section with recipe ingredients.</div>
       </div>
       <div class="guide-step">
         <div class="guide-num">7</div>
-        <div><strong>⚙️ Settings & Sync</strong><br/>Sign in with Google to save your data permanently in the cloud — works on any device. Export data as CSV anytime for backup.</div>
+        <div><strong>💧 Activity Tab</strong><br/>Track water glasses (target 8/day), steps and exercise. For steps — use Manual Entry and type steps from Google Fit or Samsung Health for accurate all-day tracking.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">8</div>
+        <div><strong>🏥 Health Conditions</strong><br/>Go to Health tab → select your condition: Diabetic-Friendly, Heart-Healthy, Cholesterol-Friendly, Thyroid-Friendly, PCOD-Friendly or Acidity-Friendly. Get personalised food recommendations and habit guidance for your condition.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">9</div>
+        <div><strong>🧮 BMI & Calorie Calculator</strong><br/>Go to Settings → Tools. Enter your age, height, weight and activity level to get your BMI, ideal weight range (Asian standard 18.5-23) and recommended daily calorie target. Tap "Apply" to set it automatically.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">10</div>
+        <div><strong>⚙️ Settings & Sync</strong><br/>Sign in with Google to save data permanently across all devices. Export food log and weight data as CSV anytime. Settings organised in 4 sections: My Profile, Tools, App Settings and Data & Support.</div>
       </div>
       <div style="background:#e8f5e9;border-radius:12px;padding:12px;margin-top:4px;font-size:12px;color:#2e7d32;line-height:1.6">
-        💡 <strong>Tip:</strong> Install this app on your home screen! Tap your browser menu → "Add to Home Screen" → it works like a real app with no Play Store needed.
+        💡 <strong>Pro Tips:</strong><br/>
+        • Install on home screen for app-like experience (browser menu → Add to Home Screen)<br/>
+        • Set calorie target using BMI calculator for personalised results<br/>
+        • Use Night Prep every night to plan tomorrow's meals in advance<br/>
+        • Select your diet type (Veg/Egg/Non-Veg) in Settings for personalised daily specials
       </div>
-      <button onclick="document.getElementById('guide-modal').style.display='none'"
-        style="width:100%;margin-top:14px;padding:14px;background:#1b4332;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;font-family:inherit;cursor:pointer">
-        Got it! Let's start 🚀
-      </button>
+      <button onclick="document.getElementById('guide-modal').style.display='none'" style="width:100%;margin-top:14px;padding:14px;background:#1b4332;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;font-family:inherit;cursor:pointer">Got it! Let's start 🚀</button>
     </div>
   </div>
 </div>
