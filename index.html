@@ -1086,6 +1086,7 @@ canvas.chart{width:100%;height:140px;display:block;}
       </button>
     </div>
     <div id="step-auto-panel">
+      <div style="background:rgba(255,152,0,.15);border-radius:8px;padding:8px 10px;margin-bottom:10px;border-left:3px solid #ff9800;font-size:11px;color:#ff9800;line-height:1.5">⚠️ Auto counting pauses when screen locks or app goes to background — Android limitation. For all-day tracking use Manual Entry tab with steps from Google Fit or Samsung Health.</div>
       <p style="font-size:11px;opacity:.6;margin-bottom:8px;line-height:1.5">⚠️ Phone-based counting is approximate. Works best with phone in pocket. Shaking may add false steps.</p>
       <button id="step-btn" onclick="toggleSteps()"
         style="width:100%;padding:12px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:10px;color:#fff;font-size:14px;font-weight:bold;font-family:inherit;cursor:pointer">
@@ -1605,6 +1606,22 @@ let waterCount=0, stepCount=0, stepTracking=false,
 lastMag=-1, stepCooldown=false,
 stepMagBuffer=[], stepLastPeakTime=0;
 let fabOpen=false;
+
+document.addEventListener('freeze', ()=>{
+  try{
+    localStorage.setItem('dt_steps_freeze_save', JSON.stringify({count:stepCount,date:TODAY}));
+  }catch(e){}
+});
+document.addEventListener('resume', ()=>{
+  try{
+    const saved=JSON.parse(localStorage.getItem('dt_steps_freeze_save')||'null');
+    if(saved&&saved.date===TODAY&&stepCount===0&&saved.count>0){
+      stepCount=saved.count;
+      renderSteps();
+      showToast("Steps restored: "+saved.count+" 👟");
+    }
+  }catch(e){}
+});
 let currentCat="All", openSections=new Set();
 let userSettings={name:"",target:1550,diet:"egg",weight:80,apiKey:"",waterTarget:8};
 let favorites = []; // array of food names
@@ -3177,7 +3194,10 @@ function handleMotion(e){
     stepCooldown = true;
     setTimeout(()=>stepCooldown=false, 600);
     renderSteps();
-    if(stepCount % 100 === 0) saveAll();
+    try{
+      localStorage.setItem('dt_steps_freeze_save', JSON.stringify({count:stepCount,date:TODAY}));
+    }catch(e){}
+    if(stepCount % 50 === 0) saveAll();
   }
   lastMag = mag;
 }
@@ -3225,6 +3245,14 @@ function autoResumeSteps(){
       showToast("Step counting resumed 👟");
     } else {
       localStorage.removeItem(STEP_TRACKING_KEY);
+    }
+  }catch(e){}
+  // Also restore from freeze save
+  try{
+    const saved=JSON.parse(localStorage.getItem('dt_steps_freeze_save')||'null');
+    if(saved&&saved.date===TODAY&&saved.count>stepCount){
+      stepCount=saved.count;
+      renderSteps();
     }
   }catch(e){}
 }
