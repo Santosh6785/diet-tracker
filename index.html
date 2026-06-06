@@ -4607,25 +4607,23 @@ function renderNightPrep(){
     'c_water',       // Drank 8+ glasses water
     'c_nolate',      // Nothing after 10 PM
   ]);
-  const diet = userSettings.diet || 'egg';
-  const items = SECTIONS.flatMap(s=>s.items.slice(0,3)
-    .filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id))
-    .filter(i=>!i.diet || i.diet.includes(diet))
-    .map(i=>({...i,section:s.label})));
-  // Add condition-specific checklist items
+  let items;
   if(selectedConditions && selectedConditions.size > 0){
-    const condItems = [];
-    selectedConditions.forEach(condId=>{
-      const cond = HEALTH_CONDITIONS.find(c=>c.id===condId);
-      if(cond && cond.checkItems){
-        cond.checkItems.slice(0,2).forEach(item=>{
-          if(!EXCLUDE_FROM_NIGHTPREP.has(item.id)){
-            condItems.push({...item, section: cond.label + ' condition'});
-          }
-        });
-      }
-    });
-    items.push(...condItems);
+    // Mirror allItems() — use condition-specific sections, not generic SECTIONS
+    items = [...selectedConditions]
+      .map(id=>CONDITION_CHECKLISTS[id])
+      .filter(Boolean)
+      .flatMap(cond=>cond.sections.flatMap(s=>
+        s.items.slice(0,3)
+          .filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id))
+          .map(i=>({...i,section:s.label}))
+      ));
+  } else {
+    const diet = userSettings.diet || 'egg';
+    items = SECTIONS.flatMap(s=>s.items.slice(0,3)
+      .filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id))
+      .filter(i=>!i.diet || i.diet.includes(diet))
+      .map(i=>({...i,section:s.label})));
   }
   // Show tomorrow's recipe plan if set
   const recipeNote = [];
@@ -4674,8 +4672,14 @@ function saveNightPrep(){
 }
 function shareNightPrep(){
   const EXCLUDE_FROM_NIGHTPREP=new Set(['c_lemon','c_saladFirst','c_sabzi','c_noFried','c_noRice','c_walk','c_water','c_nolate']);
-  const diet=userSettings.diet||'egg';
-  const items=SECTIONS.flatMap(s=>s.items.slice(0,3).filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id)).filter(i=>!i.diet||i.diet.includes(diet)).map(i=>({...i,section:s.label})));
+  let items;
+  if(selectedConditions && selectedConditions.size > 0){
+    items=[...selectedConditions].map(id=>CONDITION_CHECKLISTS[id]).filter(Boolean)
+      .flatMap(cond=>cond.sections.flatMap(s=>s.items.slice(0,3).filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id)).map(i=>({...i,section:s.label}))));
+  } else {
+    const diet=userSettings.diet||'egg';
+    items=SECTIONS.flatMap(s=>s.items.slice(0,3).filter(i=>!EXCLUDE_FROM_NIGHTPREP.has(i.id)).filter(i=>!i.diet||i.diet.includes(diet)).map(i=>({...i,section:s.label})));
+  }
   const checkedItems=items.filter(i=>nightPrep[i.id]);
   if(!checkedItems.length){showToast("Tick some items first to share");return;}
   const text="🌙 My Plan for Tomorrow:\n\n"+checkedItems.map(i=>"✅ "+i.text+" ("+i.section+")").join("\n")+"\n\n— Diet Tracker";
