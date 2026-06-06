@@ -1870,7 +1870,7 @@ function renderSections(){
           +'<span style="font-weight:bold;font-size:13px;flex:1">'+condNames+'</span>'
           +'<button onclick="expandAllCondSections()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer">▼ All</button>'
           +'<button onclick="collapseAllCondSections()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer">▲ All</button>'
-          +'<button onclick="selectedConditions.clear();try{localStorage.setItem(\'dt_conditions\',\'[]\');}catch(e){}renderPriority();renderSections();renderHealthTab();updateHeader();showToast(\'Switched to default checklist ✓\');" '
+          +'<button onclick="selectedConditions.clear();try{localStorage.setItem(\'dt_conditions\',\'[]\');}catch(e){}renderPriority();renderSections();renderHealthTab();updateHeader();renderNightPrep();showToast(\'Switched to default checklist ✓\');" '
           +'style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer">✕</button>'
           +'</div>'
           +'<div style="font-size:11px;opacity:.6;margin-top:3px">'+selectedConds.length+' condition'+(selectedConds.length>1?'s':'')+' · Tap ▼ All to expand all sections</div>';
