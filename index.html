@@ -3554,6 +3554,7 @@ function renderHealthTab(){
         renderPriority();
         renderSections();
         updateHeader();
+        renderNightPrep();
         // Re-render selector buttons
         selector.querySelectorAll(".condition-btn").forEach((b,i)=>{
           b.classList.toggle("on",selectedConditions.has(HEALTH_CONDITIONS[i].id));
