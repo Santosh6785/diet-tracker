@@ -1668,6 +1668,11 @@ function saveSettings(){
   const diet=["veg","egg","nonveg"].find(d=>document.getElementById("diet-"+d).classList.contains("on"))||"egg";
   const apiKey=document.getElementById("set-api-key").value.trim();
   const wt=parseInt(document.getElementById("set-water-target").value)||8;
+  const rawWeight=parseFloat(document.getElementById("set-weight").value);
+  const rawWater=parseInt(document.getElementById("set-water-target").value);
+  if(rawWeight&&(rawWeight<20||rawWeight>400)){showToast("Enter valid weight (20-400 kg)");return;}
+  if(rawWater&&(rawWater<1||rawWater>20)){showToast("Enter valid water target (1-20 glasses)");return;}
+  if(t&&(t<800||t>4000)){showToast("Enter valid calorie target (800-4000)");return;}
   userSettings={name:n,target:t,diet,weight:w,apiKey,waterTarget:wt};
   try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(userSettings));}catch(e){}
   // Sync to Firebase if logged in
@@ -2178,6 +2183,19 @@ async function compressImage(file){
   });
 }
 
+function getGeminiErrorMsg(err){
+  const msg=err.message||'';
+  if(msg.includes('API_KEY_INVALID')||msg.includes('API key not valid'))
+    return '❌ Invalid API key — check your Gemini key in Settings';
+  if(msg.includes('QUOTA_EXCEEDED')||msg.includes('quota'))
+    return '❌ Daily scan limit reached — try again tomorrow (free tier: 1500/day)';
+  if(msg.includes('NETWORK')||msg.includes('fetch'))
+    return '❌ No internet — check your connection and try again';
+  if(msg.includes('image')||msg.includes('INVALID_ARGUMENT'))
+    return '❌ Image not clear enough — try better lighting or closer photo';
+  return '❌ Scan failed — try again or add food manually';
+}
+
 async function analysePhoto(input){
   if(!input.files[0])return;
   const file=input.files[0];
@@ -2277,7 +2295,7 @@ async function analysePhoto(input){
     resultEl.classList.add("show");
   }catch(e){
     loading.style.display="none";
-    showToast("Scan failed: "+e.message);
+    showToast(getGeminiErrorMsg(e));
     console.error("analysePhoto error:",e);
   }
   input.value="";
@@ -2523,7 +2541,9 @@ function calcBMR(){
   const activity=parseFloat(document.getElementById("bmr-activity").value)||1.2;
   const goal=parseFloat(document.getElementById("bmr-goal").value)||0.9;
   try{ if(age) localStorage.setItem('dt_bmr_age',age); if(height) localStorage.setItem('dt_bmr_height',height); }catch(e){}
-  if(!age||!height||age<10||age>100||height<100||height>250){showToast("Enter valid age and height");return;}
+  if(!age||age<10||age>100){showToast("Enter valid age (10-100 years)");return;}
+  if(!height||height<100||height>250){showToast("Enter valid height (100-250 cm)");return;}
+  if(weight<20||weight>400){showToast("Enter valid weight (20-400 kg)");return;}
   // Mifflin-St Jeor formula
   let bmr = bmrGender==="male"?(10*weight+6.25*height-5*age+5):(10*weight+6.25*height-5*age-161);
   const tdee=Math.round(bmr*activity);
@@ -5010,10 +5030,19 @@ async function _saveTodayToFirebase(){
       checked,meals,exercises,water:waterCount,steps:stepCount,
       updatedAt:new Date().toISOString()
     });
+    window._syncFailCount=0;
     setSyncStatus("synced");
   }catch(err){
     console.error("Firebase save error:",err);
-    setSyncStatus("error");
+    window._syncFailCount=(window._syncFailCount||0)+1;
+    if(window._syncFailCount>=3){
+      setSyncStatus("error");
+      showToast("⚠️ Sync unavailable — data saved locally. Will retry automatically.",5000);
+      window._syncFailCount=0;
+      setTimeout(()=>{ _saveTodayToFirebase(); },30000);
+    } else {
+      setSyncStatus("error");
+    }
   }
 }
 
