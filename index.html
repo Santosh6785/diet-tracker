@@ -2185,7 +2185,7 @@ async function analysePhoto(input){
         {text:"List all food items visible in this image. Reply ONLY with a JSON array: [{\"name\":\"Roti\",\"cal\":80,\"emoji\":\"🫓\",\"p\":3,\"c\":15,\"fa\":1,\"fi\":1},{\"name\":\"Dal\",\"cal\":120,\"emoji\":\"🫘\",\"p\":8,\"c\":18,\"fa\":2,\"fi\":4}]. Include protein(p), carbs(c), fat(fa), fibre(fi) grams. Use realistic Indian portion sizes. No text before or after the array."}
       ]}],
       generationConfig:{
-        maxOutputTokens:500,
+        maxOutputTokens:1500,
         temperature:0.1,
         response_mime_type:"application/json"
       }
@@ -2216,13 +2216,19 @@ async function analysePhoto(input){
 
     // Strip markdown code fences if present
     const clean=text.replace(/^```[a-z]*\n?/i,"").replace(/\n?```$/,"").trim();
-    // Find JSON array in response
-    const arrStart=clean.indexOf("[");
-    const arrEnd=clean.lastIndexOf("]");
     let items=[];
-    if(arrStart!==-1&&arrEnd!==-1){
-      try{ items=JSON.parse(clean.slice(arrStart,arrEnd+1)); }
-      catch(pe){ console.warn("JSON parse failed:",clean.substring(0,200)); }
+    // Try full parse first (works when response_mime_type returns clean JSON)
+    try{
+      const parsed=JSON.parse(clean);
+      items=Array.isArray(parsed)?parsed:(Array.isArray(parsed?.items)?parsed.items:[]);
+    }catch(e){
+      // Fallback: extract array between first [ and last ]
+      const arrStart=clean.indexOf("[");
+      const arrEnd=clean.lastIndexOf("]");
+      if(arrStart!==-1&&arrEnd!==-1){
+        try{ items=JSON.parse(clean.slice(arrStart,arrEnd+1)); }
+        catch(pe){ console.warn("JSON parse failed:",clean.substring(0,300)); }
+      }
     }
 
     if(!items.length){
