@@ -2186,7 +2186,8 @@ async function analysePhoto(input){
       ]}],
       generationConfig:{
         maxOutputTokens:500,
-        temperature:0.1
+        temperature:0.1,
+        response_mime_type:"application/json"
       }
     });
 
@@ -2213,13 +2214,15 @@ async function analysePhoto(input){
     const text=parts.filter(p=>!p.thought&&p.text).map(p=>p.text).join("").trim()
       || parts.map(p=>p.text||"").join("").trim();
 
+    // Strip markdown code fences if present
+    const clean=text.replace(/^```[a-z]*\n?/i,"").replace(/\n?```$/,"").trim();
     // Find JSON array in response
-    const arrStart=text.indexOf("[");
-    const arrEnd=text.lastIndexOf("]");
+    const arrStart=clean.indexOf("[");
+    const arrEnd=clean.lastIndexOf("]");
     let items=[];
     if(arrStart!==-1&&arrEnd!==-1){
-      try{ items=JSON.parse(text.slice(arrStart,arrEnd+1)); }
-      catch(pe){ console.warn("JSON parse failed:",text.substring(0,200)); }
+      try{ items=JSON.parse(clean.slice(arrStart,arrEnd+1)); }
+      catch(pe){ console.warn("JSON parse failed:",clean.substring(0,200)); }
     }
 
     if(!items.length){
