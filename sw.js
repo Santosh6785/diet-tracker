@@ -1,4 +1,4 @@
-const CACHE = "diet-tracker-BUILD_VERSION_20260507";
+const CACHE = "diet-tracker-BUILD_VERSION_20260606";
 const ASSETS = [
   "./index.html", "./manifest.json",
   "./icon-192.png", "./icon-512.png",
@@ -51,6 +51,33 @@ self.addEventListener("fetch", e => {
       }).catch(()=>caches.match("./offline.html"));
     })
   );
+});
+
+// Notification click — open/focus the app
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({type:"window", includeUncontrolled:true}).then(list => {
+      for(const c of list){
+        if(c.url.includes("diet-tracker") && "focus" in c) return c.focus();
+      }
+      return clients.openWindow("./");
+    })
+  );
+});
+
+// Push event — for future FCM server-sent pushes
+self.addEventListener("push", e => {
+  const data = e.data ? e.data.json().catch(()=>({})) : {};
+  const title = data.title || "Diet Tracker 🥗";
+  const options = {
+    body: data.body || "Time to check your diet plan!",
+    icon: "./icon-192.png",
+    badge: "./icon-192.png",
+    tag: data.tag || "diet-push",
+    renotify: true,
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
 });
 
 // Background Sync: notify clients to flush pending Firebase writes
