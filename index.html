@@ -127,7 +127,7 @@ body{font-family:'Georgia','Palatino',serif;background:var(--bg);min-height:100v
 
 /* Dark mode overrides */
 body.dark .card,.dark .cust-box,.dark .ex-card,.dark .net-cal-card{background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.3);}
-body.dark .tabs{background:var(--card);border-bottom-color:#2a3a2a;}
+body.dark .tabs.visible{background:var(--card);border-bottom-color:#2a3a2a;}
 body.dark .tabs,.dark .tab-btn{background:var(--card);color:var(--text3);}
 body.dark .tab-btn.active{color:#97bc62;border-bottom-color:#97bc62;}
 body.dark .it-text{color:var(--text);}
@@ -200,7 +200,8 @@ body.dark .sidebar{background:#0f2a1e;}
 .sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,.1);}
 .hamburger-btn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;line-height:1;}
 /* ── Tabs ── */
-.tabs{display:none;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;border-bottom:1px solid #e8f0e8;background:#fff;position:sticky;top:0;z-index:100;padding:0 4px;}
+.tabs{display:none;}
+.tabs.visible{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;border-bottom:1px solid #e8f0e8;background:#fff;position:sticky;top:0;z-index:100;padding:0 4px;}
 .tabs::-webkit-scrollbar{display:none;}
 .tab-btn{display:inline-block;padding:10px 12px;font-size:12px;font-weight:600;color:#888;border:none;background:none;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;font-family:inherit;flex-shrink:0;}
 .tab-btn.active{color:#1b4332;border-bottom-color:#1b4332;}
@@ -5256,6 +5257,8 @@ function _checkStreakBreak(){
 
 // ═══════════════ INIT ═══════════════
 function init(){
+  const tabsEl=document.querySelector('.tabs');
+  if(tabsEl) tabsEl.classList.add('visible');
   loadAll();
   loadDarkMode();
   loadHealthNotes();
