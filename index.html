@@ -3145,6 +3145,7 @@ window.addEventListener("resize", function(){
 // ═══════════════ WATER ═══════════════
 function renderWater(){
   const tgt=userSettings.waterTarget||8;
+  if(typeof waterCount!=="number"||isNaN(waterCount)) waterCount=0;
   const pct=Math.min(100,Math.round((waterCount/tgt)*100));
   document.getElementById("water-count").textContent=waterCount;
   document.getElementById("water-target-disp").textContent=tgt;
