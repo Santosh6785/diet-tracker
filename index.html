@@ -1429,10 +1429,6 @@ canvas.chart{width:100%;height:140px;display:block;}
       <p style="font-size:12px;color:#888;margin-bottom:10px">Easier on eyes at night.</p>
       <button class="save-btn" onclick="toggleDark()" style="background:#2c3e50;margin-bottom:14px">🌙 Toggle Dark / Light Mode</button>
 
-      <div class="card-title">💡 Food Facts</div>
-      <p style="font-size:12px;color:#888;margin-bottom:10px">Daily nutrition tips shown on home screen.</p>
-      <button class="save-btn" onclick="toggleFoodFact()" id="food-fact-toggle-btn" style="background:#1b4332;margin-bottom:14px">Show Food Facts</button>
-
       <div class="card-title">🔔 Daily Reminders</div>
       <p style="font-size:12px;color:#888;line-height:1.6;margin-bottom:8px">While app is open, you will receive these daily reminders:</p>
       <div style="background:#f8fdf8;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#555;line-height:1.8">
@@ -1501,6 +1497,13 @@ canvas.chart{width:100%;height:140px;display:block;}
 
 <div class="content" id="tab-7">
   <div style="padding:4px 0 10px">
+    <div class="card card-pad" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="card-title" style="margin-bottom:2px">💡 Food Facts</div>
+        <div style="font-size:12px;color:#888;line-height:1.4">Daily tips shown on home screen</div>
+      </div>
+      <button onclick="toggleFoodFact()" id="food-fact-toggle-btn" style="padding:8px 14px;border-radius:20px;border:none;font-family:inherit;font-size:12px;font-weight:bold;cursor:pointer;background:#1b4332;color:#fff">Show</button>
+    </div>
     <div style="text-align:center;padding:8px 0 14px">
       <div style="font-size:22px">💡</div>
       <div style="font-size:17px;font-weight:bold;color:#1b4332;margin-top:4px">Wellness Guide</div>
@@ -3677,7 +3680,8 @@ function toggleWellness(id){
   if(arrow)arrow.textContent=isOpen?'▶':'▼';
 }
 function renderWellness(){
-  // Wellness tab is static content — no dynamic rendering needed
+  const ffBtn=document.getElementById('food-fact-toggle-btn');
+  if(ffBtn){ ffBtn.textContent=localStorage.getItem('dt_hide_foodfact')?'Show':'Hide'; }
 }
 
 // ═══════════════ SETTINGS RENDER ═══════════════
@@ -3698,7 +3702,7 @@ function renderSettings(){
   ["veg","egg","nonveg"].forEach(d=>document.getElementById("diet-"+d).classList.toggle("on",d===diet));
   document.querySelectorAll(".cal-preset-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.val)===target));
   const ffBtn = document.getElementById('food-fact-toggle-btn');
-  if(ffBtn){ ffBtn.textContent = localStorage.getItem('dt_hide_foodfact') ? 'Show Food Facts' : 'Hide Food Facts'; }
+  if(ffBtn){ ffBtn.textContent = localStorage.getItem('dt_hide_foodfact') ? 'Show' : 'Hide'; }
   try{
     const sa=localStorage.getItem('dt_bmr_age'); const sh=localStorage.getItem('dt_bmr_height');
     const ageEl=document.getElementById('bmr-age'); const htEl=document.getElementById('bmr-height');
@@ -4368,12 +4372,12 @@ function toggleFoodFact(){
   if(hidden){
     localStorage.removeItem('dt_hide_foodfact');
     if(card) card.style.display='';
-    if(btn) btn.textContent='Hide Food Facts';
+    if(btn) btn.textContent='Hide';
     renderFoodFact();
     showToast('Food facts restored ✓');
   } else {
     hideFoodFact();
-    if(btn) btn.textContent='Show Food Facts';
+    if(btn) btn.textContent='Show';
     showToast('Food facts hidden ✓');
   }
 }
