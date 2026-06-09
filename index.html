@@ -1497,12 +1497,16 @@ canvas.chart{width:100%;height:140px;display:block;}
 
 <div class="content" id="tab-7">
   <div style="padding:4px 0 10px">
-    <div class="card card-pad" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div class="card-title" style="margin-bottom:2px">💡 Food Facts</div>
-        <div style="font-size:12px;color:#888;line-height:1.4">Daily tips shown on home screen</div>
+    <div class="card card-pad" style="margin-bottom:10px;background:linear-gradient(135deg,#1b4332,#2d6a4f);color:#fff;border-radius:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:bold;opacity:.8">💡 Food Fact of the Day</div>
+        <button onclick="toggleFoodFact()" id="food-fact-toggle-btn" style="padding:5px 12px;border-radius:20px;border:none;font-family:inherit;font-size:11px;font-weight:bold;cursor:pointer;background:rgba(255,255,255,.15);color:#fff">Hide</button>
       </div>
-      <button onclick="toggleFoodFact()" id="food-fact-toggle-btn" style="padding:8px 14px;border-radius:20px;border:none;font-family:inherit;font-size:12px;font-weight:bold;cursor:pointer;background:#1b4332;color:#fff">Show</button>
+      <div id="food-fact-text-wellness" style="font-size:13px;line-height:1.7;opacity:.95;margin-bottom:10px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:10px;opacity:.5">Updates every 35 seconds</div>
+        <button onclick="nextFoodFact()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:12px;padding:4px 12px;border-radius:20px;font-family:inherit;cursor:pointer">Next →</button>
+      </div>
     </div>
     <div style="text-align:center;padding:8px 0 14px">
       <div style="font-size:22px">💡</div>
@@ -3680,6 +3684,8 @@ function toggleWellness(id){
   if(arrow)arrow.textContent=isOpen?'▶':'▼';
 }
 function renderWellness(){
+  const wel=document.getElementById("food-fact-text-wellness");
+  if(wel) wel.textContent=FOOD_FACTS[currentFactIdx];
   const ffBtn=document.getElementById('food-fact-toggle-btn');
   if(ffBtn){ ffBtn.textContent=localStorage.getItem('dt_hide_foodfact')?'Show':'Hide'; }
 }
@@ -4347,13 +4353,17 @@ const FOOD_FACTS = [
 let currentFactIdx = Math.floor(Math.random() * FOOD_FACTS.length);
 
 function renderFoodFact(){
+  const homeCard=document.getElementById('food-fact-card');
   if(localStorage.getItem('dt_hide_foodfact')){
-    const c=document.getElementById('food-fact-card');
-    if(c) c.style.display='none';
-    return;
+    if(homeCard) homeCard.style.display='none';
+  } else {
+    if(homeCard) homeCard.style.display='';
+    const el=document.getElementById("food-fact-text");
+    if(el) el.textContent=FOOD_FACTS[currentFactIdx];
   }
-  const el = document.getElementById("food-fact-text");
-  if(el) el.textContent = FOOD_FACTS[currentFactIdx];
+  // Always update Wellness tab regardless of hide setting
+  const wel=document.getElementById("food-fact-text-wellness");
+  if(wel) wel.textContent=FOOD_FACTS[currentFactIdx];
 }
 function nextFoodFact(){
   currentFactIdx = (currentFactIdx + 1) % FOOD_FACTS.length;
