@@ -1,3 +1,35 @@
+// ══════════════════════════════════
+// FCM — Firebase Cloud Messaging
+// ══════════════════════════════════
+importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyBF0ZZqCyNRdHQAD2eBU32obdVNQG84C70",
+  projectId: "diet-tracker-app-c22f4",
+  messagingSenderId: "64330985373",
+  appId: "1:64330985373:web:d74e375b4a2d1c55dc0974"
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage(function(payload) {
+  const title = (payload.notification && payload.notification.title) || "Diet Tracker";
+  const body = (payload.notification && payload.notification.body) || "Time to check your habits!";
+  self.registration.showNotification(title, {
+    body,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    tag: 'diet-tracker-reminder',
+    data: { url: 'https://diet-tracker-app-c22f4.web.app' }
+  });
+});
+// ══════════════════════════════════
+// END FCM
+// ══════════════════════════════════
+
 const CACHE = "diet-tracker-BUILD_VERSION_20260606";
 const ASSETS = [
   "./index.html", "./manifest.json",

@@ -82,6 +82,11 @@
     doc,setDoc,getDoc,collection,getDocs,onSnapshot
   };
 
+  import{getMessaging,getToken}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+  const fcmMessaging=getMessaging(app);
+  window._fcmMessaging=fcmMessaging;
+  window._fcmGetToken=getToken;
+
   // Handle redirect result when page loads back from Google
   getRedirectResult(auth).then(result=>{
     if(result&&result.user){
@@ -3030,6 +3035,7 @@ function requestNotificationPermission(){
     showToast("Daily reminders re-enabled ✓");
     scheduleNotifications();
     updateNotifBtn("granted");
+    initFCM();
     return;
   }
   Notification.requestPermission().then(perm=>{
@@ -3038,10 +3044,37 @@ function requestNotificationPermission(){
       localStorage.removeItem('dt_notif_disabled');
       showToast("Daily reminders enabled ✓");
       scheduleNotifications();
+      initFCM();
     } else {
       showToast("Permission denied — enable in browser Settings → Notifications");
     }
   });
+}
+
+async function initFCM(){
+  try{
+    if(!("serviceWorker" in navigator)) return;
+    const user=window._fbUser;
+    const fb=window._fb;
+    if(!user||!fb){console.warn("initFCM: no auth user");return;}
+    const messaging=window._fcmMessaging;
+    const getToken=window._fcmGetToken;
+    if(!messaging||!getToken){console.warn("initFCM: FCM not ready");return;}
+    const reg=await navigator.serviceWorker.ready;
+    const token=await getToken(messaging,{
+      vapidKey:"BFstTwy6n-1sSqXQSyq06hUM93bQkBLTOM-6y39LUt8W7Pqp6nAvoP9jeBsSWo_rMGy5uwubnblb_AioXhcVqwU",
+      serviceWorkerRegistration:reg
+    });
+    if(!token){console.warn("initFCM: no token");return;}
+    await fb.setDoc(
+      fb.doc(fb.db,"fcmTokens",user.uid),
+      {fcmToken:token,updatedAt:new Date().toISOString()}
+    );
+    localStorage.setItem("dt_fcm_token",token);
+    console.log("FCM token saved ✓",token.slice(0,20)+"...");
+  }catch(err){
+    console.warn("initFCM failed:",err.message);
+  }
 }
 
 function disableNotifications(){
