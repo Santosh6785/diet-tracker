@@ -5479,11 +5479,11 @@ function init(){
   if(typeof Notification!=="undefined"&&Notification.permission==="granted") scheduleNotifications();
   // Restore reminders enabled state and re-register FCM token
   setTimeout(async()=>{
-    if(localStorage.getItem('dt_reminders_enabled')==='1'&&typeof Notification!=="undefined"&&Notification.permission==="granted"){
+    if(typeof Notification!=="undefined"&&Notification.permission==="granted"&&localStorage.getItem('dt_reminders_enabled')==='1'){
+      localStorage.removeItem('dt_notif_disabled');
       updateNotifBtn("granted");
       if(typeof initFCM==="function"){
         await initFCM();
-        // Retry after 3 more seconds in case FCM messaging wasn't ready
         setTimeout(async()=>{ await initFCM(); },3000);
       }
     }
