@@ -10,10 +10,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
       - run: npm install -g firebase-tools
       - run: cd functions && npm install
-      - run: firebase deploy --only functions --project diet-tracker-app-c22f4 --token "${{ secrets.FIREBASE_TOKEN }}"
+      - name: Deploy functions
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/sa.json
+          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json firebase deploy --only functions --project diet-tracker-app-c22f4
