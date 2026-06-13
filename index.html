@@ -3032,6 +3032,7 @@ function requestNotificationPermission(){
   if(Notification.permission==="granted"){
     // Re-enable after being disabled
     localStorage.removeItem('dt_notif_disabled');
+    localStorage.setItem('dt_reminders_enabled','1');
     showToast("Daily reminders re-enabled ✓");
     scheduleNotifications();
     updateNotifBtn("granted");
@@ -3080,6 +3081,7 @@ async function initFCM(){
 
 function disableNotifications(){
   localStorage.setItem('dt_notif_disabled','1');
+  localStorage.removeItem('dt_reminders_enabled');
   if(window._reminderInterval){clearInterval(window._reminderInterval);window._reminderInterval=null;}
   // Cancel any scheduled SW notifications
   navigator.serviceWorker&&navigator.serviceWorker.ready.then(reg=>{
