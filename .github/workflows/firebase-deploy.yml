@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bump version numbers
         run: |
@@ -19,10 +19,9 @@ jobs:
           echo "{\"version\":\"BUILD_VERSION_$TIMESTAMP\"}" > version.json
           echo "All versions bumped to BUILD_VERSION_$TIMESTAMP"
 
-      - uses: actions/setup-node@v3
+      - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          node-version: '20'
-
-      - run: npm install -g firebase-tools
-
-      - run: firebase deploy --only hosting --project diet-tracker-app-c22f4 --token "${{ secrets.FIREBASE_TOKEN }}"
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: diet-tracker-app-c22f4
+          channelId: live
