@@ -3044,6 +3044,7 @@ function requestNotificationPermission(){
       localStorage.removeItem('dt_notif_disabled');
       showToast("Daily reminders enabled ✓");
       scheduleNotifications();
+      localStorage.setItem('dt_reminders_enabled','1');
       initFCM();
     } else {
       showToast("Permission denied — enable in browser Settings → Notifications");
@@ -5474,6 +5475,13 @@ function init(){
   }
   // Schedule notifications if permission already granted
   if(typeof Notification!=="undefined"&&Notification.permission==="granted") scheduleNotifications();
+  // Restore reminders enabled state and re-register FCM token
+  setTimeout(async()=>{
+    if(localStorage.getItem('dt_reminders_enabled')==='1'&&typeof Notification!=="undefined"&&Notification.permission==="granted"){
+      updateNotifBtn("granted");
+      if(typeof initFCM==="function") await initFCM();
+    }
+  },2000);
   // Resume step tracking if it was active before reload (1s delay lets Firebase load first)
   setTimeout(autoResumeSteps, 1000);
 }
