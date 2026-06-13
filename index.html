@@ -5479,9 +5479,13 @@ function init(){
   setTimeout(async()=>{
     if(localStorage.getItem('dt_reminders_enabled')==='1'&&typeof Notification!=="undefined"&&Notification.permission==="granted"){
       updateNotifBtn("granted");
-      if(typeof initFCM==="function") await initFCM();
+      if(typeof initFCM==="function"){
+        await initFCM();
+        // Retry after 3 more seconds in case FCM messaging wasn't ready
+        setTimeout(async()=>{ await initFCM(); },3000);
+      }
     }
-  },2000);
+  },3000);
   // Resume step tracking if it was active before reload (1s delay lets Firebase load first)
   setTimeout(autoResumeSteps, 1000);
 }
