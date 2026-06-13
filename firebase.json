@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "diet-tracker-app-c22f4",
     "public": ".",
     "ignore": [
       "firebase.json",
