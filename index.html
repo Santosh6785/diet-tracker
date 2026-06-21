@@ -2902,7 +2902,42 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
       contents:[{parts:[{text:prompt}]}],
       generationConfig:{
         temperature:0.3,
-        maxOutputTokens:2000
+        maxOutputTokens:2000,
+        responseMimeType:"application/json",
+        responseSchema:{
+          type:"OBJECT",
+          properties:{
+            meals:{
+              type:"ARRAY",
+              items:{
+                type:"OBJECT",
+                properties:{
+                  name:{type:"STRING"},
+                  items:{
+                    type:"ARRAY",
+                    items:{
+                      type:"OBJECT",
+                      properties:{
+                        name:{type:"STRING"},
+                        cal:{type:"NUMBER"},
+                        emoji:{type:"STRING"},
+                        p:{type:"NUMBER"},
+                        c:{type:"NUMBER"},
+                        fa:{type:"NUMBER"},
+                        fi:{type:"NUMBER"}
+                      },
+                      required:["name","cal"]
+                    }
+                  }
+                },
+                required:["name","items"]
+              }
+            },
+            totalCal:{type:"NUMBER"},
+            note:{type:"STRING"}
+          },
+          required:["meals","totalCal"]
+        }
       }
     });
 
