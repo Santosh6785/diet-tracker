@@ -2628,7 +2628,21 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
 
     // Fix trailing commas before } or ] — common LLM output mistake
     let jsonStr=rawText.slice(start,end+1).replace(/,(\s*[}\]])/g,'$1');
-    const plan=JSON.parse(jsonStr);
+    let plan;
+    try{
+      plan=JSON.parse(jsonStr);
+    }catch(parseErr){
+      // Common LLM mistake: missing comma between adjacent objects/arrays
+      const repaired=jsonStr.replace(/}(\s*){/g,'},$1{').replace(/](\s*)\[/g,'],$1[');
+      try{
+        plan=JSON.parse(repaired);
+      }catch(parseErr2){
+        result.innerHTML='<div style="color:#c62828;font-size:12px;padding:8px;background:#fce4ec;border-radius:8px">'
+          +'<strong>Could not parse meal plan:</strong><br><pre style="white-space:pre-wrap;font-size:11px">'+rawText.substring(0,400)+'</pre></div>';
+        result.style.display="block";
+        throw new Error("Invalid JSON from AI — tap Regenerate to try again");
+      }
+    }
     let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap any meal to log it</div>';
     plan.meals.forEach(meal=>{
       const mealCal=meal.items.reduce((s,i)=>s+(i.cal||0),0);
