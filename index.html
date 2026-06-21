@@ -2603,6 +2603,10 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
     }
 
     const data=await resp.json();
+    if(data.error){
+      showToast("API: "+data.error.message.substring(0,60));
+      btn.textContent="✨ Generate Today's Meal Plan";btn.disabled=false;return;
+    }
 
     // Extract text from all non-thought parts
     const parts=data.candidates?.[0]?.content?.parts||[];
@@ -2629,7 +2633,8 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
     plan.meals.forEach(meal=>{
       const mealCal=meal.items.reduce((s,i)=>s+(i.cal||0),0);
       const itemsJson=encodeURIComponent(JSON.stringify(meal.items));
-      html+='<div style="background:#f8fdf8;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;border:1px solid #e0e8e0" onclick="logMealPlanEncoded(\''+itemsJson+'\',\''+meal.name+'\')">'
+      const safeName=meal.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+      html+='<div style="background:#f8fdf8;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;border:1px solid #e0e8e0" onclick="logMealPlanEncoded(\''+itemsJson+'\',\''+safeName+'\')">'
         +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
         +'<strong style="font-size:13px;color:#1b4332">'+meal.name+'</strong>'
         +'<span style="font-size:12px;color:#97bc62;font-weight:bold">+'+mealCal+' kcal</span></div>'
