@@ -2913,10 +2913,9 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
         .replace(/,(\s*[}\]])/g,'$1')           // trailing commas before } or ]
         .replace(/}(\s*){/g,'},$1{')             // missing comma between objects
         .replace(/](\s*)\[/g,'],$1[')            // missing comma between arrays
-        .replace(/"(\s*)\n(\s*)"/g,'",$1$2"')    // missing comma, value then key on new line
-        .replace(/([}\]0-9"])(\s*)\n(\s*)"(\w+)":/g,'$1,$3"$4":') // missing comma before next key on new line
+        .replace(/([0-9}\]"])(\s*)"(\w+)"\s*:/g,'$1,$2"$3":') // missing comma before next key (same or new line)
         .replace(/[“”]/g,'"');          // smart quotes
-      try{ return JSON.parse(s); }catch(e){ return null; }
+      try{ return {plan:JSON.parse(s),err:null}; }catch(e){ return {plan:null,err:e.message}; }
     }
 
     let resp=null, lastErr="", rawText="", plan=null, attempts=0;
@@ -2971,10 +2970,11 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
         continue;
       }
 
-      plan=tryRepairJson(rawText.slice(start,end+1));
+      const repairResult=tryRepairJson(rawText.slice(start,end+1));
+      plan=repairResult.plan;
       if(!plan && attempts>=maxAttempts){
         result.innerHTML='<div style="color:#c62828;font-size:12px;padding:8px;background:#fce4ec;border-radius:8px">'
-          +'<strong>Could not parse meal plan:</strong><br><pre style="white-space:pre-wrap;font-size:11px">'+rawText.substring(0,400)+'</pre></div>';
+          +'<strong>Could not parse meal plan:</strong> '+(repairResult.err||"")+'<br><pre style="white-space:pre-wrap;font-size:11px">'+rawText.substring(0,1200)+'</pre></div>';
         result.style.display="block";
         throw new Error("Invalid JSON from AI — tap Regenerate to try again");
       }
