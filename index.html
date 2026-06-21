@@ -2922,6 +2922,10 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
     }
 
     const data=await resp.json();
+    if(data.error){
+      showToast("API: "+data.error.message.substring(0,60));
+      btn.textContent="✨ Generate Today's Meal Plan";btn.disabled=false;return;
+    }
 
     // Extract text from all non-thought parts
     const parts=data.candidates?.[0]?.content?.parts||[];
@@ -2943,12 +2947,27 @@ Replace with real Indian foods. Each item must have: name(string), cal(number), 
 
     // Fix trailing commas before } or ] — common LLM output mistake
     let jsonStr=rawText.slice(start,end+1).replace(/,(\s*[}\]])/g,'$1');
-    const plan=JSON.parse(jsonStr);
+    let plan;
+    try{
+      plan=JSON.parse(jsonStr);
+    }catch(parseErr){
+      // Common LLM mistake: missing comma between adjacent objects/arrays
+      const repaired=jsonStr.replace(/}(\s*){/g,'},$1{').replace(/](\s*)\[/g,'],$1[');
+      try{
+        plan=JSON.parse(repaired);
+      }catch(parseErr2){
+        result.innerHTML='<div style="color:#c62828;font-size:12px;padding:8px;background:#fce4ec;border-radius:8px">'
+          +'<strong>Could not parse meal plan:</strong><br><pre style="white-space:pre-wrap;font-size:11px">'+rawText.substring(0,400)+'</pre></div>';
+        result.style.display="block";
+        throw new Error("Invalid JSON from AI — tap Regenerate to try again");
+      }
+    }
     let html='<div style="font-size:12px;color:#888;margin-bottom:8px">Total: ~'+plan.totalCal+' kcal · Tap any meal to log it</div>';
     plan.meals.forEach(meal=>{
       const mealCal=meal.items.reduce((s,i)=>s+(i.cal||0),0);
       const itemsJson=encodeURIComponent(JSON.stringify(meal.items));
-      html+='<div style="background:#f8fdf8;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;border:1px solid #e0e8e0" onclick="logMealPlanEncoded(\''+itemsJson+'\',\''+meal.name+'\')">'
+      const safeName=meal.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+      html+='<div style="background:#f8fdf8;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;border:1px solid #e0e8e0" onclick="logMealPlanEncoded(\''+itemsJson+'\',\''+safeName+'\')">'
         +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
         +'<strong style="font-size:13px;color:#1b4332">'+meal.name+'</strong>'
         +'<span style="font-size:12px;color:#97bc62;font-weight:bold">+'+mealCal+' kcal</span></div>'
